@@ -1,0 +1,138 @@
+-- MySQL dump 9.09
+--
+-- Host: localhost    Database: msi_it
+-- Server version	4.0.15-log
+
+--
+-- Table structure for table `Grupos`
+--
+
+CREATE TABLE Grupos (
+  id int(9) NOT NULL auto_increment,
+  nome varchar(50) NOT NULL default '',
+  admin char(1) default NULL,
+  incluir char(1) default NULL,
+  excluir char(1) default NULL,
+  visualizar char(1) default NULL,
+  alterar char(1) default NULL,
+  abrir char(1) default NULL,
+  fechar char(1) default NULL,
+  comentar char(1) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Dumping data for table `Grupos`
+--
+
+INSERT INTO Grupos VALUES (1,'Administradores','S','','','','','','','');
+
+--
+-- Table structure for table `Maquinas`
+--
+
+CREATE TABLE Maquinas (
+  id int(11) NOT NULL auto_increment,
+  nome varchar(200) default NULL,
+  ip varchar(15) default NULL,
+  cliente varchar(200) default NULL,
+  idEmpresa int(11) default NULL,
+  data datetime default NULL,
+  obs text,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Dumping data for table `Maquinas`
+--
+
+--
+-- Table structure for table `Parametros`
+--
+
+CREATE TABLE Parametros (
+  id int(11) NOT NULL auto_increment,
+  descricao varchar(200) default NULL,
+  parametro varchar(20) default NULL,
+  valor varchar(200) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Dumping data for table `Parametros`
+--
+
+INSERT INTO Parametros VALUES (1,'Passphrase de autenticação para visualização de senha','passphrase','YmF0YXRpbmhhIHF1YW5kbyBuYXNjZQ==');
+INSERT INTO Parametros VALUES (2,'Timeout de validação de PassPhrase (em segundos)','passphrase_timeout','MzA=');
+INSERT INTO Parametros VALUES (3,'Ticket-IT - URL','ticket_url','aHR0cDovL3RpY2tldC5kZXZlbC1pdC5jb20uYnI');
+
+--
+-- Table structure for table `Programas`
+--
+
+CREATE TABLE Programas (
+  id int(11) NOT NULL auto_increment,
+  idMaquina int(11) default NULL,
+  nome varchar(200) default NULL,
+  versao varchar(60) default NULL,
+  data datetime default NULL,
+  idUsuario int(11) default NULL,
+  comentarios text,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Dumping data for table `Programas`
+--
+
+--
+-- Table structure for table `Users`
+--
+
+CREATE TABLE Users (
+  id int(11) NOT NULL auto_increment,
+  idMaquina int(11) default NULL,
+  usuario varchar(60) default NULL,
+  senha varchar(200) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Dumping data for table `Users`
+--
+-- Table structure for table `Usuarios`
+--
+
+CREATE TABLE Usuarios (
+  id int(9) NOT NULL auto_increment,
+  login varchar(20) NOT NULL default '',
+  senha varchar(40) NOT NULL default '',
+  status char(1) NOT NULL default '',
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Dumping data for table `Usuarios`
+--
+
+INSERT INTO Usuarios VALUES (1,'devel-it','$1$Ab85IdW/$4buak3UG6CCx4S08oYUzG0','A');
+
+--
+-- Table structure for table `UsuariosGrupos`
+--
+
+CREATE TABLE UsuariosGrupos (
+  idUsuario int(9) NOT NULL default '0',
+  idGrupo int(9) NOT NULL default '0',
+  PRIMARY KEY  (idUsuario,idGrupo)
+) TYPE=MyISAM;
+
+--
+-- Dumping data for table `UsuariosGrupos`
+--
+
+INSERT INTO UsuariosGrupos VALUES (1,1);
+create table Tickets (id int primary key auto_increment, idMaquina int, idTicket int, titulo varchar(200), data datetime);
+create table Empresas (id int not null auto_increment primary key, idPessoaTipo int, nome varchar(200));
+
+
