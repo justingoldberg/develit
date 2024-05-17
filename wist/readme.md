@@ -1,0 +1,1 @@
+WIST - Web Interface for SIP Trace - It allows remote capturing and nice graphical representation in a browser window.
