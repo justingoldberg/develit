@@ -1,0 +1,508 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Chat Online
+
+
+function ticketChat($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $sessChat, $sessLogin, $tb;
+	
+	# Caso por protocolo, procurar ticket
+	if(!$registro || !is_numeric($registro)) {
+		
+		$detalhesTicket=dadosTicketProtocolo($registro,'protocolo','igual','id');
+		
+		$registro=$detalhesTicket[id];
+	}
+
+	# Checar Chat em aberto
+	$idChatAberto=checkChatTicket($registro);
+	$sessChat[$registro]=$idChatAberto;
+	
+	if($acao=='montar') {
+		if($sessLogin[login]) {
+			$tamanho=80;
+		}
+		else {
+			$tamanho=50;
+		}
+		# Verificar se Ticket possui chat ativo ou não
+		echo "<frameset rows=0,*,$tamanho border=0>";
+		echo "<frame name=none  src=?modulo=ticket&sub=chat&acao=atualizar&registro=$registro>";
+		echo "<frame name=cima src=?modulo=ticket&sub=chat&acao=chat&registro=$registro>";
+		echo "<frame name=baixo src=?modulo=ticket&sub=chat&acao=usuario&registro=$registro>";
+		echo "</frameset>";
+	}
+	elseif($acao=='atualizar') {
+		if($matriz[bntFinalizar]) {
+			echo "<span class=normal8>finalizado</span>";
+		}
+		else {
+			# Atualizar frame
+			echo "<meta http-equiv=refresh content=2;URL=?modulo=ticket&sub=chat&acao=atualizar&registro=$registro>";
+			
+			# Chechar Chat em aberto
+			
+			#checa ultimo ID do chat
+			if(!checkChatStatus($sessChat[$registro]) || !$sessChat[$registro]) {
+				
+				# Caso nao seja usuario do suporte, nao deixar criar chat
+				if(!$sessLogin[login] || !$sessLogin[senha] || $sessLogin[login]=='convidado' || !checkChatStatus($sessChat[$registro]) ) {
+					echo "<span class=txtaviso>Chat indisponivel para este atendimento!</span>";
+
+					if(!checkChatStatus($sessChat[$registro])) {
+						echo "
+						<script>
+							window.parent.frames['cima'].window.location = \"?modulo=ticket&sub=chat&acao=chat&registro=$registro\";
+						</script>";
+					}
+					else {
+						
+						echo "
+						<script>
+							window.parent.frames['baixo'].window.location = \"?modulo=ticket&sub=chat&acao=chat&registro=$registro\";
+						</script>";
+					}
+
+				}
+				else {
+					
+					if($sessChat[$registro] && !checkChat($sessChat[$registro],'id')) {
+						echo "<span class=normal8>chat finalizado</span";
+					}
+					else {
+							
+						# Iniciar Chat
+						$matriz[ticket]=$registro;
+						
+						$id=buscaIDNovoChat();
+						$matriz[id]=$id;
+						
+						dbTicketChat($matriz, 'incluir');
+					}
+					
+				}
+			}
+			else {
+				if(checkChatListID($idChatAberto)) {
+					
+					echo "
+						<script>
+							window.parent.frames['cima'].window.location = \"?modulo=ticket&sub=chat&acao=chat&registro=$registro\";
+						</script>";
+				}
+			}
+		}
+	}
+	elseif($acao=='usuario' || $acao=='configurar') {
+		
+		if((!$sessLogin[login] || !$sessLogin[senha] || $sessLogin[login]=='convidado') && !checkChatStatus($sessChat[$registro]) ) {
+			echo "<span class=txtaviso>Chat indisponível para este atendimento!</span>";
+			if(!checkChatStatus($sessChat[$registro])) {
+				echo "
+					<script>
+						window.parent.frames['cima'].window.location = \"?modulo=ticket&sub=chat&acao=chat&registro=$registro\";
+					</script>";
+			}
+
+		}
+		else {
+		
+			if($acao=='configurar' && $matriz[bntIniciar]) {
+				# Iniciar Chat
+				chatStart($registro, $matriz);
+			}
+			elseif($acao=='configurar' && $matriz[bntFinalizar]) {
+				# Finalizar Chat
+				chatStop($registro, $matriz);
+			}
+			elseif($matriz[mensagem]) {
+				
+				# Verificar se há chat em aberto e iniciar chat caso mensagem
+				# seja postada antes de pressionado o botão Iniciar
+				if(!$sessChat[$registro] || !is_numeric($sessChat[$registro])) {
+					# Iniciar chat
+					chatStart($registro, $matriz);
+				}
+				
+				# Incluir Mensagem 
+				$matriz[ticket]=$registro;
+				$matriz[chat]=$sessChat[$registro];
+				dbTicketChatConteudo($matriz,'incluir');
+			}
+			if(!$matriz[bntFinalizar]) formChatTicket($modulo, $sub, $acao, $registro, $matriz);
+		}
+	}
+	elseif($acao=='chat') {
+		
+		# Chechar Chat em aberto
+		if((!$sessLogin[login] || !$sessLogin[senha] || $sessLogin[login]=='convidado') && !checkChatStatus($sessChat[$registro]) ) {
+			echo "<span class=txtaviso>Chat indisponível para este atendimento!</span>";
+			
+		}
+		else {
+			if($sessChat[$registro] && !checkChatStatus($sessChat[$registro])) {
+				echo "<span class=txtaviso>Chat indisponível</span>";
+			}
+			else {
+				ticketChatMSG($modulo, $sub, $acao, $registro, $matriz);
+			}
+		}
+	}
+	
+}
+
+
+function ticketChatMSG($modulo, $sub, $acao, $registro, $matriz) {
+	
+	global $sessChat, $sessChatCor;
+	
+	# Mostra ticket
+	$dadosChat=dadosChat($sessChat[$registro]);
+	
+	mostraTicket($registro,0,0);
+	
+	if($dadosChat) {
+		echo "<BR><span class=bold10>ChatOnline [$sessChat[$registro]] iniciado: (últimas mensagens no topo da lista)</span><br><br>";
+		
+	
+		# Mostrar Mensagens
+		mostraChatMSG($modulo, $sub, $acao, $sessChat[$registro], $matriz);
+	}
+	else {
+		# Chat não iniciado
+		echo "<br><span class=txtaviso>ATENÇÃO: Chat ainda não foi iniciado!<br>Clique em \"Iniciar Chat\" para ativar o ChatOnline para este atendimento!";
+		$sessChatCor='';
+	}
+}
+
+
+# Formulário de Inclusão de Tempo
+function formChatTicket($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $corFundo, $corBorda, $sessLogin;
+	
+	$data=dataSistema();
+	
+	if($matriz[bntConfirmar]) {
+		# Adicionar Mensagem
+	}
+	
+	novaTabela2SH("left", '100%', 0, 2, 1, $corFundo, $corBorda, 4);
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$opcFocus="<body onLoad=\"javascript:if(document.forms[0]){document.forms[0].elements[4].focus()}\" topmargin=0>";
+		$texto="
+			$opcFocus
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=configurar>
+			<input type=hidden name=registro value=$registro>";
+			itemLinhaNOURL($texto, 'right', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+
+		novaLinhaTabela($corFundo, '100%');
+			itemLinhaTMNOURL('<b class=bold10>Mensagem:</b>', 'right', 'middle', '10%', $corFundo, 0, 'tabfundo1');
+			$texto="<input type=text name=matriz[mensagem] size=45>&nbsp;";
+			$texto.="&nbsp;&nbsp;<input type=submit name=matriz[bntConfirmar] value='Enviar' class=submit2>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		# Checar Permissões do Usuário - Usuário convidado não mostrar botões abaixo
+		if($sessLogin[login] && $sessLogin[senha]) {
+			novaLinhaTabela($corFundo, '100%');
+				$texto="<input type=submit name=matriz[bntIniciar] value='Iniciar Chat' class=submit>";
+				$texto.="&nbsp;&nbsp;<input type=submit name=matriz[bntFinalizar] value='Finalizar Chat' class=submit2>";
+				itemLinhaForm($texto, 'center', 'top', $corFundo, 2, 'tabfundo1');
+			fechaLinhaTabela();
+		}
+	fechaTabela();
+}
+
+function mostraChatMSG($modulo, $sub, $acao, $registro, $matriz) {
+	
+	global $conn, $corFundo, $corBorda, $tb, $sessChat, $sessChatCor, $sessLogin;
+	
+	$consulta=buscaRegistro($registro,'idChat','igual','data DESC',$tb[TicketChatConteudo]);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		for($a=0;$a<contaConsulta($consulta);$a++) {
+			$id=resultadoSQL($consulta, $a, 'id');
+			$idChat=resultadoSQL($consulta, $a, 'idChat');
+			$idUsuario=resultadoSQL($consulta, $a, 'idUsuario');
+			$usuario=buscaLoginUsuario(resultadoSQL($consulta, $a, 'idUsuario'),'id','igual','id');
+			$data=converteData(resultadoSQL($consulta, $a, 'data'),'banco','form');
+			$texto=htmlentities(resultadoSQL($consulta, $a, 'texto'));
+			$ip=resultadoSQL($consulta, $a, 'ip');
+			
+			$cor='normal10';
+			if(!$usuario) $usuario='convidado';
+			
+			if($usuario == 'convidado') {
+				$cor='normal10';
+			}
+			else {
+				# Definir Cores
+				if(!is_array($sessChatCor)) {
+					$sessChatCor[$usuario]=0;
+					echo 0;
+				}
+				elseif(!is_numeric($sessChatCor[$usuario])) $sessChatCor[$usuario]=count($sessChatCor);
+				
+				$cor="chat" . $sessChatCor[$usuario];
+			}
+			echo "<span class=$cor>$data $usuario: $texto</span><br>\n";
+			
+			if($a==0) $sessChat[$registro][lastID]=$id;
+		}
+	}
+	
+	# Mostrar mensagem de boas vindas do Chat
+	chatBoasVindas();
+}
+
+
+# Banco de dados
+function dbTicketChat($matriz, $tipo) {
+	
+	global $conn, $tb, $modulo, $acao, $sessLogin,$sessChat;
+	
+	# Data do sistema 
+	$data=dataSistema();
+
+	# Busca o ID do usuário logado
+	if($sessLogin[login]) $idUser=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+	else $idUser=buscaIDUsuario('convidado', 'login','igual','login');
+	
+	# Incluir Comentarios
+	if($tipo=='incluir') {
+		$aux_ticket = $matriz[ticket];
+		$sessChat[$aux_ticket][id]=$matriz[id];
+		$sql="INSERT INTO $tb[TicketChat] VALUES (
+			$matriz[id],
+			$matriz[ticket],
+			'$data[dataBanco]',
+			'$idUser',
+			'A'	
+		)";
+	} #fecha abertura
+
+	elseif($tipo=='excluirtodos') {
+		$sql="DELETE FROM $tb[TicketChat] WHERE idTicket='$matriz[id]'";
+	}
+	
+	elseif($tipo=='excluir') {
+		$sql="DELETE FROM $tb[TicketChat] WHERE id='$matriz[id]'";
+	}
+	
+	elseif($tipo=='finalizar') {
+		$sql="UPDATE 
+				$tb[TicketChat] 
+			SET 
+				status='F'
+			WHERE 
+				id='$matriz[id]'";
+	}	
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+}
+
+
+# Função para buscar ID de npvo Chat
+function buscaIDNovoChat() {
+
+	global $conn, $tb;
+	
+	$sql="SELECT max(id)+1 id from $tb[TicketChat]";
+	$consulta=consultaSQL($sql, $conn);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$id=resultadoSQL($consulta, 0, 'id');
+		
+		if(!is_numeric($id)) return(1) ;
+		else  return($id);
+	}
+	else return(1);
+	
+}
+
+
+# Buscar dados do chat
+function dadosChat($idChat) {
+	
+	global $tb;
+	
+	$consulta=buscaRegistro($idChat, 'id','igual','',$tb[TicketChat]);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$retorno[id]=resultadoSQL($consulta, 0, 'id');
+		$retorno[idTicket]=resultadoSQL($consulta, 0, 'idTicket');
+		$retorno[idUsuario]=resultadoSQL($consulta, 0, 'idUsuario');
+		$retorno[data]=resultadoSQL($consulta, 0, 'data');
+		$retorno[status]=resultadoSQL($consulta, 0, 'status');
+	}
+	
+	return($retorno);
+	
+}
+
+function checkChatListID($registro) {
+	
+	global $sessChat, $tb;
+	
+	$consulta=buscaRegistro($registro,'idChat','todos','data DESC', $tb[TicketChatConteudo]);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		if(resultadoSQL($consulta,0,'id') != $sessChat[$registro][lastID]) {
+			$sessChat[$registro][lastID] = resultadoSQL($consulta,0,'id') ;
+			return(1);
+		}
+		else return(0);
+	}
+	else {
+		return(1);	
+	}
+}
+
+function checkChat($id,$campo) {
+	
+	global $sessChat, $tb;
+	
+	$consulta=buscaRegistro($id, $campo,'igual','id', $tb[TicketChat]);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		 return(1);
+	}
+	else {
+		return(0);	
+	}
+}
+
+
+function checkChatStatus($id) {
+	
+	global $sessChat, $tb;
+	
+	$consulta=buscaRegistro("id=$id and status='A'", '','custom','id', $tb[TicketChat]);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		 return(1);
+	}
+	else {
+		return(0);	
+	}
+}
+
+function checkChatTicket($idTicket) {
+	
+	global $sessChat, $tb;
+	
+	$consulta=buscaRegistro("idTicket=$idTicket and status='A'", '','custom','id', $tb[TicketChat]);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		 return(resultadoSQL($consulta,0,'id'));
+	}
+	else {
+		return(0);	
+	}
+}
+
+# Iniciar Chat
+function chatStart($registro, $matriz) {
+	
+	global $sessChat;
+	
+	# Registro = idTicket
+	$matriz[ticket]=$registro;
+				
+	# Verificar se tem chat anterior
+	$matriz[id]=checkChatTicket($registro);
+	if($matriz[id]) {
+		dbTicketChat($matriz, 'finalizar');
+	}
+
+	$id=buscaIDNovoChat();
+	$sessChat[$registro]=$id;
+	$matriz[id]=$id;
+	
+	dbTicketChat($matriz, 'incluir');
+	//echo "<b class=bold10>Chat $sessChat[$registro] iniciado</span>";
+	
+	echo "
+			<script>
+				window.parent.frames['cima'].window.location = \"?modulo=ticket&sub=chat&acao=chat&registro=$registro\";
+			</script>";
+}
+
+
+# Finalizar Chat
+function chatStop($registro, $matriz) {
+	
+	global $sessChat, $sessChatCor;
+	
+	echo "<span class=normal8>chat finalizado</span>";
+	
+	# Verificar se tem chat anterior
+	$matriz[id]=checkChatTicket($registro);
+	
+	if($matriz[id]) {
+		dbTicketChat($matriz, 'finalizar');
+	}
+	
+	# Gravar log do Chat em Comentário ticket
+	gravaChatComentario($matriz[id]);
+	
+	$sessChat[$registro]='';
+	$sessChatCor='';
+	
+	echo "
+			<script>
+				window.parent.frames['cima'].window.location = \"?modulo=ticket&sub=chat&acao=chat&registro=$registro\";
+			</script>";
+}
+
+
+# Boas Vindas ao chat
+function chatBoasVindas() {
+	
+	global $sessLogin;
+	
+	$parametros=carregaParametros();
+	
+	$usuario=buscaLoginUsuario($sessLogin[id],'id','igual','id');
+	
+	if(!$usuario) $usuario="suporte";
+	
+	if(!$parametros[boas_vindas_chat]) $parametros[boas_vindas_chat]="Em que posso ajudá-lo ?";
+	echo "<span class=txterr>$usuario: $parametros[boas_vindas_chat]</span><br>\n";
+}
+
+?>
+@

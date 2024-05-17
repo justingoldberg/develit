@@ -1,0 +1,20 @@
+- Ordem de Serviço
+- Ocorrências
+-> Sistema de listagem de ocorrencias por status
+-> Transferencia de ocorrências entre os usuários
+-> Listagem de minhas ocorrencias
+-> Busca por ocorrências
+- Débito Automático
+- Relatórios
+- Mudança de Serviço
+- Contas a Pagar
+- Fluxo de Caixa
+- Gerenciamento de Dominios Web
+- Integração com WT-IT
+- Relatório de parceiros: Exibir os cancelamentos
+- Cancelamentos: Qdo for cancelamento de dominio, incluir, automaticamente, o nome do dominio no texto do cancelamento.
+- Admninistração de Dominios: Colocar um icone a mais na tela de administracao de dominios para abrir/alterar o plano relativo ao dominio exibido.
+- Nota Fiscal
+-> seleção de itens padronizados para Nota Fiscal
+-> cirar diretorio nota com permissao de escrita no path do isp-it ( /isp-it/tmp/nota ) onde serao gravados os aruivos temporarios das notas fiscais
+- Relatorio de Grupo de Servicos - SQL Pronto e alterado. Implementar listagem em HTML e geracao de PDF

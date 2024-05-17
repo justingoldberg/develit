@@ -1,0 +1,27 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.37.17;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@--
+-- Registro que avisa que o Ticket-it e o Invent-it Estão trabalhando de forma integrada - Data: 01/02/2006
+--
+INSERT INTO Parametros VALUES (0, 'Intregração entre sistemas Ticket e Invent', 'integration', 'dGlja2V0X2FuZF9pbnZlbnQ=');
+@

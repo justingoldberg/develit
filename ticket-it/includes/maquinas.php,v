@@ -1,0 +1,136 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para cadastro de máquinas
+
+# função de busca 
+function buscaMaquinas($texto, $campo, $tipo, $ordem)
+{
+	global $conn, $tb, $corFundo, $modulo, $sub;
+	
+	if($tipo=='todos') {
+		$sql="SELECT * FROM $tb[Maquinas] ORDER BY $ordem";
+	}
+	elseif($tipo=='contem') {
+		$sql="SELECT * from $tb[Maquinas] WHERE $campo LIKE '%$texto%' ORDER BY $ordem";
+	}
+	elseif($tipo=='igual') {
+		$sql="SELECT * from $tb[Maquinas] WHERE $campo='$texto' ORDER BY $ordem";
+	}
+	elseif($tipo=='custom') {
+		$sql="SELECT * from $tb[Maquinas] WHERE $texto ORDER BY $ordem";
+	}
+	
+	# Verifica consulta
+	if($sql){
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta
+		return($consulta);
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+	
+} # fecha função de busca
+
+
+
+function formSelectMaquinasEmpresa($registro, $empresa, $campo, $tipo) {
+	global $isp;
+	
+	if($tipo=='form') {
+		$consulta=buscaMaquinas($empresa,'idEmpresa','igual','nome');
+	}
+	elseif($tipo=='check') {
+		$consulta=buscaMaquinas($registro,'id','igual','id');
+	}
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		if($tipo=='form') {
+			
+			$retorno="<select name=matriz[$campo]>\n";
+			
+			for($a=0;$a<contaConsulta($consulta);$a++) {
+				
+				$id=resultadoSQL($consulta, $a, 'id');
+				$nome=substr(resultadoSQL($consulta, $a, 'nome'),0,40);
+				$ip=substr(resultadoSQL($consulta, $a, 'ip'),0,40);
+				
+				if($registro==$id) $opcSelect='selected';
+				else $opcSelect='';
+				
+				# Verificar se registro já está em banco de dados de Empresas
+				$retorno.="<option value=$id $opcSelect>$nome\n";
+			}
+			
+			$retorno.="</select>";
+		}
+		elseif($tipo=='check') {
+			$nome=resultadoSQL($consulta, 0, 'nome');
+			$ip=resultadoSQL($consulta, 0, 'ip');
+			
+			$retorno="$nome";
+			if($ip)
+				$retorno.=" - $ip";
+		}
+	}
+	
+	return($retorno);
+}
+
+
+/**
+ * Retornar o nome da empresa da qual a maquina esta relacionada
+ *
+ * @@param $idMaquina
+ * @@return string $nome = nome da empresa
+ */
+function checkEmpresaMaquina($idMaquina) {
+
+	global $conn, $tb;
+	
+	$sql="
+		SELECT
+			$tb[Empresas].nome 
+		FROM
+			$tb[Maquinas], 
+			$tb[Empresas]
+		WHERE 
+			$tb[Empresas].id=$tb[Maquinas].idEmpresa 
+			AND $tb[Maquinas].id='$idMaquina'";
+	
+	$consulta=consultaSQL($sql, $conn);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		return(resultadoSQL($consulta, 0, 'nome'));
+	}
+}
+
+
+?>
+@

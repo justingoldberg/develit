@@ -1,0 +1,56 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+# 		Funções de Template
+
+
+function k_templateLoad($tplFile) {
+
+	global $template;
+	$arquivo=k_fileOpen($template[dir] . $tplFile . ".tpl", 'r');
+	$retorno=k_fileRead($arquivo);
+
+	return($retorno);
+
+}
+
+
+
+function k_templateParse($tpl, $data) {
+
+	$keys=array_keys($data);
+	
+	for($a=0;$a<count($keys);$a++) {
+	
+		$tmpData=$data[$keys[$a]];
+		$tpl=str_replace("%_".$keys[$a]."_%",$tmpData,$tpl);
+	}
+	
+	return($tpl);
+	
+}
+
+?>
+@

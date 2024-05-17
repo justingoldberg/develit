@@ -1,0 +1,87 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.07.09;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@#!/bin/bash
+# Run ngrep and automaticaly zero log file after X seconds if nobody is using
+# Web Interface SIP Trace
+# PS: Run as service not by cron
+
+#################
+# CONFIGURATION #
+#################
+
+# interface to capture packets
+IFACE='eth0'
+
+# ngrep's binary location
+NGREP='/usr/bin/ngrep'
+
+# ngrep opts
+NGREP_OPTS="-t -p -d ${IFACE} -W byline port 5060"
+
+# ngrep's log file
+LOG_FILE='/var/tmp/ngrep.log'
+
+# pid's file
+PID_FILE='/var/run/ngrep.pid'
+
+# my log file
+MY_LOG_FILE='/var/log/rungrep.log'
+
+# max runtime (seconds)
+# after that time, ngrep will be killed and log file cleaned (if nobody is
+# using it - checked with ps)
+MAX_RUNTIME=3600
+
+# redirect all output to log's file
+exec 1>> $MY_LOG_FILE
+exec 2>> $MY_LOG_FILE
+
+########
+# CODE #
+########
+
+while : ; do
+	RUNNING=$(ps axfw|grep "$NGREP $NGREP_OPTS"|grep -v ' grep ')
+	if [ "$RUNNING" ] ; then
+		RUNNING_TAIL=$(ps axfw|grep "tail -f $LOG_FILE"|grep -v ' grep ')
+		if [ "$RUNNING_TAIL" ] ; then
+			sleep 60
+			continue
+		else
+			kill -9 $(<$PID_FILE)
+			if [ $? -gt 0 ] ; then
+				echo "Error trying to kill ${NGREP} [$(<$PID_FILE)], please check.."
+				sleep $MAX_RUNTIME
+				continue
+			fi
+			$NGREP $NGREP_OPTS > $LOG_FILE &
+			echo $! > $PID_FILE
+			sleep $MAX_RUNTIME
+		fi
+	else
+		$NGREP $NGREP_OPTS > $LOG_FILE &
+		echo $! > $PID_FILE
+		sleep $MAX_RUNTIME
+	fi
+done
+@

@@ -1,0 +1,30 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.38.34;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<table width=100%>
+<tr>
+<td><img src=%_IMG_LOGO_% border=0></td>
+<td align=center><H3>%_TITULO_%</h3><br>
+<p>
+</td>
+</tr>
+</table>@

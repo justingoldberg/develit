@@ -1,0 +1,181 @@
+ISP-IT
+
+ChangeLog-1.4.1 - 23/10/2007
+-> Implementado novo modelo de impressão de Notas Fiscais.
+-> Implementação da tabela ImpostosNF responsável em armazenar
+impostos que serão gravados temporariamente para serem impressos na nota
+fiscal.
+-> Alteração no formulário de inclusão dos ítens da nota fiscal.
+-> Criação do arquivo SQL 14_Tabela_Impostos_NF.sql com rotinas SQL de criação
+de tabela, insersão de registros de impostos e parâmetros pré-definidos
+-> Criação de parâmetros para definir se os impostos da Nota Fiscal deve ser
+impressa ou não. Sim 'S' p/ TDKOM e 'N' p/ a Devel.(By Felipe Assis)
+
+ChangeLog-1.4.1 - 19/06/2007
+o correção sequência numérica arquivo remessa quando for carteiras difetentes, mesmo banco e
+contas diferentes. Geração de sequência numérica distinta.
+ChangeLog-1.4.1 - 18/06/2007
+o implementação do módulo Nota Fiscal Fatura de Serviço (By Lis)
+ChangeLog-1.4.0.4 - 26/04/2007
+o implementação pesquisa de clientes por IP. (By Lis)
+ChangeLog-1.4.0.3 - 21/03/2007
+o realizada implementação de verificação de exibição de módulo de controle de estoque.
+(By Lis)
+ChangeLog-1.4.0.2 - 19/03/2007
+o realizada implementação de novo modelo de Nota Fiscal e correções gramaticais.
+(By Lis)
+ChangeLog-1.4.0.1 - 28/02/2007
+o realizada junção e atualização de arquivos do isp-it versão 1.3.5 com isp-estoque
+versão 1.4 (By Lis)
+ChangeLog-1.4.0 - 11/01/2007
+o adicionar opção de filtro "Data de Ativação" no relatório Clientes por Serviço.
+(By Lis)
+ChangeLog-1.4 - 04/01/2007
+o realizadas as correções e finalizadas todas as rotinas para a implentação do modulo
+de controle de estoque. (By Lis)
+o desenvolvimento das rotinas de fracionamento de produtos e devolução de itens de 
+Nota Fiscal de Fornecedor; (By Lis)
+o desenvolvimento dos relatórios do módulo de controle de Estoque; (By Lis)
+o correção de desconto de nota fiscal e faturamento; (By Lis)
+ChangeLog-1.3.4 - 18/01/2007
+o Melhoria no formulário de Cliente_Banco de Débito Automático
+  (By Alexandre Neto)
+ChangeLog-1.3.4 - 11/01/2007
+o Correçao na parte de recolhemento de impostos da Nota Fiscal. 
+  (By Alexandre and Lis)
+ChangeLog-1.3.3 - 29/11/2006
+o realizadas correções no cadastro de produtos, produtos compostos, estoque de 
+produtos, ordem de serviço, requisição/retorno e entrada nota fiscal (By Lis)
+ChangeLog-1.3.2.2-a - 04/10/2006
+o realizado o cadastro de produtos (By Alexandre,  Lis and Damiao)
+ChangeLog-1.3.2.1-a - 29/09/2006
+o Adaptado o cadastro de unidades, iniciado o cadastro de produtos e 
+  adicionado os arquivos SQL para a implementação desta nova funcionalidade
+ . (By Alexandre and Lis)
+ChangeLog-1.3.1.2 - 28/09/2006
+o Adicionada a opção que permite exibir mensagens no arquivo remessa do
+  HSBC; (By Alexandre)
+o Foi realizado uma correção no relatório de Baixas por POP/Cliente e
+  Serviços Adicionais, com alteraçao na função getPeriodoDias e getPeriodo,
+  respectivamente. (By Lis and Alexandre Damiao)
+o Foi realizado uma correção no relatorio de Baixa de Grupo de Servico,
+  inadimplentes_gruposservicos.php na funcao getPeriodo (By Damiao)
+ChangeLog-1.3.1 - 21/09/2006
+o Foram realizadas alterações para garantir que os dados sejam creditados de 
+  forma consistente no Fluxo de Caixa. (By Alexandre, Gustavo and Lis)
+ChangeLog-1.3.0.3 - 20/09/2006
+o Adicionada função de paginação de registros no módulo de notas fiscais. (By 
+  Lis and Damião)
+ChangeLog-1.3.0.2 - 19/09/2006
+o Corrigido o paginador de registros, adicionado dicas de formatação em contas
+  à pagar, e corrigido o módulo de Contra Partidas Padrão. (By Lis and 
+  Damião)
+ChangeLog-1.3.0.1 - 18/09/2006
+  Comentado a linha da opção "Documento" em Configurações/Banco/Listar com o 
+  objetivo de evitar erro a fim de evitar conflitos.(By Damiao)
+ChangeLog-1.3 - 15/09/2006
+o Adicionado a funcionalidade para permitir o cadastro Pop como pessoa de
+  forma a permitir cadastro de documentos e endereços. (By Alexandre)
+o Adicionado um recurso de impressão de versos de boletos em formato HTML
+  e PDF. (By Alexandre)
+o Corrigido o erro apresentado na alteração de registros de Tipos de
+  Equipamentos e de Características de Equipamentos/Tipos.  (By Lis);
+o Corrigido o erro apresentado durante o cadastro de pagamento avulso caso o
+  cliente não tenha nenhum plano cadastrado. Ao verificar se o cliente não
+  possui nenhum plano cadastrado não será exibido o botão de Prosseguir mas sim
+  o de Adicionar Plano de Serviço, evitando assim que seja efetuado o cadastro
+  do pagamento avulso.  (By Lis);
+o Corrigido o erro apresentado durante o cadastro de Equipamentos no campo de
+  Tipo, não havia forma de modificar este campo para adicionar o registro,
+  também foi incluída a verificação pra não deixar adicionar os registros com
+  campos em branco. (By Lis and Damiao)
+o Foram realizadas correções ortográficas e corrigido o bug no Relatório
+  de Cliente por Valor Nominal que não estava realizando a consulta.  (By
+  Lis);
+o Em Configurações / Serviços foi descomentada a query de exclusão de serviço
+  e adicionado uma verificação que impede o usuário de excluir um serviço 
+  caso exista um plano que utiliza este; (By Alexandre)
+
+ChangeLog-1.2.3 - 11/09/2006
+o Implantado o boleto de impressão da CEF trabalhando em classes com a
+  finalidade de facilitar a futura implatantação de impressão de boletos para
+  outros bancos. (by Alexandre)
+o Adicionado o campo CEP para a geração de contratos. (by Alexandre)
+o Foi feitas correções de erros de gramática. (By Lis)
+
+ChangeLog-1.2.2 - 07/06/2006
+o Implantando o suporte ao sistema de cobrança do HSBC mediante a arquivo
+  remessa e retorno.
+
+ChangeLog-1.2.1 - 22/06/2006
+o Correções visuais em contas à pagar:
+  - Removido os quadros de aviso de falta parametro de bancos na hora de gerar
+    um arquivo remessa.
+  - Alterado em Contas a Pagar a opção "Dados Pagamento" para "Detalhes";
+  - Mensagem de aviso de confirmação de cancelamento estava sendo mostrada em 
+    uma tela muito pequena e com a cor de titulo "texto" muito semelhante ao de 
+	"fundo".
+
+ChangeLog-1.2 - 29/05/2006
+Rogério, Gustavo e Alexandre:
+o Implementação do módulo fluxo de caixa que realiza as operações de débito
+  e crédito.
+o Alteração na baixa de manual de uma conta a receber, de forma que os campos
+  valor e data fiquem desabilitados após efetuar a baixa.
+o correção de um problema ao alterar um detalhe de plano de contas, que quando 
+  não preenchido o campo descrição, além de dar o aviso na tela, a conta
+  principal é alterada para a primeira conta cadastrada não mantendo a 
+  pré-selecionada na tela anterior.
+o Removida no cadastro de novo fornecedor a opção de recolher ISSQN.
+o Correção no cadastro de endereço de pessoas que, quando informando o 
+  CEP, o campo Pais era preenchido quando campo cep perdia ofoco.
+o Adicionado uma opção para o cadastro de um novo fornecedor, quando 
+  selecionado "Incluir" em contas a pagar.
+o Alteração de status de contas à pagar: de Pago para Baixado, de Pagar para 
+  Pendente.
+o Alteração da formatação do valor no baixar do contas à pagar (estava "." ao 
+  invez de ",").
+o Organização do modulo de lançamentos.
+o Correções visuais:
+    - na listagem Titulo da listagem de Débito automático. 
+	- Ajuste tela buscar na tela principal para o botão buscar ficar na mesma 
+	linha do "Procurar Pessoas" e "Tipos Pessoas".
+
+ChangeLog-1.1
+Rogério, Gustavo e Alexandre:
+o Implementação do módulo Contas à Pagar com plano de contas de três niveis.
+o Criação do módulo centro de custo com lançamento de previsões.
+o Desenvolvimento de relatórios de Contas à Pagar: por Plano de Contas, por 
+  fornecedores e por previsão de centro de custos.
+o Correção para não exibir uns "warnings" que apareciam em alguns relatórios.
+o Organização do modulo de lançamentos.
+o Exibe um icone notificando que tem contas à pagar restando até a quantidade
+  a dias a vencer contida no parámetro "dias_aviso_cap". Caso não encontre
+  este parámetro, é notificado apenas se existir contas à pagar atrasadas.
+
+ChangeLog-1.0.27
+kerne: config.php - Desenvolvimento de versão 1.0.27 (29/12/2004)
+kerne: Inativação de Ordem de Serviço (lançamento e relatorio) (29/12/2004)
+kerne: Criação de sql/patch-1.0.27.sql para migração de versão, facilitando a 
+instalação/update das versões (29/12/2004)
+kerne: Inclusão de função de estorno de lançamentos (29/12/2004)
+rogerio: Implementação da rotina de Nota fiscal (02/02/2005)
+rogerio: o arquivo AlteracoesSQL.txt tinha o mesmo conteudo de isp_it.sql,
+então padronizamos o alteracoesSQL.txt para armazenar apenas armazenar as
+alteracoes nas estruturas de 4 tabelas e indices. Mudei tambem a extensao 
+para .sql para utilizar o suporte a sintaxe do vi.
+gustavo: correcao na nomenclatura dos arquivos do relatorio de ocorrencia,
+(01/04/2005).
+alexandre: Foi alterada a ordem do campo idTipoCarteira da tabela no 
+arquivo alteracoesSQL.txt (20/03/2006).
+alexandre: Foi adicionado a interface de geração do Boleto-IT (23/03/2006).
+ChangeLog-1.4.1
+felipe assis: Implementado novo modelo de impressão de Notas Fiscais.
+-> Implementação da tabela ImpostosNF responsável em armazenar
+impostos que serão gravados temporáriamente para serem impressos na nota
+fiscal.
+-> Alteração no formulário de inclusão dos ítens da nota fiscal.
+-> Criação do arquivo SQL 14_Tabela_Impostos_NF.sql com rotinas SQL de criação
+de tabela, insersão de registros de impostos e parâmetros pré-definidos
+-> Criação de parâmetros para definir se os impostos da Nota Fiscal deve ser
+impressa ou não. Sim 'S' p/ TDKOM e 'N' p/ a Devel. (23/10/2007).

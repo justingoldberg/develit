@@ -1,0 +1,39 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.38.33;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<html>
+<body>
+%_CABECALHO_%
+<table width=100% cellpadding=2 cellspacing=1>
+<tr><td colspan=5><hr></td></tr>
+<tr>
+<td width=20% align=left><b>%_0_%</b></td>
+<td width=10% align=center><b>%_1_%</b></td>
+<td width=30% align=center><b>%_2_%</b></td>
+<td width=10% align=center><b>%_3_%</b></td>
+<td width=30% align=center><b>%_4_%</b></td>
+</tr>
+<tr><td colspan=7><hr></td></tr>
+%_DETALHE_%
+</table>
+</body>
+</html>@

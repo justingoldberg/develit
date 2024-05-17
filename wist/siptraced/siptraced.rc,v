@@ -1,0 +1,69 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	2006.04.07.12.07.09;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@#!/bin/bash
+#
+# siptraced          Start/Stop the siptraced daemon.
+#
+# chkconfig: 2345 40 60
+# description: siptraced is a daemon who reads ngrep log file and
+#              print each line on a TCP port 
+# description(pt_BR): siptraced é um daemon que lê o arquivo de log
+#              do ngrep e imprime cada linha em uma porta TCP
+# processname: siptraced
+# pidfile: /var/run/siptraced.pid
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+NAME='siptraced'
+SIPTRACED='/usr/local/bin/siptraced'
+
+# See how we were called.
+case "$1" in
+  start)
+	gprintf "Starting %s: " "$NAME"
+	daemon $SIPTRACED
+	echo
+	touch /var/lock/subsys/siptraced
+	;;
+  stop)
+	gprintf "Stopping %s: " "$NAME"
+	killproc $SIPTRACED
+	echo
+	rm -f /var/lock/subsys/siptraced
+	;;
+  status)
+	status $SIPTRACED
+	r=$?; if [ $r -ne 0 ]; then exit $r; fi
+	;;
+  restart)
+	$0 stop
+	$0 start
+	;;
+  *)
+	gprintf "Usage: %s {start|stop|status|restart}\n" "$0"
+	exit 1
+esac
+
+exit 0
+@

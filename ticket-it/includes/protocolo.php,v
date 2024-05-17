@@ -1,0 +1,777 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para cadastro de tickets
+
+
+# Função para cadastro
+function protocolo($modulo, $sub, $acao, $registro, $matriz) {
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+	# Carregar Frame
+	if($acao=='ver') {
+		echo "<frameset rows=0,* border=1>";
+		echo "<frame name=none  src=?modulo=protocolo&acao=atualizar&registro=$registro>";
+		echo "<frame name=chatprotocolo src=?modulo=protocolo&acao=verprotocolo&registro=$registro>";
+		echo "</frameset>";
+	}
+
+	# Mostrar Status caso não seja informada a ação
+	# Procurar
+	elseif(!$acao || $acao=="procurar") {
+		procurarProtocolo($modulo, $sub, $acao, $registro, $matriz);
+	}
+	elseif($sub=='feedback') {
+		ticketFeedback($modulo, $sub, $acao, $registro, $matriz);
+	}
+	elseif($acao=='verprotocolo' || $acao=='comentar' || $acao=='incluir') {
+		novaTabela2SH('left',768,0,0,0,$corFundo,$corBorda,0);
+		htmlAbreLinha($corFundo);
+			htmlAbreColuna(768,'left',$corFundo,0,'normal10');
+				verTicketProcotolo($modulo, $sub, $acao, $registro, $matriz);
+			htmlFechaColuna();
+		htmlFechaLinha();
+		fechaTabela();
+	}
+	elseif($acao=='atualizar') {
+		# Checar Chat
+		$idTicket=buscaIDTicket($registro,'protocolo','igual','id');
+		
+		if($idTicket) {
+			if(checkChatTicket($idTicket)) {
+			echo "
+				<script>
+					novaJanela(\"?modulo=ticket&sub=chat&acao=montar&registro=$idTicket\",\"chatprotocolo$idTicket\",\"width=640,height=600,resizable=No,scrollbars=Yes,title=ChatOnline,toolbar=No\");
+				</script>
+				";
+			}
+		}
+		else {
+			echo "<meta http-equiv=refresh content=2;URL=?modulo=protocolo&acao=atualizar&registro=$registro>";
+		}
+	}
+} #fecha menu principal
+
+
+
+# Função para procura de protocolo
+# Função para procura 
+function procurarProtocolo($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $conn, $tb, $corFundo, $corBorda, $html, $limite, $textoProcurar, $sessLogin;
+	
+	$idUsuario=buscaIDUsuario($sessLogin[login],'login','igual','id');
+	
+	# Buscar Grupos do Usuario
+	$gruposUsuario=buscaUsuariosGrupos($idUsuario,'idUsuario','igual','idUsuario');
+	for($a=0;$a<contaConsulta($gruposUsuario);$a++) {
+		$idGrupo=resultadoSQL($gruposUsuario, $a, 'idGrupo');
+		
+		$sqlADD.="$tb[Grupos].id = $idGrupo";
+		
+		if($a+1 < contaConsulta($gruposUsuario)) $sqlADD.=" OR ";
+	}
+	
+	novaTabela2("[Protocolos]", "center", '100%', 0, 3, 1, $corFundo, $corBorda, 3);
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('65%', 'left', $corFundo, 0, 'tabfundo1');
+				echo "<br><img src=".$html[imagem][protocolos]." border=0 align=left >
+				<b class=bold>Protocolos</b>
+				<br><span class=normal10>Protocolos são utilizados para melhor organizar e 
+				catalogar os chamados ténicos de suporte, atendimentos e ocorrências gerenciadas
+				pelo $configAppName.</span>";
+			htmlFechaColuna();			
+			$texto=htmlMontaOpcao("<br>Novo Ticket", 'relatorio');
+			itemLinha($texto, "?modulo=ticket&acao=adicionar", 'center', $corFundo, 0, 'normal');
+			$texto=htmlMontaOpcao("<br>Procurar", 'procurar');
+			itemLinha($texto, "?modulo=ticket&acao=procurar", 'center', $corFundo, 0, 'normal');
+		fechaLinhaTabela();
+	fechaTabela();
+	
+	# Atribuir valores a variável de busca
+	if($textoProcurar) {
+		$matriz[bntProcurar]=1;
+		$matriz[txtProcurar]=$textoProcurar;
+	} #fim da atribuicao de variaveis
+	
+	echo "<br>";
+	# Motrar tabela de busca
+	novaTabela2("[Buscar Protocolo]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+			echo "<b>Informe a identificação do protocolo:</b>";
+			htmlFechaColuna();
+			$texto="
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=procurar>
+			<input type=text name=matriz[txtProcurar] size=30 value='$matriz[txtProcurar]'>
+			<input type=submit name=matriz[bntProcurar] value=Procurar>";
+			itemLinhaForm($texto, 'left','middle', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();
+
+	# Caso botão procurar seja pressionado
+	if($matriz[txtProcurar] && $matriz[bntProcurar]) {
+		#buscar registros
+		$consulta=buscaTicket($matriz[txtProcurar],'protocolo','contem','data DESC');
+
+		echo "<br>";
+		novaTabela("[Protocolos encontrados]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 5);
+	
+		if(!$consulta || contaConsulta($consulta)==0 ) {
+			# Não há registros
+			itemTabelaNOURL('Não foram encontrados registros cadastrados', 'left', $corFundo, 5, 'txtaviso');
+		}
+		elseif($consulta && contaConsulta($consulta)>0 && (!$registro || is_numeric($registro)) ) {	
+		
+			itemTabelaNOURL('Registros encontrados procurando por ('.$matriz[txtProcurar].'): '.contaConsulta($consulta).' registro(s)', 'left', $corFundo, 5, 'txtaviso');
+
+			# Paginador
+			$urlADD="&textoProcurar=".$matriz[txtProcurar];
+			paginador($consulta, contaConsulta($consulta), $limite[lista][tickets], $registro, 'normal', 5, $urlADD);
+			
+			htmlAbreLinha($corBorda);
+				itemLinhaTMNOURL('Assunto', 'center', 'middle','40%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Data de Criação', 'center', 'middle','15%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Status', 'center', 'middle','5%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Categoria', 'center', 'middle','20%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Criado por', 'center', 'middle','10%', $corFundo, 0, "titulo");
+			htmlFechaLinha();
+	
+			# Setar registro inicial
+			if(!$registro) {
+				$i=0;
+			}
+			elseif($registro && is_numeric($registro) ) {
+				$i=$registro;
+			}
+			else {
+				$i=0;
+			}
+			
+			$limite=$i+$limite[lista][usuarios];
+			
+			while($i < contaConsulta($consulta) && $i < $limite) {			
+				# Verificar se registro está na matriz de tickets selecionads
+				$id=resultadoSQL($consulta, $i, 'id');
+				$assunto=resultadoSQL($consulta, $i, 'assunto');
+				$data=resultadoSQL($consulta, $i, 'data');
+				$usuario=resultadoSQL($consulta, $i, 'idUsuario');
+				$idPrioridade=resultadoSQL($consulta, $i, 'idPrioridade');
+				if($idPrioridade) {
+					$prioridade=checaPrioridade($idPrioridade);
+					
+					# Procurar categoria
+					$corFundo=$prioridade[cor];
+				}
+				
+				$idCategoria=resultadoSQL($consulta, $i, 'idCategoria');
+				if($idCategoria) {
+					$categoria=checaCategoria($idCategoria);
+				}
+				else {
+					$categoria='xxx';
+				}
+					
+				$status=buscaUltimoStatusTicket($id);
+	
+				# Mostrar ticket
+				htmlAbreLinha($corFundo);
+					$url="?modulo=ticket&sub&acao=ver&registro=$id";
+					if($usuario==$idUsuario) $icone="<img src=".$html[imagem][usuario]." border=0>";
+					else $icone="<img src=".$html[imagem][grupo]." border=0>";
+					itemLinhaTM("$icone <b>$assunto</b>", $url, 'left', 'middle','40%', $corFundo, 0, "normal10");
+					itemLinhaTMNOURL(converteData($data,'banco','form'), 'center', 'middle','15%', $corFundo, 0, "normal10");
+					itemLinhaTMNOURL($status[nome], 'center', 'middle','5%', $corFundo, 0, "normal10");
+					itemLinhaTMNOURL($categoria[nome], 'center', 'middle','20%', $corFundo, 0, "bold10");
+					itemLinhaTMNOURL(checaUsuario($usuario), 'center', 'middle','10%', $corFundo, 0, "normal10");
+				htmlFechaLinha();
+				
+				# Incrementar contador
+				$i++;
+			}
+			
+		} #fecha listagem
+		
+		fechaTabela();
+	} # fecha botão procurar
+} #fecha funcao de  procurar 
+
+
+
+# Gerar numero do protocolo
+function buscaIDNovoProtocolo($idTicket) {
+
+	$qtdeNumeros=5;
+
+	if($idTicket) {
+	
+		$data=dataSistema();
+	
+		$matLetras=array('A','C','E','F','H','J','R','U','X','Z','Y','W');
+		
+		$letra1=$matLetras[rand(0,(count($matLetras)-1))];
+		$letra2=$matLetras[rand(0,(count($matLetras)-1))];
+		$letra3=$matLetras[rand(0,(count($matLetras)-1))];
+		
+		while($letra1 == $letra2) {
+			$letra2=$matLetras[rand(0,(count($matLetras)-1))];
+		}
+		
+		# Gerar numero do Ticket com zeros a esquerda
+		// ATENÇÃO: 9 casas numéricas para idTicket
+		//$complemento='';
+		//for($a=strlen($idTicket);$a<$qtdeNumeros;$a++) $complemento.="0";
+		
+		if(strlen(trim($idTicket)) >= $qtdeNumeros) {
+			$protocolo=$letra1.$letra2.$complemento.trim(substr($idTicket,strlen($idTicket)-$qtdeNumeros,$qtdeNumeros)).$letra3;
+		}
+		else {
+			$protocolo=$letra1.$letra2.$complemento.substr(trim($idTicket),0,strlen(trim($idTicket))).$letra3;
+		}
+		
+		# Verificar a existência do numero do protocolo
+		$consulta=buscaTicket($protocolo, 'protocolo','igual','protocolo');
+		
+		if($consulta && contaConsulta($consulta)>0) $protocolo=buscaIDNovoProtocolo($idTicket);
+		else return($protocolo);
+		
+	}
+	else {
+		$msg="Protocolo não pode ser gerado!";
+		avisoNOURL("Aviso", $msg, 400);
+	}
+
+}
+
+
+
+# Visualização de Ticket através de informação de protocolo
+function verProtocolo($protocolo) {
+
+	global $corFundo, $corBorda, $tb, $html, $sessLogin;
+	
+	# Checar permissão do usuario
+	# Buscar informações sobre usuario - permissões
+	$permissao=buscaPermissaoUsuario($sessLogin[login]);
+
+	if(!$permissao[visualizar] && !$permissao[admin]) {
+		# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+		$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Acesso Negado", $msg, $url, 760);
+	}
+	else {
+	
+	
+		# Mostar informações sobre Servidor
+		$consulta=buscaTicket($protocolo, 'protocolo','igual','id');
+		
+		if($consulta && contaConsulta($consulta)>0) {
+			
+			$idTicket=resultadoSQL($consulta, 0, 'id');
+			$assunto=resultadoSQL($consulta, 0, 'assunto');
+			$data=resultadoSQL($consulta, 0, 'data');
+			$descricao=resultadoSQL($consulta, 0, 'texto');
+			$idUsuario=resultadoSQL($consulta, 0, 'idUsuario');
+			$nomeUsuario=resultadoSQL(buscaUsuarios($idUsuario,'id','igual','login'),0,'login');
+			$idPrioridade=resultadoSQL($consulta, 0, 'idPrioridade');
+			$idCategoria=resultadoSQL($consulta, 0, 'idCategoria');
+			$protocolo=resultadoSQL($consulta, 0, 'protocolo');
+				
+			#nova tabela para mostrar informações
+			novaTabela2("Novo Protocolo Gerado", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				novaLinhaTabela($corFundo, '100%');
+					$mensagem="<span class=txtaviso>
+						ATENÇÃO: Novo protocolo foi gerado!<br>
+						Informações sobre novo protocolo:<br><br>
+					</span>";
+					itemLinhaNOURL($mensagem, 'center', $corFundo, 2, 'normal10');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					itemLinhaTabela('<b>Data de Criação:</b>', 'right', '40%', 'normal10');
+					itemLinhaNOURL(converteData($data, 'banco','form'), 'left', $corFundo, 0, 'normal10');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					itemLinhaTabela('<b>Protocolo:</b>', 'right', '40%', 'normal10');
+					itemLinhaNOURL($protocolo, 'left', $corFundo, 0, 'protocolo');
+				fechaLinhaTabela();
+			fechaTabela();	
+			# fim da tabela	
+		}
+		else {
+			#erro
+		}
+	}
+}
+
+
+# Função para Visualiação de Ticket a partir de protocolo
+function verTicketProcotolo($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $corFundo, $corBorda, $tb, $html, $sessLogin;
+	
+	
+	if($registro) {
+		# Procurar Ticket a partir de protocolo
+		$consulta=buscaTicket($registro, 'protocolo','igual','id');
+		
+		$sessLogin[modulo]=$modulo;
+		$sessLogin[sub]=$sub;
+		$sessLogin[acao]=$acao;
+	}
+	
+	if($acao=='verprotocolo' && (!$registro || !$consulta || ($consulta && contaConsulta($consulta)==0)) ) {
+		# Form para informar o numero do protocolo
+		# Motrar tabela de busca
+		novaTabela2SH("center", '100%', 0, 2, 0, $corFundo, $corBorda, 2);
+			novaLinhaTabela($corFundo, '100%');
+				htmlAbreColuna('40%', 'center', $corFundo, 0, 'normal10');
+					echo "<img src=".$html[imagem][logo].">";
+				htmlFechaColuna();
+				htmlAbreColuna('60%', 'right', $corFundo, 0, 'normal10');
+					novaTabela2("[Visualização de Ticket - Informe Protocolo]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+						#fim das opcoes adicionais
+						novaLinhaTabela($corFundo, '100%');
+							$texto="<form method=post name=matriz action=index.php>
+							<input type=hidden name=modulo value=$modulo>
+							<input type=hidden name=sub value=$sub>
+							<input type=hidden name=acao value=$acao>";
+							itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+						fechaLinhaTabela();
+						novaLinhaTabela($corFundo, '100%');
+							htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+								echo "<b class=bold10>Protocolo: </b>";
+							htmlFechaColuna();
+							$texto="<input type=text name=registro size=20>";
+							itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+						fechaLinhaTabela();
+						# Botão de confirmação
+						novaLinhaTabela($corFundo, '100%');
+							htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+								echo "&nbsp;";
+							htmlFechaColuna();
+							$texto="<input type=submit name=matriz[bntOK] value=Visualizar>";
+							itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+						fechaLinhaTabela();
+						
+					fechaTabela();
+				htmlFechaColuna();
+			fechaLinhaTabela();
+		fechaTabela();
+		
+	}
+	elseif($consulta && contaConsulta($consulta)>0) {
+
+		$idTicket=resultadoSQL($consulta, 0, 'id');
+		$assunto=resultadoSQL($consulta, 0, 'assunto');
+		$data=resultadoSQL($consulta, 0, 'data');
+		$descricao=resultadoSQL($consulta, 0, 'texto');
+		$idUsuario=resultadoSQL($consulta, 0, 'idUsuario');
+		$nomeUsuario=resultadoSQL(buscaUsuarios($idUsuario,'id','igual','login'),0,'login');
+		$idPrioridade=resultadoSQL($consulta, 0, 'idPrioridade');
+		$idCategoria=resultadoSQL($consulta, 0, 'idCategoria');
+		$protocolo=resultadoSQL($consulta, 0, 'protocolo');
+		
+		/*
+			Verificação de Registro - Em caso de encaminhamento de ticket (envio de url com protocolo)
+			para um usuário do ticket, fazendo com que haja a necessidade de passagem do ID do ticket
+			e não mais o protocolo
+		*/
+		if($sessLogin[login] && $sessLogin[senha]) {
+			$modulo='ticket';
+			$registro=$idTicket;
+		}
+		
+		# Processos do Ticket
+		$processosTicket=buscaProcessosTicket($idTicket, 'idTicket','igual','data DESC');
+		
+		if($processosTicket && contaConsulta($processosTicket)>0) {
+			$statusTicket=resultadoSQL($processosTicket, 0, 'idStatus');
+			$status=checaStatusTicket($statusTicket);
+			
+			if($acao=='verprotocolo') {
+				
+				#nova tabela para mostrar informações
+				novaTabela2SH('center', '100%', 0, 2, 0, $corFundo, $corBorda, 2);
+					novaLinhaTabela($corFundo, '100%');
+						# Menu de opções na visualização do ticket
+						htmlAbreColuna('90%', 'center valign=top', $corFundo, 0, 'normal');
+							novaTabela2("Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+								if($protocolo) {
+									novaLinhaTabela($corFundo, '100%');
+										itemLinhaTabela('<b>Protocolo:</b>', 'right', '20%', 'tabfundo1');
+										itemLinhaNOURL($protocolo, 'left', $corFundo, 0, 'normal10');
+									fechaLinhaTabela();
+								}
+								novaLinhaTabela($corFundo, '100%');
+									itemLinhaTabela('<b>Criado por:</b>', 'right', '20%', 'tabfundo1');
+									itemLinhaNOURL($nomeUsuario, 'left', $corFundo, 0, 'normal10');
+								fechaLinhaTabela();
+								novaLinhaTabela($corFundo, '100%');
+									itemLinhaTabela('<b>Data de Criação:</b>', 'right', '20%', 'tabfundo1');
+									itemLinhaNOURL(converteData($data, 'banco','form'), 'left', $corFundo, 0, 'normal10');
+								fechaLinhaTabela();
+								novaLinhaTabela($corFundo, '100%');
+									itemLinhaTabela('<b>Status:</b>', 'right', '20%', 'tabfundo1');
+									itemLinhaNOURL($status[nome], 'left', $corFundo, 0, 'normal10');
+								fechaLinhaTabela();
+								if($dadosRelacionamento[idEmpresa]) {
+										novaLinhaTabela($corFundo, '100%');
+										itemLinhaTabela('<b>Empresa:</b>', 'right', '20%', 'tabfundo1');
+										itemLinhaNOURL(formSelectEmpresas($dadosRelacionamento[idEmpresa],'','check'), 'left', $corFundo, 0, 'normal10');
+									fechaLinhaTabela();
+								}
+								if($dadosRelacionamento[idMaquina]) {
+										novaLinhaTabela($corFundo, '100%');
+										itemLinhaTabela('<b>Máquina:</b>', 'right', '20%', 'tabfundo1');
+										itemLinhaNOURL(formSelectMaquinasEmpresa($dadosRelacionamento[idMaquina],'','','check'), 'left', $corFundo, 0, 'normal10');
+									fechaLinhaTabela();
+								}
+								novaLinhaTabela($corFundo, '100%');
+									itemLinhaTabela('<b>Descrição:</b>', 'right', '20%', 'tabfundo1');
+									itemLinhaNOURL(nl2br($descricao), 'left', $corFundo, 0, 'tabfundo3');
+								fechaLinhaTabela();
+							fechaTabela();
+						htmlFechaColuna();
+						htmlAbreColuna('10%', 'left nowrap  valign=top', $corFundo, 0, 'normal');
+							menuTicket($statusTicket, $registro, 'Opções', 'left', '100%', $corFundo, $corBorda, 'normal10');
+						htmlFechaColuna();
+					htmlFechaLinha();
+				fechaTabela();	
+				# fim da tabela	
+				
+				# Listagem de Processos do Ticket
+				echo "<br>";
+				listarProcessosTicket($modulo, $sub, $acao, $matriz, $idTicket);
+
+				# Listagem de Comentários do Ticket
+				echo "<br>";
+				listarComentariosTicket($modulo, $sub, $acao, $matriz, $idTicket);
+			}
+			
+			elseif($acao=='comentar') {
+				# Carregar Detalhes
+				$detalhesTicket=detalhesTicket($idTicket);
+				
+				# Processos do Ticket
+				$processosTicket=buscaProcessosTicket($idTicket, 'idTicket','igual','data DESC LIMIT 1');
+				
+				if($processosTicket && contaConsulta($processosTicket)>0) {
+					$statusTicket=resultadoSQL($processosTicket, 0, 'idStatus');
+					$status=checaStatusTicket($statusTicket);
+		
+					if(!$matriz[descricao] && !$matriz[bntComentar]) {
+												
+						#nova tabela para mostrar informações
+						novaTabela2SH('center', '100%', 0, 2, 0, $corFundo, $corBorda, 2);
+							novaLinhaTabela($corFundo, '100%');
+								# Menu de opções na visualização do ticket
+								htmlAbreColuna('90%', 'center valign=top', $corFundo, 0, 'normal');
+									novaTabela2("Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+										if($protocolo) {
+											novaLinhaTabela($corFundo, '100%');
+												itemLinhaTabela('<b>Protocolo:</b>', 'right', '20%', 'tabfundo1');
+												itemLinhaNOURL($protocolo, 'left', $corFundo, 0, 'normal10');
+											fechaLinhaTabela();
+										}
+										novaLinhaTabela($corFundo, '100%');
+											itemLinhaTabela('<b>Criado por:</b>', 'right', '20%', 'tabfundo1');
+											itemLinhaNOURL($nomeUsuario, 'left', $corFundo, 0, 'normal10');
+										fechaLinhaTabela();
+										novaLinhaTabela($corFundo, '100%');
+											itemLinhaTabela('<b>Data de Criação:</b>', 'right', '20%', 'tabfundo1');
+											itemLinhaNOURL(converteData($data, 'banco','form'), 'left', $corFundo, 0, 'normal10');
+										fechaLinhaTabela();
+										novaLinhaTabela($corFundo, '100%');
+											itemLinhaTabela('<b>Status:</b>', 'right', '20%', 'tabfundo1');
+											itemLinhaNOURL($status[nome], 'left', $corFundo, 0, 'normal10');
+										fechaLinhaTabela();
+										if($dadosRelacionamento[idEmpresa]) {
+												novaLinhaTabela($corFundo, '100%');
+												itemLinhaTabela('<b>Empresa:</b>', 'right', '20%', 'tabfundo1');
+												itemLinhaNOURL(formSelectEmpresas($dadosRelacionamento[idEmpresa],'','check'), 'left', $corFundo, 0, 'normal10');
+											fechaLinhaTabela();
+										}
+										if($dadosRelacionamento[idMaquina]) {
+												novaLinhaTabela($corFundo, '100%');
+												itemLinhaTabela('<b>Máquina:</b>', 'right', '20%', 'tabfundo1');
+												itemLinhaNOURL(formSelectMaquinasEmpresa($dadosRelacionamento[idMaquina],'','','check'), 'left', $corFundo, 0, 'normal10');
+											fechaLinhaTabela();
+										}
+										novaLinhaTabela($corFundo, '100%');
+											itemLinhaTabela('<b>Descrição:</b>', 'right', '20%', 'tabfundo1');
+											itemLinhaNOURL(nl2br($descricao), 'left', $corFundo, 0, 'tabfundo3');
+										fechaLinhaTabela();
+									fechaTabela();
+								htmlFechaColuna();
+								htmlAbreColuna('10%', 'left nowrap  valign=top', $corFundo, 0, 'normal');
+									menuTicket($statusTicket, $registro, 'Opções', 'left', '100%', $corFundo, $corBorda, 'normal10');
+								htmlFechaColuna();
+							htmlFechaLinha();
+						fechaTabela();	
+						# fim da tabela	
+						
+						echo "<br>";
+						novaTabela2('Comentário do Ticket', 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+							#fim das opcoes adicionais
+							novaLinhaTabela($corFundo, '100%');
+							$texto="			
+								<form method=post name=matriz action=index.php>
+								<input type=hidden name=modulo value=$modulo>
+								<input type=hidden name=sub value=$sub>
+								<input type=hidden name=acao value=$acao>
+								<input type=hidden name=registro value=$registro>
+								<input type=hidden name=matriz[ticket] value=$idTicket>";
+								itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+							fechaLinhaTabela();
+							novaLinhaTabela($corFundo, '100%');
+								htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+									echo "<b class=bold>Comentário: </b><br>
+									<span class=normal10>Comentários sobre Ticket</span>";
+								htmlFechaColuna();
+								$texto="<textarea name=matriz[descricao] rows=15 cols=60></textarea>";
+								itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+							fechaLinhaTabela();
+							novaLinhaTabela($corFundo, '100%');
+								htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+									echo "&nbsp;";
+								htmlFechaColuna();
+								$texto="<input type=submit name=matriz[bntComentar] value='Comentar Ticket'>";
+								itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+							fechaLinhaTabela();
+						fechaTabela();		
+					}
+					
+					else {
+						# Gravar
+						$grava=dbComentariosTicket($matriz, 'incluir');
+						
+						if($grava) {
+							/*
+							$msg="Comentário postado com sucesso!";
+							$url="?modulo=$modulo&sub=&acao=ver&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							*/
+							verTicketProcotolo('protocolo', $sub, 'verprotocolo', $registro, $matriz);
+							
+							# Enviar mensagem alertando sobre novo ticket Criado
+							$matriz[email]=$detalhesTicket;
+							$matriz[idTicket]=$matriz[ticket];
+							$matriz[protocolo]=$protocolo;
+							$matriz[categoria]=$idCategoria;
+							mailTicketProtocolo($matriz, $idUsuario, 'comentario');
+	
+						}
+					}
+					
+				}			
+			}
+		}
+	}
+	elseif($acao=='incluir' && is_numeric($matriz[categoria])) {
+		
+		if($matriz[email] && checkMailDominio($matriz[email], 'check')) {
+			$mensagem="<center><span class=txtaviso>ATENÇÃO: Email informado é inválido!<br>" .
+						"Certifique-se de informar um endereço de email válido!<br>" .
+						"Para informar mais de um endereço de email, utilize \",\" (vírgula)<br>" .
+						"Apenas os endereços de email válidos foram mantidos!</span></center><br>";
+		}
+		else {
+			$mensagem = "";
+		}
+						
+		$matriz[email]=checkMailDominio($matriz[email], 'format');
+
+		if(!$matriz[bntAdicionar] || !$matriz[descricao] || !$matriz[nome] || $mensagem || checkMailDominio($matriz[email], 'check')) {
+			# Form de inclusao
+			$matriz[email]=checkMailDominio($matriz[email], 'format');
+			# Motrar tabela de busca
+				#fim das opcoes adicionais
+			novaTabela2("[Visualizar Protocolo]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				$imagem="<img src=" . $html[imagem][protocolos] . " align=left>";
+				novaLinhaTabela($corFundo, '100%');
+					$texto="<form method=post name=matriz action=index.php>
+					<input type=hidden name=moduloProtocolo value=protocolo>
+					<input type=hidden name=sub value=>
+					<input type=hidden name=acaoProtocolo value=ver>
+					";
+					itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('60%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "
+						<center>
+							<table width=400 cellpadding=0 cellspacing=1 border=0 bgcolor=#000000><tr><td>
+							<table width=400 cellpadding=0 cellspacing=2 border=0 bgcolor=#ffffff>
+							<tr><td width=100%>
+								<span class=bold10>$imagem Atenção:</span><br>Caso já possua o número
+								do protocolo de atendimento, informe-o no fomulário ao lado e	
+								pressione o botão \"Visualizar\"<br><br>
+								</td>
+							</tr>
+							</table></td></tr></table>
+						</center>
+						";
+					htmlFechaColuna();
+					$texto="
+					<table width=270 cellpadding=0 cellspacing=1 border=0 bgcolor=#000000><tr><td>
+						<table width=270 cellpadding=0 cellspacing=5 border=0 bgcolor=#ffffff>
+							<tr>
+								<td width=100 align=right><b class=bold10>Protocolo: </b></td>
+								<td width=170 align=left><input type=text name=registro size=10></td>
+							</tr>
+							<tr>
+								<td width=270 colspan=2 align=center>
+									<input type=submit name=matriz[bntProtocolo] class=submit value=Visualizar>
+								</td>
+							</tr>
+							</table></td></tr></table>
+							</form>
+					";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+			fechaTabela();
+			echo "<br>";
+			
+			novaTabela2("[Adicionar]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				#fim das opcoes adicionais
+				novaLinhaTabela($corFundo, '100%');
+				$texto="			
+					<form method=post name=matriz action=index.php>
+					<input type=hidden name=modulo value=$modulo>
+					<input type=hidden name=sub value=$sub>
+					<input type=hidden name=categoria value=$matriz[categoria]>
+					<input type=hidden name=acao value=$acao>&nbsp;$mensagem";
+					itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold10>Nome/Empresa: </b><br>
+						<span class=normal8>Seu Nome/Nome da Empresa para Identificação</span>";
+					htmlFechaColuna();
+					$texto="<input type=text name=matriz[nome] size=50 value='$matriz[nome]'>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold10>Email: </b><br>
+						<span class=normal8>Email para contato</span>";
+					htmlFechaColuna();
+					$texto="<input type=text name=matriz[email] size=50 value='$matriz[email]'>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold10>Assunto: </b><br>
+						<span class=normal8>Assunto do ticket, utilizado para visualização abreviada do Ticket</span>";
+					htmlFechaColuna();
+					$texto="<input type=text name=matriz[assunto] size=50 value='$matriz[assunto]'>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold10>Descrição: </b><br>
+						<span class=normal8>Descrição detalhada do Ticket</span>";
+					htmlFechaColuna();
+					$texto="<textarea name=matriz[descricao] rows=10 cols=60>$matriz[descricao]</textarea>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "&nbsp;";
+					htmlFechaColuna();
+					$texto="<input type=submit name=matriz[bntAdicionar] value=Adicionar class=submit>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+			fechaTabela();
+		} #fecha form
+		elseif($matriz[bntAdicionar]) {
+			# Conferir campos
+			if($matriz[assunto] && $matriz[descricao]) {
+				# Buscar ID de novo Ticket
+				$matriz[idCategoria]=$matriz[categoria];
+				$matriz[idTicket]=buscaIDNovoTicket();
+				
+				# Buscar ID de novo Protocolo
+				$matriz[protocolo]=buscaIDNovoProtocolo($matriz[idTicket]);
+				
+				# Alterar Descrição
+				$matriz[descricao]="Nome/Empresa: $matriz[nome]".
+										"\nEmail: $matriz[email]".
+										"\n\n$matriz[descricao]";
+				
+				# Incluir Detalhes ao Ticket
+				gravaDetalhesTicket($matriz[idTicket], $matriz);
+				
+				# Cadastrar em banco de dados
+				$grava=dbTicket($matriz, 'incluir');
+				
+				# Verificar inclusão de registro
+				if($grava) {
+					# Gravar Status de Ticket - NOVO
+					dbProcessosTicket($matriz, 'incluir');
+					
+					# Buscar Ticket
+					if($sessLogin[login]) $idUsuario=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+					else $idUsuario=buscaIDUsuario('convidado', 'login','igual','login');
+					
+					# Enviar mensagem para autor da mensagem - verificando detalhes
+					$detalhesTicket=detalhesTicket($matriz[idTicket]);
+					if($detalhesTicket) {
+						$matriz[email]=$detalhesTicket;
+						mailTicketProtocolo($matriz, $idUsuario, 'incluir');
+					}
+					
+					# Mostrar Ticket
+					echo "<meta http-equiv=refresh content=0;URL=?modulo=protocolo&acao=ver&registro=$matriz[protocolo]>";
+					//verTicketProcotolo("protocolo", '', 'ver', $matriz[protocolo], $matriz);
+				}
+			}
+			
+			# falta de parametros
+			else {
+				# acusar falta de parametros
+				# Mensagem de aviso
+				$msg="Falta de parâmetros necessários. Informe os campos obrigatórios e tente novamente";
+				$url="?modulo=$modulo&acao=$acao";
+				aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+			}
+		}
+	}
+	else {
+	
+		if($registro) {
+			# Ticket não pode ser visualizado
+			$msg="Ticket não pode ser encontrado";
+			avisoNOURL("Visualização de Ticket", $msg, 760);
+		}
+	}
+}
+
+
+?>
+@

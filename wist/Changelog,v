@@ -1,0 +1,45 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.03.20;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@WIST
+
+   0.4: Mar 29, 2006
+   * Minor bugfixes;
+   * Show error messages formated in red color;
+
+   0.3: Mar 01, 2006
+   * Implemented internationalization using gettext schema;
+   * Added translations to en_US, pt_BR and es_ES;
+   * Created  "rungrep.sh"  to  help   start   ngrep   and   zero   log   file;
+   * Software DOCs created (INSTALL, README, TODO, etc);
+
+   0.2: Feb 22, 2006
+   * siptraced improved (daemonize, sanity checks);
+   * Added some formating and colors  standards  to  be  more  user's  friendly;
+   * Removed every session instruction and  changed  methodology  of  abort/stop
+     process/filter;
+
+   0.1: Feb 17, 2006
+   * siptraced  was   done   to   permit   traffic   capture/filter   remotely;
+   * Searching SIP messages on a Socket connection;
+   * prof  concept   (remotely   filter   SIP   dialogs   on   a   TCP   port);
+@

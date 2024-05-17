@@ -1,0 +1,139 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?php
+################################################################################
+# Função:
+#    Funções JavaScript
+
+### Javascript ###
+echo "
+<script language=JavaScript>
+<!--
+function novaJanela(theURL,winName,features) { //v2.0
+
+  window.open(theURL,winName,features);
+  
+}
+
+function voltar() {
+	document.history.back();
+}
+
+function verificaData(data, campo) {
+
+	var er = /\//g;
+	data=data.replace(er,'');
+	
+	if(data && !isNaN(data)) {
+		
+		dia=data.substr(0,2);
+		mes=data.substr(2,2);
+		ano=data.substr(4,4);
+		
+		dataFormat=dia+'/'+mes+'/'+ano;
+		
+		if( !dia || !mes || !ano || (dia <= 0 || dia > 31) || (mes <=0 || mes > 12) || (ano < 1900) ) {
+			alert('Data Inválida');
+			
+			nomecampo=document.forms[0].elements[campo].name;
+			
+			document.forms[0].elements[campo].value='';
+			document.forms[0].elements[campo].focus();
+			return false;
+
+		}
+		else {
+			document.forms[0].elements[campo].value=dataFormat;
+		}
+	}
+	else if(data && isNaN(data)) {
+		alert('Data Inválida');
+		
+		document.forms[0].elements[campo].value='';
+		document.forms[0].elements[campo].focus();
+	}
+}
+
+
+function verificaHora(data, campo) {
+
+	var er = /\//g;
+	data=data.replace(er,'');
+	
+	if(data && !isNaN(data)) {
+		
+		hora=data.substr(0,2);
+		
+		if( !hora || (hora <= 0 || hora > 24) ) {
+			alert('Hora Inválida');
+			
+			nomecampo=document.forms[0].elements[campo].name;
+			
+			document.forms[0].elements[campo].value='';
+			document.forms[0].elements[campo].focus();
+			return false;
+
+		}
+		else {
+			document.forms[0].elements[campo].value=hora;
+		}
+	}
+	else if(data && isNaN(data)) {
+		alert('Hora Inválida');
+		
+		document.forms[0].elements[campo].value='';
+		document.forms[0].elements[campo].focus();
+	}
+}
+
+function verificaDataMesAno2(data, campo) {
+	
+	var er = /\//g;
+	data=data.replace(er,'');
+	
+	if(data) {
+		mes=data.substr(0,2);
+		ano=data.substr(2,4);
+		
+		dataFormat=mes+'/'+ano;
+		
+		if( !mes || !ano || 
+		(mes < 1 || mes > 12) 
+		) {
+		
+			alert('Data Inválida');
+			document.forms[0].elements[campo].value='';
+			document.forms[0].elements[campo].focus();
+		}
+		else {
+			document.forms[0].elements[campo].value=dataFormat;
+		}
+	}
+}
+
+//-->
+</script>
+";
+### Fim do Javascript ###
+?>
+@

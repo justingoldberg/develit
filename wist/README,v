@@ -1,0 +1,92 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.04.45;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@WIST - Web Interface for SIP Trace
+--------------------------------------------------------------------------------
+
+
+INTRO
+
+This software born as a prof concept of the idea to capture SIP traffic  from  a
+remote host (SIP Proxy, Gateway, etc) and  show  up  alive  SIP  messages  about
+an specific dialog (filtered by From SIP user) to help  our  tech  support  team
+to debug SIP transactions in a friendly way.
+
+There are 3 peaces of software in this process, 2 of them was created by us:
+
+ 1) ngrep: Created by Jordan Ritter - http://ngrep.sourceforge.net
+    ngrep  strives  to   provide   most   of   GNU   grep's   common   features,
+    applying  them  to  the  network  layer.   ngrep  is   a   pcap-aware   tool
+    that  will  allow  you  to   specify   extended   regular   or   hexadecimal
+    expressions   to   match   against   data   payloads   of    packets.     It
+    currently  recognizes  TCP,  UDP  and  ICMP  across  Ethernet,  PPP,   SLIP,
+    FDDI,  Token  Ring  and  null  interfaces,  and   understands   bpf   filter
+    logic  in  the  same  fashion  as  more  common   packet   sniffing   tools,
+    such as tcpdump and snoop.
+	
+ 2) siptraced: Created by Devel-IT - http://www.devel.it
+    siptraced is a perl daemon who reads a ngrep log file and push each line  on
+    a TCP port, so every one connected on this  port  will  listen  all  traffic
+    captured  by  ngrep  (dangerous  and  perhaps   a   waste   of   bandwidth).
+    There is no user/IP authentication yet.
+
+ 3) WIST: Created by Devel-IT - http://www.devel.it
+    WIST is a PHP Web Interface who permits you to connect on a remote host/port
+    and listen/filter a SIP dialog of an specific SIP From number,  avoiding  to
+    listen all captured traffic pushed by siptraced. The STOP control is done by
+    browser's stop button.   The  output  is  colorized  and  "Call-ID"  tag  is
+    highlighted to make it simple to be located.
+    You can run WIST on any host running a Web Server  with  PHP  >=  4.0.x  and
+    authorized to connect on siptraced remote TCP port.
+
+
+There  is  no  guarantee  about  our  softwares,  use  it  by  your  own   risk.
+Read the  source  code  first,  if  you  didn't  understand  it  don't  use  it!
+
+
+INSTALL
+
+Please read INSTALL file.
+
+
+LICENSE
+
+This  software  is  licensed   under   GNU   General   Public   License   (GPL).
+Please   read    LICENSE    file    for    more    informations    about    GPL.
+
+
+TODO
+
+Please read TODO file for todo list.
+
+
+LANGUAGES
+
+WIST use gettext as internationalization schema and comes with pt_BR, en_US  and
+es_ES translations.
+
+
+--------------------------------------------------------------------------------
+Devel-IT Team
+http://www.devel.it
+desenvolvimento@@devel.it
+@

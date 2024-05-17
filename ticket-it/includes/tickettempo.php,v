@@ -1,0 +1,395 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para processos de tickets
+
+# Controle tempo por ticket
+function tickettempo($modulo, $sub, $acao, $registro, $matriz) {
+	
+	global $sessTempo;
+
+	$data=dataSistema();
+	# Iniciar Sessão
+
+	$matriz[ticket]=$registro;
+	
+	if($acao == 'listar') {
+		# Listar Atendimentos do ticket
+		listarTempoTicket($matriz[ticket]);
+		echo "<br>";
+		mostraTicket($matriz[ticket], 0);
+		
+	}
+	elseif($acao=='excluir' || $acao=='alterar') {
+		$matriz[ticket]=idTicketTicketTempo($registro);
+		mostraTicketTempo($matriz, $registro, $matriz[ticket],$acao);
+		echo "<br>";
+		# Buscar ID do Tickete
+		mostraTicket($matriz[ticket],0);
+	}
+	elseif(!$acao || $acao=='adicionar' || $acao=='atualizar') {
+		
+		if((!$matriz[bntConfirmar] && !$matriz[bntFinalizar] && $acao!='atualizar') || $matriz[bntIniciar] ) {
+			$sessTempo[dtInicial][$registro]=$data[timestamp];
+			$matriz[tempoatendimento]="Atendimento iniciado";
+		}
+		
+		# Iniciar refresh
+		if($acao=='atualizar' && $sessTempo[dtInicial][$registro] != $data[timestamp]) {
+			$tmpTempo=converteData($data[timestamp]-$sessTempo[dtInicial][$registro],'timestamp','formhora');
+			//echo "<span class=txtaviso>Tempo de atendimento: $tmpTempo</span><br>";
+			$matriz[tempoatendimento]=$tmpTempo;
+		}
+		echo "<meta http-equiv=refresh content=10;URL=?modulo=$modulo&sub=tempoticket&acao=atualizar&registro=$registro&$matriz[bntIninciar]=''>";
+		
+		if($matriz[bntFinalizar]) {
+			$sessTempo[dtFinal][$registro]=$data[timestamp];
+			$matriz[duracao]=$sessTempo[dtFinal][$registro]-$sessTempo[dtInicial][$registro];
+			$grava=dbFinalizacoesTicket($matriz, 'incluir');
+			$sessTempo[dtInicial][$registro]=$data[timestamp];
+			
+			# Fechar janela
+		}
+		
+		if($matriz[bntConfirmar] && $matriz[tempo]) {
+			$matriz[duracao]=$matriz[tempo] * 60;
+			$grava=dbFinalizacoesTicket($matriz, 'incluir');
+		}
+		elseif($matriz[bntConfirmar]) {
+			$tmpTempo=converteData($data[timestamp]-$sessTempo[dtInicial][$registro],'timestamp','formhora');
+			$matriz[tempoatendimento]="Informe tempo a adicionar! Tempo de atendimento: $tmpTempo";
+		}
+		
+		if($grava) {
+			$matriz[tempoatendimento]="Tempo adicionado: " . converteData($matriz[duracao],'timestamp','formhora');
+		}
+		
+		# Mostrar Form de inclusão de tempo
+		formTicketTempo($modulo, $sub, $acao, $registro, $matriz);
+		
+		echo "<br>";
+		mostraTicket($registro,0);
+	}
+
+}
+
+# Formulário de Inclusão de Tempo
+function formTicketTempo($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $corFundo, $corBorda, $sessLogin;
+	
+	$data=dataSistema();
+	
+	# Motrar tabela de busca
+	$opcListar="
+		<table border=0 cellpadding=0 cellspacing=0 width=100%>
+		<tr><td width=50% align=left class=tabtitulo>Ticket em andamento<td><td width=50% align=right>
+	";
+	$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&acao=listar&registro=$registro class=titulo>Listar</a>",'listar');
+	$opcListar.="</td></tr></table>";
+	
+	novaTabela2("$opcListar","left", '100%', 0, 2, 1, $corFundo, $corBorda, 4);
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=adicionar>
+			<input type=hidden name=registro value=$registro>";
+			itemLinhaNOURL($texto, 'right', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+
+		novaLinhaTabela($corFundo, '100%');
+			itemLinhaTMNOURL('<b class=bold10>Tempo de Atendimento:</b>', 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+			# Buscar Total de Tempo registrado
+			$texto=$matriz[tempoatendimento];
+			itemLinhaForm("<span class=txtaviso>$texto</span>", 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		novaLinhaTabela($corFundo, '100%');
+			itemLinhaTMNOURL('<b class=bold10>Tempo Registrado:</b>', 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+			# Buscar Total de Tempo registrado
+			$texto=converteData(tempoAtendimento($registro),'timestamp','formhora');
+			itemLinhaForm("<span class=txtaviso>$texto</span>", 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		novaLinhaTabela($corFundo, '100%');
+			itemLinhaTMNOURL('<b class=bold10>Minutos:</b>', 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+			$texto="<input type=text name=matriz[tempo] size=5>&nbsp;";
+			$texto.="&nbsp;&nbsp;<input type=submit name=matriz[bntConfirmar] value='Adicionar' class=submit2>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		novaLinhaTabela($corFundo, '100%');
+				( $matriz[expediente] != 'N' ? $check = "CHECKED" : $check1 = "CHECKED" );
+				itemLinhaTMNOURL("<b class=bold10>Periodo do serviço</b>",  'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+				$texto = "<input id=durante type=radio name=matriz[expediente] value=S $check >" .
+						 	"<label for=durante>Durante Horario de Servico</label>&nbsp;" ;
+				$texto .= "&nbsp;<input id=fora type=radio name=matriz[expediente] value=N $check1 >" .
+						 	"<label for=fora>Fora de Horario de Servico</label>" ;
+				itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	
+		novaLinhaTabela($corFundo, '100%');
+			$texto="<input type=submit name=matriz[bntIniciar] value='Iniciar Atendimento' class=submit>";
+			$texto.="&nbsp;&nbsp;<input type=submit name=matriz[bntFinalizar] value='Finalizar Atendimento' class=submit2>";
+			itemLinhaForm($texto, 'center', 'top', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();
+}
+
+
+# Somar tempo de atendimento registrado
+function tempoAtendimento($idTicket) {
+	global $conn, $tb;
+	
+	if(is_numeric($idTicket)) {
+		$sql="
+			SELECT
+				sum(segundos) segundos
+			FROM
+				$tb[TicketFinalizacoes]
+			WHERE
+				idTicket=$idTicket
+		";
+		
+		$consulta=consultaSQL($sql, $conn);
+		
+		if($consulta && contaConsulta($consulta)>0) {
+			$retorno=resultadoSQL($consulta,0,'segundos');
+			
+			if(!is_numeric($retorno)) $retorno=0;
+		}
+		else {
+			$retorno=0;
+		}
+		
+		return($retorno);
+	}
+}
+
+
+# Listar tempos de atendimeto
+function listarTempoTicket($idTicket) {
+	global $conn, $tb, $corBorda, $corFundo, $sessLogin;
+	
+	$consulta=buscaRegistro($idTicket, 'idTicket', 'igual', '', "$tb[TicketFinalizacoes]");
+	
+	# Motrar tabela de busca
+	$opcListar="
+		<table border=0 cellpadding=0 cellspacing=0 width=100%>
+		<tr><td width=50% align=left class=tabtitulo>Atendimentos<td><td width=50% align=right>
+	";
+	$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&registro=$idTicket class=titulo>Atender</a>",'relogio');
+	$opcListar.="</td></tr></table>";
+	
+	novaTabela2("$opcListar","left", '100%', 0, 2, 1, $corFundo, $corBorda, 5);
+	novaLinhaTabela($corFundo, '100%');
+		itemLinhaTMNOURL('<b>Data</b>', 'center', 'middle', '20%', $corFundo, 0, 'tabfundo1');
+		itemLinhaTMNOURL('<b>Usuário</b>', 'center', 'middle', '20%', $corFundo, 0, 'tabfundo1');
+		itemLinhaTMNOURL('<b>Tempo</b>', 'center', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+		itemLinhaTMNOURL('<b>Expediente</b>', 'center', 'middle', '10', $corFundo, 0, 'tabfundo1');
+		itemLinhaTMNOURL('<b>Opções</b>', 'center', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+	fechaLinhaTabela();
+
+	if($consulta && contaConsulta($consulta)>0) {
+		# Listar
+		for($a=0;$a<contaConsulta($consulta);$a++) {
+			
+			$id=resultadoSQL($consulta, $a, 'id');
+			$idTicket=resultadoSQL($consulta, $a, 'idTicket');
+			$idUsuario=resultadoSQL($consulta, $a, 'idUsuario');
+			$data=resultadoSQL($consulta, $a, 'data');
+			$segundos=resultadoSQL($consulta, $a, 'segundos');
+			$expediente=resultadoSQL($consulta, $a, 'expediente');
+			
+			$opc=htmlMontaOpcao("<a class=normal8 href=?modulo=ticket&sub=tempoticket&acao=alterar&registro=$id>Alterar</a>",'alterar');
+			$opc.=htmlMontaOpcao("<a class=normal8 href=?modulo=ticket&sub=tempoticket&acao=excluir&registro=$id>Excluir</a>",'excluir');
+			
+			novaLinhaTabela($corFundo, '100%');
+				itemLinhaTMNOURL(converteData($data,'banco','form'), 'center', 'middle', '20%', $corFundo, 0, 'normal8');
+				itemLinhaTMNOURL(buscaLoginUsuario($idUsuario,'id','igual','id'), 'center', 'middle', '20%', $corFundo, 0, 'normal10');
+				itemLinhaTMNOURL(converteData($segundos,'timestamp','formhora'), 'center', 'middle', '30%', $corFundo, 0, 'normal10');
+				itemLinhaTMNOURL($expediente, 'center', 'middle', '10', $corFundo, 0, 'normal10');
+				itemLinhaTMNOURL($opc, 'left', 'middle', '30%', $corFundo, 0, 'normal10');
+			fechaLinhaTabela();
+
+		}
+	}
+	else {
+		# sem registros
+		novaLinhaTabela($corFundo, '100%');
+				itemLinhaTMNOURL("Não foram encontrados registros de atendimento", 'center', 'middle', '100%', $corFundo, 5, 'txtaviso');
+			fechaLinhaTabela();
+	}
+	
+	
+	fechaTabela();
+}
+
+
+# Mostrar Ticket Tempo - Form de Exclusão e Alteração
+function mostraTicketTempo($matriz, $id, $idTicket, $acao) {
+	
+	global $corFundo, $corBorda,$sessLogin, $tb;
+	
+	# Mostar informações sobre Servidor
+	$consulta=buscaRegistro($id, 'id','igual','',"$tb[TicketFinalizacoes]");
+
+	if($consulta && contaConsulta($consulta)>0) {
+		
+		$id=resultadoSQL($consulta, 0, 'id');
+		$idTicket=resultadoSQL($consulta, 0, 'idTicket');
+		$data=resultadoSQL($consulta, 0, 'data');
+		$segundos=resultadoSQL($consulta, 0, 'segundos');
+		$expediente=resultadoSQL($consulta, 0, 'expediente');
+	
+		#nova tabela para mostrar informações
+		if($acao=='excluir') {
+			if($matriz[bntConfirmar] && $id) {
+				# Excluir
+				$matriz[id]=$id;
+				dbFinalizacoesTicket($matriz,'excluir');
+				# Listar
+				listarTempoTicket($idTicket);
+			}
+			else {
+				
+				# Motrar tabela de busca
+				$opcListar="
+					<table border=0 cellpadding=0 cellspacing=0 width=100%>
+					<tr><td width=50% align=left class=tabtitulo>Excluir Atendimento<td><td width=50% align=right>
+				";
+				$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&acao=alterar&registro=$id class=titulo>Alterar</a>",'alterar');
+				$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&acao=listar&registro=$idTicket class=titulo>Listar</a>",'listar');
+				$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&registro=$idTicket class=titulo>Atender</a>",'relogio');
+				$opcListar.="</td></tr></table>";
+				
+				novaTabela2("$opcListar","left", '100%', 0, 2, 1, $corFundo, $corBorda, 4);
+					novaLinhaTabela($corFundo, '100%');
+					$texto="			
+						<form method=post name=matriz action=index.php>
+						<input type=hidden name=modulo value=ticket>
+						<input type=hidden name=sub value=tempoticket>
+						<input type=hidden name=acao value=excluir>
+						<input type=hidden name=registro value=$id>";
+						itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTMNOURL("<b>Data:</b>", 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+						itemLinhaTMNOURL(converteData($data,'banco','form'), 'left', 'middle', '70%', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTMNOURL("<b>Tempo:</b>", 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+						itemLinhaTMNOURL(converteData($segundos,'timestamp','formhora'), 'left', 'middle', '70%', $corFundo, 0, 'tabfundo1');
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTMNOURL("<b>Expediente:</b>", 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+						itemLinhaTMNOURL($expediente, 'left', 'middle', '70%', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						$texto="<input type=submit name=matriz[bntConfirmar] value='Excluir'>";
+						itemLinhaForm($texto, 'center', 'top', $corFundo, 2, 'tabfundo1');
+					fechaLinhaTabela();
+				fechaTabela();
+			}
+		}
+		elseif($acao=='alterar') {
+			if($matriz[bntConfirmar] && $id && is_numeric($matriz[duracao]) && $matriz[data]) {
+				# Alterar
+				$matriz[id]=$id;
+				$matriz[duracao]=($matriz[duracao]*60);
+				$matriz[data]=converteData(formatarData($matriz[data]),'form','bancodata');
+				dbFinalizacoesTicket($matriz,'alterar');
+				# Listar
+				listarTempoTicket($idTicket);
+			}
+			else {
+				# Motrar tabela de busca
+				$opcListar="
+					<table border=0 cellpadding=0 cellspacing=0 width=100%>
+					<tr><td width=50% align=left class=tabtitulo>Excluir Atendimento<td><td width=50% align=right>
+				";
+				$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&acao=excluir&registro=$id class=titulo>Excluir</a>",'excluir');
+				$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&acao=listar&registro=$idTicket class=titulo>Listar</a>",'listar');
+				$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&registro=$idTicket class=titulo>Atender</a>",'relogio');
+				$opcListar.="</td></tr></table>";
+				
+				novaTabela2("$opcListar","left", '100%', 0, 2, 1, $corFundo, $corBorda, 4);
+					novaLinhaTabela($corFundo, '100%');
+					$texto="			
+						<form method=post name=matriz action=index.php>
+						<input type=hidden name=modulo value=ticket>
+						<input type=hidden name=sub value=tempoticket>
+						<input type=hidden name=acao value=alterar>
+						<input type=hidden name=registro value=$id>";
+						itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTMNOURL("<b>Data:</b>", 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+						$data=converteData($data,'banco','formdata');
+						$texto="<input type=text size=10 name=matriz[data] value='$data' onBlur=verificaData(this.value,4)>";
+						itemLinhaTMNOURL($texto, 'left', 'middle', '70%', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTMNOURL("<b>Minutos:</b>", 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+						$minutos=intval($segundos/60);
+						$texto="<input type=text name=matriz[duracao] size=5 value='$minutos'>";
+						itemLinhaTMNOURL($texto, 'left', 'middle', '70%', $corFundo, 0, 'tabfundo1');
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTMNOURL("<b>Expediente:</b>", 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+						itemLinhaTMNOURL(formSelectSimNao($expediente, 'expediente','form'), 'left', 'middle', '70%', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						$texto="<input type=submit name=matriz[bntConfirmar] value='Alterar'>";
+						itemLinhaForm($texto, 'center', 'top', $corFundo, 2, 'tabfundo1');
+					fechaLinhaTabela();
+				fechaTabela();
+			}
+		}
+	}
+}
+
+
+# Buscar ID TicketTempo
+function idTicketTicketTempo($id) {
+	
+	global $tb;
+	
+	$consulta=buscaRegistro($id, 'id', 'igual','',"$tb[TicketFinalizacoes]");
+	
+	if($consulta && contaConsulta($consulta)) {
+		$idTicket=resultadoSQL($consulta, 0, 'idTicket');
+		
+		return($idTicket);
+	}
+	else {
+		return(0);
+	}
+	
+}
+
+?>
+@

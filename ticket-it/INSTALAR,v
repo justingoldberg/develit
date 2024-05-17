@@ -1,0 +1,69 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.19.52.40;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@Instalação do Ticket-IT
+=======================
+
+REQUERIMENTOS:
+
+-  PHP  4.0.x  ou  superior  (O  suporte  a  register_globals  deve  estar   On)
+-  MySQL 3.23 ou superior
+
+INSTALANDO:
+
+o Descompacte o arquivo ticket-it-XXX.tar.bz2 (aonde XXX  deve  ser  substituído
+  pela  versão  do  pacote)  dentro  do  diretório  raiz  do  seu  servidor  WEB
+  (DocummentRoot);
+o Crie uma base de dados com o nome desejado no  MySQL  e  importe  os  arquivos
+  ticket_global.sql       e       em        seguida        ticket_exclusivo.sql;
+o Edite o arquivo config/custom.php com um editor de sua  preferência  e  altere
+  os dados correspondentes à sua base de dados (Host, usuário, senha e  base  de
+  dados); 
+  Não  se  esqueça  de  aplicar  permissões  de  acesso  ao  usuário   e   senha
+  configurados    e    rodar     um     "flush     privileges"     no     MySQL;
+o Para acessar o Ticket-IT, abra um browser e digite
+  http://nome_ou_ip_do_host/ticket-it-XXX
+  Para se autenticar, utilize: 
+  usuário: admin
+  senha: admin
+
+Exemplo de instalação via shell do Linux supondo que a pasta  raiz  do  servidor
+WEB seja "/var/www":
+
+usuario@@host:/var/www$ tar xjvf ticket-it-XXX.tar.bz2
+usuario@@host:/var/www$ cd ticket-it-XXX
+usuario@@host:/var/www/ticket-it-XXX$ mysql -u root
+# utilize "mysql -u root -p" caso o usuário "root" necessite de senha 
+mysql> CREATE DATABASE ticket;
+mysql> USE ticket;
+mysql> source sql/ticket_global.sql;
+mysql> source sql/ticket_exclusivo.sql;
+mysql> GRANT ALL ON ticket.* TO usuario@@localhost IDENTIFIED BY 'senha';
+mysql> FLUSH PRIVILEGES;
+mysql> exit;
+usuario@@host:/var/www/ticket-it-XXX$ vi config/custom.php
+# Altere os dados correspondentes à sua base de dados salve o  arquivo	e  saia.
+
+OBS:  Para  que  o  envio  de  e-mails  funcione,  é  necessário  ter  instalado
+algum MTA (Mail Transfer  Agent)  no  host  aonde  o  Ticket-IT  foi  instalado.
+Ex: qmail ou postfix
+@

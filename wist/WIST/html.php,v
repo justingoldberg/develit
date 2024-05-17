@@ -1,0 +1,409 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.11.37;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Function:
+#    Functions for page formatting and HTML outputs
+
+# Função para criação de tabelas
+function novaTabela( $titulo, $alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas ){
+	
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\"";
+	}
+
+	# Criar nova tabela
+	echo "<!-- Cria nova tabela [$titulo] -->\n
+	<table width=\"$tamanho\" border=\"$borda\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$corBorda\">\n
+	<tr><td>\n
+	<table width=\"$tamanho\" border=\"$borda\" cellpadding=\"$spcCel\" cellspacing=\"$spcCarac\">\n
+	<th $colspan width=\"$tamanho\" class=\"tabtitulo\" align=\"$alinhamento\" background=\"$corFundo\">$titulo</th>\n";
+
+} # Fecha função tabelanova
+
+
+# Função para criação de tabelas
+function novaTabelaSH( $alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas ){
+
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Criar nova tabela
+	echo "<table width=\"$tamanho\" border=\"$borda\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$corBorda\">\n
+	<tr><td>\n
+	<table width=\"$tamanho\" border=\"$borda\" cellpadding=\"$spcCel\" cellspacing=\"$spcCarac\">\n";
+
+} # Fecha função tabelanova
+
+
+# Função para criação de tabelas
+function novaTabela2( $titulo, $alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas ){
+	
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+	
+	# Criar nova tabela
+	echo "<!-- Cria nova tabela [$titulo] -->\n
+	<table width=\"$tamanho\" border=\"$borda\" cellpadding=\"0\" align=\"$alinhamento\" cellspacing=\"$spcCarac\" bgcolor=\"$corBorda\">\n
+	<tr><td>\n
+	<table width=\"$tamanho\" border=\"0\" cellpadding=\"$spcCel\" cellspacing=\"0\">\n
+	<th $colspan width=\"$tamanho\" class=\"tabtitulo\" align=\"$alinhamento\" background=\"$corFundo\">$titulo</th>\n";
+	
+} # Fecha função tabelanova
+
+
+# Função para criação de tabelas
+function novaTabela2SH( $alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+	
+	# Criar nova tabela
+	echo "<!-- Cria nova tabela [$titulo] -->\n
+	<table width=\"$tamanho\" border=\"$borda\" cellpadding=\"0\" cellspacing=\"$spcCarac\" bgcolor=\"$corBorda\">\n
+	<tr><td>\n
+	<table width=\"$tamanho\" border=\"0\" cellpadding=\"$spcCel\" cellspacing=\"0\">\n";
+} # Fecha função tabelanova
+
+
+# Função para criação de tabelas - Sem Header
+function htmlAbreTabelaSH( $alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas ){
+	echo "
+	<table width=\"$tamanho\" border=\"$borda\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$corBorda\">\n
+	<tr><td>\n
+	<table width=\"$tamanho\" border=\"$borda\" cellpadding=\"$spcCel\" cellspacing=\"$spcCarac\">\n
+	";
+} # Fecha função tabelanova
+
+
+# Função para crição de nova linha
+function htmlAbreLinha( $corFundo ){
+	echo "<tr bgcolor=\"$corFundo\">\n";
+} #fecha função de abertura de nova linha
+
+
+# Função para fechar linha aberta
+function htmlFechaLinha(){
+	echo "</tr>\n";
+} # fecha função de fechamento de linha
+
+
+# Função para abrir nova coluna
+function htmlAbreColuna($tamanho, $alinhamento, $corFundo, $colunas, $classeCSS){
+	# Adicionar item
+	echo "<td width=$tamanho colspan=$colunas align=$alinhamento class=$classeCSS>\n";
+} # fecha função abrir nova coluna
+
+
+# Função para abrir nova coluna
+function htmlAbreColunaForm( $tamanho, $alinhamento, $alinhamentov, $corFundo, $colunas, $classeCSS ){
+	echo "<td width=\"$tamanho\" colspan=\"$colunas\" align=\"$alinhamento\" valign=\"$alinhamentov\" class=\"$classeCSS\">\n";
+} # fecha função abrir nova coluna
+
+
+# Função para fechar nova coluna
+function htmlFechaColuna(){
+	echo "</td>\n";
+} # fecha função fecha coluna aberta
+
+
+# Função para adicionar items a tabela
+function itemTabela( $item, $url, $alinhamento, $corFundo, $colunas, $classeCSS ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item
+	echo "
+	<tr bgcolor=\"$corFundo\">\n
+	<td $colspan align=\"$alinhamento\" class=\"$classeCSS\"><a href=\"$url\">$item</a></td>\n
+	</tr>\n";
+} # fecha função para adicionar items a tabela
+
+
+
+# Função para adicionar items a tabela
+function itemTabelaNOURL( $item, $alinhamento, $corFundo, $colunas, $classeCSS ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item
+	echo "
+	<tr bgcolor=\"$corFundo\">\n
+	<td $colspan align=\"$alinhamento\" class=\"$classeCSS\">$item</td>\n
+	</tr>\n";
+} # fecha função para adicionar items a tabela
+
+
+
+# Função para adicionar items a tabela
+function itemLinha( $item, $url, $alinhamento, $corFundo, $colunas, $classeCSS ){
+	if( $colunas > 0 ) {
+		$colspan="colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item
+	echo "<td $colspan align=\"$alinhamento\" class=\"$classeCSS\"><a href=\"$url\">$item</a></td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items a tabela
+function itemLinhaForm( $item, $alinhamento, $alinhamentov, $corFundo, $colunas, $classeCSS ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item 
+	echo "<td $colspan align=\"$alinhamento\" valign=\"$alinhamentov\" class=\"$classeCSS\">$item</td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items a tabela
+function itemLinhaTM( $item, $url, $alinhamento, $alinhamentov, $tamanho, $corFundo, $colunas, $classeCSS ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item 
+	echo "<td $colspan align=\"$alinhamento\" valign=\"$alinhamentov\" class=\"$classeCSS\" width=\"$tamanho\"><a href=\"$url\">$item</a></td>\n";
+} # fecha função para adicionar items a tabela
+
+
+
+# Função para adicionar items a tabela
+function itemLinhaTMNOURL( $item, $alinhamento, $alinhamentov, $tamanho, $corFundo, $colunas, $classeCSS ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item 
+	echo "<td $colspan align=\"$alinhamento\" valign=\"$alinhamentov\" class=\"$classeCSS\" width=\"$tamanho\">$item</td>\n";
+} # fecha função para adicionar items a tabela
+
+
+
+# Função para adicionar items a tabela
+function itemLinhaNOURL( $item, $alinhamento, $corFundo, $colunas, $classeCSS ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item
+	echo "<td $colspan align=\"$alinhamento\" class=\"$classeCSS\">$item</td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items a tabela
+function itemLinhaCorNOURL( $item, $alinhamento, $corFundo, $colunas, $classeCSS, $cor ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item
+	echo "<td $colspan align=\"$alinhamento\" class=\"$classeCSS\" bgcolor=\"$cor\">$item</td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items a tabela
+function itemLinhaCor( $item, $url, $alinhamento, $corFundo, $colunas, $classeCSS, $cor ){
+	if( $colunas > 0 ) {
+		$colspan = "colspan=\"$colunas\""; 
+	}
+
+	# Adicionar item
+	echo "<td $colspan align=\"$alinhamento\" class=\"$classeCSS\" bgcolor=\"$cor\"><a href=\"$url\">$item</a></td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para criação de linha na tabela (usado para items de coluna)
+function novaLinhaTabela( $fundo, $tamanho ){
+	echo "<tr bgcolor=\"$fundo\">\n";
+} # fecha função de criação de linha na tabela
+
+
+# Função para adicionar itens de coluna
+function titLinhaTabela( $item, $alinhamento, $tamanho, $classeCSS ){
+	# Adicionar item
+	echo "<td class=\"$classeCSS\" width=\"$tamanho\" align=\"$alinhamento\">$item</td>\n";
+} # fecha função para adicionar itens de coluna
+
+
+# Função para adicionar itens de coluna
+function itemLinhaTabela( $item, $alinhamento, $tamanho, $classeCSS ){
+	# Adicionar item
+	echo "<td width=\"$tamanho\" align=\"$alinhamento\" class=\"$classeCSS\" valign=\"middle\">$item</td>\n";
+} # fecha função para adicionar itens de coluna
+
+
+# Função para fechar linha na tabela (usado para itens de coluna)
+function fechaLinhaTabela(){
+	echo "</tr>\n";
+} #fecha função para fechar linha da tabela
+
+
+# função para finalizar tabela
+function fechaTabela(){
+	echo "</table>\n</td></tr></table>\n";
+} # Fecha função fechatabela
+
+
+# Funções para resultados HTML em tela
+function aviso2( $titulo, $msg, $url, $tamanho, $borda, $fundo, $alinhamento ){
+	global $corFundo, $corBorda;
+
+	novaTabela( "$titulo", "left", $tamanho, 0, $borda, $fundo, $corFundo, $corBorda, 0 );
+	itemTabelaNOURL( '&nbsp;', $alinhamento, $corFundo, 0, 'txtaviso' );
+	itemTabelaNOURL( $msg, $alinhamento, $corFundo, 0, 'txtaviso');
+	itemTabela( "Voltar", $url, 'right', $corFundo, 0, 'normal' );
+	fechaTabela();
+	
+} # fecha função aviso
+
+
+# Funções para resultados HTML em tela
+function aviso( $titulo, $msg, $url, $tamanho ) {
+	global $corFundo, $corBorda;
+
+	novaTabela("$titulo", "left", $tamanho, 0, 2, 1, $corFundo, $corBorda, 0);
+	itemTabelaNOURL($msg,'left',$corFundo, 0, 'txtaviso');
+	itemTabela("Voltar",$url,'right',$corFundo, 0, 'normal');
+	fechaTabela();
+	
+} # fecha função aviso
+
+
+
+# Funções para resultados HTML em tela
+function avisoNOURL( $titulo, $msg, $tamanho ){
+	global $corFundo, $corBorda;
+
+	novaTabela( "$titulo", "left", $tamanho, 0, 2, 1, $corFundo, $corBorda, 0 );
+	itemTabelaNOURL( $msg,'left',$corFundo, 0, 'txtaviso' );	
+	fechaTabela();
+	
+} # fecha função aviso
+
+
+
+# Funções para resultados HTML em tela
+function avisoFechar( $titulo, $msg, $url, $tamanho ){
+	global $corFundo, $corBorda;
+
+	novaTabela( "$titulo", "left", $tamanho, 0, 2, 1, $corFundo, $corBorda, 0) ;
+	itemTabelaNOURL ($msg, 'left', $corFundo, 0, 'txtaviso' );
+	itemTabela( "Fechar", $url, 'right', $corFundo, 0, 'normal');
+	fechaTabela();
+	
+} # fecha função aviso
+
+# Função de cabeçalho
+function html_header ( $titulo, $versao, $opcao = "" ){
+	global $modulo, $sub, $acao;
+	
+	# Mostrar cabeçalho HTML
+	echo "<html>
+<head>
+<title>$titulo - $versao</title>
+<link rel=\"stylesheet\" type=\"text/css\" href=\"estilos.css\" />
+<script type=\"text/javascript\" language=\"javascript\" scr=\"funcoes.js\"></script>
+</head>
+<body $opcao>";
+} # fim da função de cabeçalho
+
+# Função de rodapé
+function html_footer( $rodape ){
+	echo "<p class=\"rodape\" align=\"left\">$rodape</p>
+</body>
+</html>";
+} # fim da função de rodapé
+
+# função para montagem de opções para URLs e Links
+function htmlMontaOpcao( $texto, $tipo ){
+	global $htmlDirImagem, $html;
+
+	return("<img src=\"".$html[imagem][$tipo]."\" border=\"0\">$texto&nbsp;");
+	
+}
+
+/**
+ * Abre um quadro em uma tag div Div
+ * @@return void
+ * @@param str $titulo
+ * @@param str $alinhamento
+ * @@param str $tamanho
+ * @@param str $classeTitulo
+ * @@param str $classeCaixa
+ */
+function abreCaixaDiv( $titulo, $alinhamento = "left", $tamanho = "100%", $classeTitulo = "classeTitulo", $classeCaixa="classeCaixa" ){
+
+	# Criar nova caixa div
+	echo "
+	<div style=\"width:" . $tamanho . ";\" class=\"$classeCaixa\">\n
+	 <div class=\"$classeTitulo\">$titulo</div>\n
+	 <div align=\"$alinhamento\" style=\"padding:5px\">
+	";
+
+}
+
+/**
+ * Fecha quadro em uma tag div Div
+ * @@return void
+ */
+function fechaCaixaDiv(){
+	
+	# Criar nova caixa div
+	echo "
+	 </div>\n
+	</div>\n";
+
+}
+
+/**
+ * Show a menu language
+ * 
+ * @@return void
+ * @@param str $lang
+ */
+function menuLanguage( $lang = "" ) {
+	
+	$languages = array("pt_BR" => "Português do Brasil", "en_US" => "American English", "es_ES" => "Espanol");
+	echo "<div align=\"right\">";
+	$language = ( !array_key_exists( $lang, $languages ) ) ? "en_US" : $lang;
+	foreach ( $languages as $value => $element ) {
+		if( $value != $language ) {
+			echo "
+			<a href=\"{$_SERVER['PHP_SELF']}?lang=$value\">
+			<img src=\"images/" . strtolower($value) . ".gif\" border=\"0\" title=\"$element\" />
+			</a>
+			";
+		}
+	}
+	echo "</div>";
+	
+}
+
+?>
+@

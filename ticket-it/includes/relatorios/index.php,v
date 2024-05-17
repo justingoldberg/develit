@@ -1,0 +1,33 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.32.22;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Página principal (index) da aplicação
+
+include("relatorios.php");
+include("relatorio_totalhoras.php");
+include("relatorio_clientehoras.php");
+
+?>
+@

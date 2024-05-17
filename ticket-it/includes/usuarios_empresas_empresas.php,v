@@ -1,0 +1,194 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#		Funções para usuários de usuarios empresas (tabela associativa)
+
+function empresasUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz) {
+	
+	global $conn, $tb, $corFundo, $corBorda;
+	
+	# Ver usuario
+	verUsuarioEmpresa($modulo, $sub, $acao, $registro, $matriz);
+	echo "<br>";
+	
+	# Lista de Empresas do Usuario
+	$sql="
+		SELECT
+			$tb[UsuariosEmpresas].id,
+			$tb[UsuariosEmpresas].idEmpresa,
+			$tb[UsuariosEmpresas].admin,
+			$tb[Empresas].nome
+		FROM
+			$tb[UsuariosEmpresas],
+			$tb[EmpresasUsuarios],
+			$tb[Empresas]
+		WHERE
+			$tb[Empresas].id = $tb[UsuariosEmpresas].idEmpresa
+			AND $tb[EmpresasUsuarios].id = $tb[UsuariosEmpresas].idEmpresaUsuario
+			AND $tb[UsuariosEmpresas].idEmpresaUsuario = '$registro'
+		ORDER BY
+			$tb[Empresas].nome
+	";
+	
+	$consulta=consultaSQL($sql, $conn);
+	
+	# Cabeçalho		
+	# Motrar tabela de busca
+	novaTabela("[Empresas do Usuário]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 3);
+	$tmpOpcao=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=".$acao."adicionar&registro=$registro>Adicionar</a>",'incluir');
+	itemTabelaNOURL($tmpOpcao, 'right', $corFundo, 3, 'tabfundo1');
+
+	# Caso não hajam servicos para o servidor
+	if(!$consulta || contaConsulta($consulta)==0) {
+		# Não há registros
+		itemTabelaNOURL('Não há empresas cadastrados para este usuário', 'left', $corFundo, 3, 'txtaviso');
+	}
+	else {
+	
+		# Cabeçalho
+		novaLinhaTabela($corFundo, '100%');
+			itemLinhaTabela('Empresa', 'center', '80%', 'tabfundo0');
+			itemLinhaTabela('Administrador', 'center', '80%', 'tabfundo0');
+			itemLinhaTabela('Opções', 'center', '20%', 'tabfundo0');
+		fechaLinhaTabela();
+
+		$i=0;
+		
+		while($i < contaConsulta($consulta)) {
+			# Mostrar registro
+			$id=resultadoSQL($consulta, $i, 'id');
+			$nome=resultadoSQL($consulta, $i, 'nome');
+			
+			$opcoes="";
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=$acao".excluir."&registro=$id>Excluir</a>",'excluir');
+
+			novaLinhaTabela($corFundo, '100%');
+				itemLinhaTabela($nome, 'left', '70%', 'normal');
+				itemLinhaTabela($nome, 'left', '10%', 'normal');
+				itemLinhaTabela($opcoes, 'center', '20%', 'normal');
+			fechaLinhaTabela();
+			
+			# Incrementar contador
+			$i++;
+		} #fecha laco de montagem de tabela
+		
+		fechaTabela();
+	} #fecha servicos encontrados
+
+	
+	
+}
+
+
+
+
+# Visualização de maquinas
+function verUsuarioEmpresa($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $corFundo, $corBorda, $html;
+
+	# ERRO - Registro não foi informado
+	if(!$registro) {
+		# Mostrar Erro
+		$msg="Registro não foi encontrado!";
+		$url="?modulo=$modulo&sub=$sub&acao=$acao";
+		aviso("Aviso", $msg, $url, 760);
+	}
+	elseif($registro) {
+	
+		# Buscar Valores
+		$consulta=buscaUsuariosEmpresas($registro, 'id', 'igual', 'id');
+		
+		if(!$consulta || contaConsulta($consulta)==0) {
+			# Mostrar Erro
+			$msg="Registro não foi encontrado!";
+			$url="?modulo=$modulo&sub=$sub&acao=$acao";
+			aviso("Aviso", $msg, $url, 760);
+		}
+		else {
+			#atribuir valores
+ 			$id=resultadoSQL($consulta, 0, 'id');
+			$login=resultadoSQL($consulta, 0, 'login');
+			$email=resultadoSQL($consulta, 0, 'email');
+			$nome=resultadoSQL($consulta, 0, 'nome');
+			$fone=resultadoSQL($consulta, 0, 'fone');
+			$status=resultadoSQL($consulta, 0, 'status');
+			
+			# Motrar tabela de busca
+			novaTabela2("[Visualização de Usuario Empresa]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				#fim das opcoes adicionais
+				menuOpcAdicional($modulo, $sub, $acao, $registro);
+				getCampo('', 'Login:', '', $login, '', '', 30,'bold10');
+				getCampo('', 'Nome Completo:', '', $nome, '', '', 60,'bold10');
+				getCampo('', 'E-mail:', '', $email, '', '', 60,'bold10');
+				getCampo('', 'Telefone para Contato:', '', $fone, '', '', 40,'bold10');
+				getCampo('', 'Administrador:', '', formSelectSimNao($admin, 'admin', 'check'), '', '', 20,'bold10');
+				getCampo('', 'Status:', '', formSelectStatus($status, 'status','check'), '', '', 20,'bold10');
+			fechaTabela();
+		} #fecha alteracao
+	} #fecha form - !$bntExcluir
+}
+
+
+function empresasUsuariosEmpresasAdicionar($modulo, $sub, $acao, $registro, $matriz) {
+	
+	global $conn, $tb, $corFundo, $corBorda;
+
+	
+	if($registro && is_numeric($registro) ) {
+		
+		verUsuarioEmpresa($modulo, $sub, 'ver',$registro, $matriz);
+		
+		# Procurar Empresas
+		$dados=dadosusuariosEmpresas($registro);
+		
+		if(!$matriz[bntAdicionar]) {
+		
+			# Motrar tabela de busca
+			novaTabela2("[Adicionar Empresa]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				#fim das opcoes adicionais
+				menuOpcAdicional($modulo, $sub, $acao, $registro);
+				getCampo('', 'Login', '', $login, '', '', 30,'bold10');
+				getCampo('', 'Nome Completo', '', $nome, '', '', 60,'bold10');
+				getCampo('', 'E-mail', '', $email, '', '', 60,'bold10');
+				getCampo('', 'Telefone para Contato', '', $fone, '', '', 40,'bold10');
+				getCampo('', 'Administrador', '', formSelectSimNao($admin, 'admin', 'check'), '', '', 20,'bold10');
+				getBotao('matriz[bntAdicionar]', 'Adicionar');
+			fechaTabela();
+		}
+		else {
+			# Adicionar ao banco
+		}
+	}
+	else {
+		avisoNOURL("ERRO","Número de registro de usuário inválido ou não informado!", 400);
+		echo "<br>";
+	}
+	
+}
+
+
+?>
+@

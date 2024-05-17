@@ -1,0 +1,1 @@
+INSERT INTO `ParametrosConfig` (`id`, `descricao`, `parametro`, `valor`) VALUES (NULL,'Indica qual o modelo de nota fiscal que deverá ser utilizado na impressão','layoutNF','P');

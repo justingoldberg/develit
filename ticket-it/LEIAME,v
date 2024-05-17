@@ -1,0 +1,65 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.19.52.40;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@Ticket-IT
+--------------------------------------------------------------------------------
+
+
+INTRODUÇÃO
+
+Ticket-IT é uma ferramenta de criação, gerenciamento e acompanhamento de tickets
+destinada a empresas que necessitam  de  melhor  integração  e  distribuição  de
+informações sobre atendimento a clientes, suporte, desenvolvimento de  produtos,
+callcenter, etc, entre seus diversos departamentos.
+
+O Ticket-IT possui recursos de fácil utilização,  concentração,  visualização  e
+distribuição da informação, possibilitando sua total adaptação às mais distintas 
+instituições  e  aplicações,  sendo  uma  perfeita  ferramenta  para   HelpDesk,
+CallCenter e Suporte Online.
+
+
+INSTALAÇÃO
+
+Leia o arquivo INSTALAR.
+
+
+FAQ
+
+Leia o arquivo FAQ.
+
+
+TODO
+
+Para  saber  a   lista   a   fazeres,   por   favor   leia   o   arquivo   TODO.
+
+
+SOBRE O LICENCIAMENTO DESTE PROGRAMA
+
+Este  programa  foi  lecenciado  sobre  a  GNU  General  Public  License  (GPL).
+Para  maiores  informações,  por  favor  leia  o  arquivo  LICENÇA  ou  LICENSE.
+
+
+--------------------------------------------------------------------------------
+Equipe Devel-IT
+desenvolvimento@@devel.it
+http://www.devel.it
+@

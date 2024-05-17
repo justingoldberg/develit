@@ -1,0 +1,1 @@
+ALTER TABLE ContraPartidaPadrao CHANGE idPlanoDeContasSub idPlanoDeContasDetalhes INT(11);

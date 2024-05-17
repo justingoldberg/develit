@@ -1,0 +1,59 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.37.17;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@# MySQL dump 8.16
+#
+# Host: localhost    Database: isp_it
+#--------------------------------------------------------
+# Server version	4.0.12-log
+
+#
+# Table structure for table 'Pessoas'
+#
+
+CREATE TABLE Pessoas (
+  id int(11) NOT NULL auto_increment,
+  tipoPessoa char(1) default NULL,
+  nome varchar(200) default NULL,
+  razao varchar(200) default NULL,
+  site varchar(100) default NULL,
+  mail varchar(100) default NULL,
+  dtNascimento datetime default NULL,
+  dtCadastro datetime default NULL,
+  idPOP int(11) default NULL,
+  contato varchar(200) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+#
+# Table structure for table 'PessoasTipos'
+#
+
+CREATE TABLE PessoasTipos (
+  id int(11) NOT NULL auto_increment,
+  idPessoa int(11) NOT NULL default '0',
+  idTipo int(11) NOT NULL default '0',
+  dtCadastro datetime default NULL,
+  PRIMARY KEY  (id),
+  KEY K_For_FK_PessoasTipos_Pessoas (idPessoa)
+) TYPE=MyISAM;
+@

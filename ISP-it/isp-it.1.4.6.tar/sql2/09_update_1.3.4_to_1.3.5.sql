@@ -1,0 +1,1 @@
+ALTER TABLE `Unidades` ADD COLUMN `status` enum('A','I') NOT NULL default 'A';

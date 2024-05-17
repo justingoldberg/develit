@@ -1,0 +1,62 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.37.17;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@
+########################
+# Alteracoes para agenda
+# 22-07-2004
+# Hugo Ribeiro
+########################
+alter table perfil add diaInicio int(1) not null default 1;
+alter table perfil add diaFim int(1) not null default 5;
+alter table perfil add horarioInicio int(1) not null default 9;
+alter table perfil add horarioFim int(1) not null default 18;
+alter table perfil add grade char(1) not null default '1';
+
+
+####################
+# Hugo 26/07/2004
+# Para Agenda
+####################
+DROP TABLE IF EXISTS agenda;
+CREATE TABLE agenda (
+  id bigint(20) NOT NULL auto_increment,
+  idEvento bigint(20) NOT NULL default '0',
+  horario datetime NOT NULL default '0000-00-00 00:00:00',
+  PRIMARY KEY  (id),
+  KEY idEvento (idEvento)
+) TYPE=MyISAM;
+
+
+DROP TABLE IF EXISTS evento;
+CREATE TABLE evento (
+  id bigint(20) NOT NULL auto_increment,
+  idTicket bigint(20) NOT NULL default '0',
+  inicio datetime NOT NULL default '0000-00-00 00:00:00',
+  duracao float NOT NULL default '0',
+  periodicidade char(1) NOT NULL default 'S',
+  status char(1) NOT NULL default 'A',
+  horario int(3) NOT NULL default '0',
+  PRIMARY KEY  (id),
+  KEY idTicket (idTicket)
+) TYPE=MyISAM;
+@

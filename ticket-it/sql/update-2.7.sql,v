@@ -1,0 +1,94 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.37.17;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@--
+-- kerne - 16/08/2004
+-- Novo parametro de alinhamento de indicaçao de prioridade
+--
+
+alter table perfil add column alinhaPrior varchar(1);
+alter table perfil add column categoriaPadrao int(9);
+alter table perfil add column atualizarUltimos varchar(1);
+alter table perfil add column ordemComentarios varchar(1);
+
+
+--
+-- kerne - 21-01-2005
+-- merge do Invent-IT + Ticket-IT
+--
+CREATE TABLE Maquinas (
+  id int(11) NOT NULL auto_increment,
+  nome varchar(200) default NULL,
+  ip varchar(15) default NULL,
+  cliente varchar(200) default NULL,
+  idEmpresa int(11) default NULL,
+  data datetime default NULL,
+  obs text,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+CREATE TABLE Parametros (
+  id int(11) NOT NULL auto_increment,
+  descricao varchar(200) default NULL,
+  parametro varchar(20) default NULL,
+  valor varchar(200) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+INSERT INTO Parametros VALUES (1,'Passphrase de autenticação para visualização de senha','passphrase','YmF0YXRpbmhhIHF1YW5kbyBuYXNjZQ==');
+INSERT INTO Parametros VALUES (2,'Timeout de validação de PassPhrase (em segundos)','passphrase_timeout','MzA=');
+INSERT INTO Parametros VALUES (3,'Ticket-IT - URL','ticket_url','aHR0cDovL3RpY2tldC5kZXZlbC1pdC5jb20uYnI');
+
+CREATE TABLE Programas (
+  id int(11) NOT NULL auto_increment,
+  idMaquina int(11) default NULL,
+  nome varchar(200) default NULL,
+  versao varchar(60) default NULL,
+  data datetime default NULL,
+  idUsuario int(11) default NULL,
+  comentarios text,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+
+CREATE TABLE Users (
+  id int(11) NOT NULL auto_increment,
+  idMaquina int(11) default NULL,
+  usuario varchar(60) default NULL,
+  senha varchar(200) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+create table ticket_empresa (id int primary key auto_increment, idMaquina int, idTicket int, titulo varchar(200), data datetime);
+create table Empresas (id int not null auto_increment primary key, idPessoaTipo int, nome varchar(200));
+
+
+-- 
+-- kerne - 21-01-2005
+-- alterações para funcionamento de detalhes de tickets
+-- usando chave primario para cada parametro
+--
+alter table ticket_detalhes add column id int primary key auto_increment;
+alter table ticket_detalhes modify column id int FIRST;
+
+
+@

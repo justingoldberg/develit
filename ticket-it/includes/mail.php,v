@@ -1,0 +1,834 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?php
+################################################################################
+# Função:
+#    Configurações utilizadas pela aplicação - Integração com Servidor de Mail
+
+
+# Enviar e-mail de notificação de Ticket
+function mailTicket($idTicket, $idUsuario, $acao, $textoAcao="") {
+
+	global $conn, $tb, $configAppName, $configAppVersion, $configAppHost, $sessLogin;
+
+	$data=dataSistema();
+	
+	# Checar dados do ticket
+	$dadosTicket=buscaTicket($idTicket, 'id','igual','id');
+	
+	$assunto=resultadoSQL($dadosTicket, 0, 'assunto');
+	$numProtocolo=resultadoSQL($dadosTicket, 0, 'protocolo');
+	$dataCriacao=converteData(resultadoSQL($dadosTicket, 0, 'data'),'banco','form');
+	$texto=resultadoSQL($dadosTicket, 0, 'texto');
+	$idUsuarioTicket=resultadoSQL($dadosTicket, 0, 'idUsuario');
+	$idCategoria=resultadoSQL($dadosTicket, 0, 'idCategoria');
+
+	# Busca perfil do usuario para identificar o grupo padrão
+	$dadosPerfil=buscaPerfil($idUsuarioTicket, 'id', 'igual','id');
+	
+	if($dadosPerfil && contaConsulta($dadosPerfil)>0) {
+		$idGrupoPadrao=resultadoSQL($dadosPerfil, 0, 'idGrupo');
+		
+		if(is_numeric($idGrupoPadrao) && $idGrupoPadrao>0) {
+			# Sql adicional de idGrupo padrao do perfil do usuario
+			# para restringir o aviso de ticket novo apenas para o grupo
+			# selecionado como padrão pelo usuairo
+			$sqlPerfil=" AND $tb[Grupos].id=$idGrupoPadrao ";
+		}
+	}
+
+	if($idCategoria) {
+		$consultaCategoria=buscaCategorias($idCategoria, 'id','igual','id');
+		if($consultaCategoria && contaConsulta($consultaCategoria)>0) {
+			$nomeCategoria=resultadoSQL($consultaCategoria, 0, 'nome');
+		}
+	}
+		
+	$idPrioridade=resultadoSQL($dadosTicket, 0, 'idPrioridade');
+	if($idPrioridade) {
+		$consultaPrioridade=buscaPrioridades($idPrioridade, 'id','igual','id');
+		if($consultaPrioridade && contaConsulta($consultaPrioridade)>0) {
+			$nomePrioridade=resultadoSQL($consultaPrioridade, 0, 'nome');
+		}
+	}
+	
+	$usuario=buscaLoginUsuario($idUsuario, 'id','igual','id');
+	$url="http://$configAppHost/index.php?modulo=ticket&acao=ver&registro=$idTicket";
+
+	
+	if($acao=='incluir') {
+		# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+		# ticket
+		$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket Criado
+
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Data: $dataCriacao
+
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------";
+
+		$acaoTicket="Novo Ticket";
+
+	}
+	else {
+		# Dados do processo do Ticket
+		
+		if($acao=='abrir') {
+			# Informações sobre ultimo processo do ticket;
+			$dadosProcessoTicket=ultimoProcessoTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi Aberto!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------
+
+Data Abertura: $dadosProcessoTicket[data]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+Status atual: $dadosProcessoTicket[status]
+Alterado por: $dadosProcessoTicket[login]
+
+Comentário de abertura:
+--------------------------------------------------------------------------------
+$dadosProcessoTicket[texto]
+--------------------------------------------------------------------------------
+";
+	
+			$acaoTicket="Ticket Aberto";
+		}
+		elseif($acao=='reabrir') {
+			# Informações sobre ultimo processo do ticket;
+			$dadosProcessoTicket=ultimoProcessoTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi Re-Aberto!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------
+
+Data Re-Abertura: $dadosProcessoTicket[data]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+Status atual: $dadosProcessoTicket[status]
+Alterado por: $dadosProcessoTicket[login]
+
+Comentário de re-abertura:
+--------------------------------------------------------------------------------
+$dadosProcessoTicket[texto]
+--------------------------------------------------------------------------------
+";
+
+			$acaoTicket="Ticket Re-Aberto";
+		}
+		elseif($acao=='fechar') {
+			# Informações sobre ultimo processo do ticket;
+			$dadosProcessoTicket=ultimoProcessoTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi Fechado!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------
+
+Data Fechamento: $dadosProcessoTicket[data]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+Status atual: $dadosProcessoTicket[status]
+Alterado por: $dadosProcessoTicket[login]
+
+
+Comentário de fechamento: 
+--------------------------------------------------------------------------------
+$dadosProcessoTicket[texto]
+--------------------------------------------------------------------------------
+";	
+			$acaoTicket="Ticket Fechado";
+		}
+		elseif($acao=='alterar') {
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi Alterado!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+Data Alteração: $data[dataNormal]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+		
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------";
+	
+			$acaoTicket="Ticket Alterado";
+		}
+		elseif($acao=='prioridade') {
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Prioridade do Ticket foi Alterada!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+Data Alteração: $data[dataNormal]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+		
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------";
+	
+			$acaoTicket="Prioridade Alterada";
+		}		
+		elseif($acao=='comentario') {
+			# Buscar ultimo comentário do Ticket
+			$dadosUltimoComentario=buscaUltimoComentarioTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Comentário adicionado ao Ticket!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+Data Postagem: $data[dataNormal]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+
+Comentado por: $dadosUltimoComentario[login]
+--------------------------------------------------------------------------------
+Texto:
+$dadosUltimoComentario[texto]
+--------------------------------------------------------------------------------";
+	
+			$acaoTicket="Ticket Comentado";
+		}
+		
+		elseif($acao=='transferir') {
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi transferido!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Data de Criação: $dataCriacao
+Transferido por: $sessLogin[login]
+Transferido para: $usuario
+Transferido em: $data[dataNormal]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+
+Comentado por: $sessLogin[login]
+--------------------------------------------------------------------------------
+Texto:
+$textoAcao
+--------------------------------------------------------------------------------
+";
+	
+			$acaoTicket="Ticket Transferido";
+		}
+		
+	}
+
+	if($acao=='incluir') {
+		# listar Grupos do Usuário
+		$consultaGrupos=buscaUsuariosGrupos($idUsuario, 'idUsuario', 'igual', 'idUsuario');
+		for($a=0;$a<contaConsulta($consultaGrupos);$a++) {
+			$idGrupo=resultadoSQL($consultaGrupos, $a, 'idGrupo');
+			# Montar sql de grupos
+			$sqlGrupos.=" $tb[Grupos].id=$idGrupo";
+			
+			if($a+1 < contaConsulta($consultaGrupos) ) $sqlGrupos.=" OR";
+		}
+
+		# Lista de usuarios - pertencentes ao grupo do usuario
+		$sql="
+			SELECT
+				$tb[Perfil].email, 
+				$tb[Perfil].titulo_email, 
+				$tb[Grupos].nome 
+			FROM
+				$tb[Ticket], 
+				$tb[Grupos], 
+				$tb[UsuariosGrupos], 
+				$tb[Usuarios], 
+				$tb[Perfil]
+			WHERE 
+				$tb[Usuarios].id=$tb[Perfil].id 
+				AND $tb[Perfil].notificar_email='S' 
+				AND $tb[Usuarios].id=$tb[UsuariosGrupos].idUsuario 
+				AND $tb[Grupos].id=$tb[UsuariosGrupos].idGrupo 
+				AND $tb[Ticket].id=$idTicket
+				AND ( $sqlGrupos ) 
+				$sqlPerfil
+			GROUP BY $tb[Usuarios].id";
+	}
+	else {
+		# Listar Grupos do usuário
+		$consultaGrupos=buscaUsuariosGrupos($idUsuario, 'idUsuario', 'igual', 'idUsuario');
+		for($a=0;$a<contaConsulta($consultaGrupos);$a++) {
+			$idGrupo=resultadoSQL($consultaGrupos, $a, 'idGrupo');
+			# Montar sql de grupos
+			$sqlGrupos.=" $tb[Grupos].id=$idGrupo";
+			
+			if($a+1 < contaConsulta($consultaGrupos) ) $sqlGrupos.=" OR";
+		}
+		
+		# Verificar Grupos do Usuario
+		# Lista de usuarios
+		$sql="
+			SELECT
+				$tb[Perfil].email, 
+				$tb[Perfil].titulo_email, 
+				$tb[Grupos].nome 
+			FROM
+				$tb[Ticket], 
+				$tb[Grupos], 
+				$tb[UsuariosGrupos], 
+				$tb[Usuarios], 
+				$tb[Perfil],
+				$tb[Categorias],
+				$tb[CategoriasGrupos]
+			WHERE 
+				$tb[Usuarios].id=$tb[Perfil].id 
+				AND $tb[Perfil].notificar_email='S' 
+				AND $tb[Usuarios].id=$tb[UsuariosGrupos].idUsuario 
+				AND $tb[UsuariosGrupos].idGrupo = $tb[CategoriasGrupos].idGrupo
+				AND $tb[Categorias].id=$tb[CategoriasGrupos].idCategoria
+				AND $tb[CategoriasGrupos].idGrupo = $tb[Grupos].id
+				AND $tb[Ticket].id=$idTicket
+				AND $tb[Ticket].idCategoria = $tb[Categorias].id
+			GROUP BY $tb[Usuarios].id";
+	}
+			
+	$consulta=consultaSQL($sql, $conn);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+	
+		for($i=0;$i<contaConsulta($consulta);$i++) {
+			$email=resultadoSQL($consulta, $i, 'email');
+			$titulo=resultadoSQL($consulta, $i, 'titulo_email');
+			if(!$titulo) $titulo="$configAppName: $acaoTicket";
+			else $titulo.=" $acaoTicket";
+			
+			mailEnviar('noreply@@devel-it.com.br',$email, $titulo, $msg);
+		}
+	}
+
+	return(0);
+
+}
+
+
+# funcao para envio de email
+function mailEnviar($origem, $destino, $assunto, $texto) {
+
+	global $configMail;
+
+	$headerADD="From: ".$origem."\nReply-To: ".$origem."\nX-Mailer: PHP-Mail (by Devel-IT)";
+	
+	mail($destino, $assunto, $texto, $headerADD);
+} # fecha função de envio de mail
+
+
+
+# Enviar e-mail de notificação de Ticket
+function mailTicketProtocolo($matriz, $idUsuario, $acao) {
+
+	global $conn, $tb, $configAppName, $configAppVersion, $configAppHost;
+
+	$data=dataSistema();
+	$idTicket=$matriz[idTicket];
+	$categoria=$matriz[categoria];
+
+	# Checar dados do ticket
+	$dadosTicket=buscaTicket($matriz[idTicket], 'id','igual','id');
+	
+	$assunto=resultadoSQL($dadosTicket, 0, 'assunto');
+	$numProtocolo=resultadoSQL($dadosTicket, 0, 'protocolo');
+	$dataCriacao=converteData(resultadoSQL($dadosTicket, 0, 'data'),'banco','form');
+	$texto=resultadoSQL($dadosTicket, 0, 'texto');
+	$idUsuarioTicket=resultadoSQL($dadosTicket, 0, 'idUsuario');
+	$idCategoria=resultadoSQL($dadosTicket, 0, 'idCategoria');
+
+	# Busca perfil do usuario para identificar o grupo padrão
+	$dadosPerfil=buscaPerfil($idUsuarioTicket, 'id', 'igual','id');
+	
+	if($dadosPerfil && contaConsulta($dadosPerfil)>0) {
+		$idGrupoPadrao=resultadoSQL($dadosPerfil, 0, 'idGrupo');
+		
+		if(is_numeric($idGrupoPadrao) && $idGrupoPadrao>0) {
+			# Sql adicional de idGrupo padrao do perfil do usuario
+			# para restringir o aviso de ticket novo apenas para o grupo
+			# selecionado como padrão pelo usuairo
+			$sqlPerfil=" AND $tb[Grupos].id=$idGrupoPadrao ";
+		}
+	}
+
+	if($idCategoria) {
+		$consultaCategoria=buscaCategorias($idCategoria, 'id','igual','id');
+		if($consultaCategoria && contaConsulta($consultaCategoria)>0) {
+			$nomeCategoria=resultadoSQL($consultaCategoria, 0, 'nome');
+		}
+	}
+		
+	$idPrioridade=resultadoSQL($dadosTicket, 0, 'idPrioridade');
+	if($idPrioridade) {
+		$consultaPrioridade=buscaPrioridades($idPrioridade, 'id','igual','id');
+		if($consultaPrioridade && contaConsulta($consultaPrioridade)>0) {
+			$nomePrioridade=resultadoSQL($consultaPrioridade, 0, 'nome');
+		}
+	}
+	
+	$usuario=buscaLoginUsuario($idUsuario, 'id','igual','id');
+	$url="http://$configAppHost/index.php?modulo=ticket&acao=ver&registro=$idTicket";
+
+	
+	if($acao=='incluir') {
+		# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+		# ticket
+		$msg="
+$configAppName - $configAppVersion
+
+Protocolo: $numProtocolo
+
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Data: $dataCriacao
+		
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------";
+
+$url="http://$configAppHost/index.php?modulo=protocolo&acao=ver&registro=$matriz[protocolo]";
+$msgOrigem="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket Criado
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Data: $dataCriacao
+		
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------";
+
+		$acaoTicket="Novo Ticket";
+
+	}
+	else {
+		# Dados do processo do Ticket
+		if($acao=='comentario' || $acao=='comentar_origem') {
+			# Buscar ultimo comentário do Ticket
+			$dadosUltimoComentario=buscaUltimoComentarioTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$msg="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Comentário adicionado ao Ticket!
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+Data Postagem: $data[dataNormal]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+
+Comentado por: $dadosUltimoComentario[login]
+--------------------------------------------------------------------------------
+Texto:
+$dadosUltimoComentario[texto]
+--------------------------------------------------------------------------------";
+	
+$url="http://$configAppHost/index.php?modulo=protocolo&acao=ver&registro=$matriz[protocolo]";
+$msgOrigem="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Comentário adicionado ao Ticket!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+Data Postagem: $data[dataNormal]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+
+Comentado por: $dadosUltimoComentario[login]
+--------------------------------------------------------------------------------
+Texto:
+$dadosUltimoComentario[texto]
+--------------------------------------------------------------------------------";
+	
+			$acaoTicket="Ticket Comentado";
+		}
+		
+		elseif($acao=='abrir_origem') {
+			# Informações sobre ultimo processo do ticket;
+			$dadosProcessoTicket=ultimoProcessoTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$url="http://$configAppHost/index.php?modulo=protocolo&acao=ver&registro=$matriz[protocolo]";
+			$msgOrigem="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi Aberto!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------
+
+Data Abertura: $dadosProcessoTicket[data]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+Status atual: $dadosProcessoTicket[status]
+Alterado por: $dadosProcessoTicket[login]
+
+Comentário de abertura:
+--------------------------------------------------------------------------------
+$dadosProcessoTicket[texto]
+--------------------------------------------------------------------------------
+";
+	
+			$acaoTicket="Ticket Aberto";
+		}
+		elseif($acao=='encaminhar') {
+			# Informações sobre ultimo processo do ticket;
+			$dadosProcessoTicket=ultimoProcessoTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$url="http://$configAppHost/index.php?modulo=protocolo&acao=ver&registro=$matriz[protocolo]";
+			$msgOrigem="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket Encaminhado!
+
+Destino: $matriz[nome]
+
+ATENÇÃO: Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------
+
+Data Abertura: $dadosProcessoTicket[data]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+Status atual: $dadosProcessoTicket[status]
+Alterado por: $dadosProcessoTicket[login]
+
+Comentário de abertura:
+--------------------------------------------------------------------------------
+$dadosProcessoTicket[texto]
+--------------------------------------------------------------------------------
+";
+	
+			$acaoTicket="Ticket Aberto";
+		}		
+		elseif($acao=='reabrir_origem') {
+			# Informações sobre ultimo processo do ticket;
+			$dadosProcessoTicket=ultimoProcessoTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$url="http://$configAppHost/index.php?modulo=protocolo&acao=ver&registro=$matriz[protocolo]";
+			$msgOrigem="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi Re-Aberto!
+
+Para se referenciar a este atendimento, por favor entre em contato utilizando
+o seguinte número de protocolo: $numProtocolo
+
+Protocolo: $numProtocolo
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------
+
+Data Re-Abertura: $dadosProcessoTicket[data]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+Status atual: $dadosProcessoTicket[status]
+Alterado por: $dadosProcessoTicket[login]
+
+Comentário de re-abertura:
+--------------------------------------------------------------------------------
+$dadosProcessoTicket[texto]
+--------------------------------------------------------------------------------
+";
+
+			$acaoTicket="Ticket Re-Aberto";
+		}
+		elseif($acao=='fechar_origem') {
+			# Informações sobre ultimo processo do ticket;
+			$dadosProcessoTicket=ultimoProcessoTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$url="http://$configAppHost/index.php?modulo=protocolo&acao=ver&registro=$matriz[protocolo]";
+			$msgOrigem="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi Fechado!
+
+Protocolo: $matriz[protocolo]
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------
+
+Data Fechamento: $dadosProcessoTicket[data]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+Status atual: $dadosProcessoTicket[status]
+Alterado por: $dadosProcessoTicket[login]
+
+
+Comentário de fechamento: 
+--------------------------------------------------------------------------------
+$dadosProcessoTicket[texto]
+--------------------------------------------------------------------------------
+";	
+			$acaoTicket="Ticket Fechado";
+		} #começo da mensagem de e-mail (Alexandre)		
+		elseif($acao=='feedback') {
+			# Informações sobre ultimo processo do ticket;
+			$dadosProcessoTicket=ultimoProcessoTicket($idTicket);
+			
+			# Alertar membros dos grupos pertencentes ao usuario, da criação do novo 
+			# ticket
+			$url="http://$configAppHost/index.php?modulo=protocolo&sub=feedback&acao=incluir&registro=$matriz[protocolo]";
+			$msgOrigem="
+$configAppName - $configAppVersion
+
+ATENÇÃO: Ticket foi Fechado! Gostariamos de pedir a sua avaliação.
+
+Protocolo: $matriz[protocolo]
+URL: $url
+Assunto: $assunto
+Criado por: $usuario
+Criado em: $dataCriacao
+--------------------------------------------------------------------------------
+Texto:
+$texto
+--------------------------------------------------------------------------------
+
+Data Fechamento: $dadosProcessoTicket[data]
+Prioridade: $nomePrioridade
+Categoria: $nomeCategoria
+Status atual: $dadosProcessoTicket[status]
+Alterado por: $dadosProcessoTicket[login]
+
+
+Comentário de fechamento: 
+--------------------------------------------------------------------------------
+$dadosProcessoTicket[texto]
+--------------------------------------------------------------------------------
+";
+			$acaoTicket="Avalie nosso atendimento";
+		}
+		# Fim da mensagem de e-mail (Alexandre)
+		
+	}
+
+
+	
+	# Buscar Usuário de uma Categoria
+	
+	if($acao=='incluir' || $acao=='comentario') {
+		# Listar Grupos do usuário
+		$sql="
+			SELECT
+				$tb[Usuarios].login, 
+				$tb[Perfil].email, 
+				$tb[Perfil].titulo_email 
+			FROM
+				$tb[Perfil], 
+				$tb[Usuarios], 
+				$tb[UsuariosGrupos], 
+				$tb[CategoriasGrupos],
+				$tb[Categorias]
+			WHERE
+				$tb[Perfil].id=$tb[Usuarios].id 
+				AND $tb[Usuarios].id=$tb[UsuariosGrupos].idUsuario 
+				AND $tb[UsuariosGrupos].idGrupo = $tb[CategoriasGrupos].idGrupo 
+				AND $tb[CategoriasGrupos].idCategoria = $tb[Categorias].id 
+				AND $tb[Categorias].id='$categoria'
+				AND $tb[Perfil].notificar_email='S'
+			GROUP BY
+				$tb[Usuarios].id";
+				
+		$consulta=consultaSQL($sql, $conn);
+		
+		if($consulta && contaConsulta($consulta)>0) {
+		
+			for($i=0;$i<contaConsulta($consulta);$i++) {
+				$email=resultadoSQL($consulta, $i, 'email');
+				$titulo=resultadoSQL($consulta, $i, 'titulo_email');
+				if(!$titulo) $titulo="$configAppName: $acaoTicket";
+				else $titulo.=" $acaoTicket";
+				
+				mailEnviar('noreply@@devel-it.com.br',$email, $titulo, $msg);
+			}
+		}
+	}
+	
+	$destinos=$matriz[email];
+	for($x=0;$x<count($destinos);$x++) {
+		# Enviar email para criador do ticket
+		mailEnviar('noreply@@devel-it.com.br', $destinos[$x], "$configAppName: $assunto", $msgOrigem);
+	}
+
+	return(0);
+
+}
+
+?>
+@

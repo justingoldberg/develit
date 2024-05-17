@@ -1,0 +1,60 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.13.16;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@# WIST - Web Interface for SIP Trace.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Devel-IT <desenvolvimento@@devel.it>, 2006.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-02-24 17:26-0300\n"
+"PO-Revision-Date: 2006-03-29 14:55-0300\n"
+"Last-Translator: Devel-IT <desenvolvimento@@devel-it>\n"
+"Language-Team: LANGUAGE <LL@@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: config.php:13
+msgid "Version"
+msgstr ""
+
+#: filter.php:23
+msgid "Research"
+msgstr ""
+
+#: filter.php:32
+msgid "User's SIP number"
+msgstr ""
+
+#: filter.php:39
+msgid "Filter"
+msgstr ""
+
+#: index.php:41:
+msgid "Results"
+msgstr ""
+@

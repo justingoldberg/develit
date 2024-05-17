@@ -1,0 +1,235 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.37.17;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@-- MySQL dump 9.09
+--
+-- Host: localhost    Database: Ticket_IT
+---------------------------------------------------------
+-- Server version	4.0.15
+
+CREATE TABLE agenda (
+  id bigint(20) NOT NULL auto_increment,
+  idEvento bigint(20) NOT NULL default '0',
+  horario datetime NOT NULL default '0000-00-00 00:00:00',
+  PRIMARY KEY  (id),
+  KEY idEvento (idEvento)
+) TYPE=MyISAM;
+
+CREATE TABLE categorias (
+  id int(9) NOT NULL auto_increment,
+  nome varchar(50) NOT NULL default '',
+  texto text NOT NULL,
+  data datetime NOT NULL default '0000-00-00 00:00:00',
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+CREATE TABLE categorias_grupos (
+  idCategoria int(9) NOT NULL default '0',
+  idGrupo int(9) NOT NULL default '0',
+  PRIMARY KEY  (idCategoria,idGrupo),
+  KEY idCategoria (idCategoria),
+  KEY idGrupo (idGrupo)
+) TYPE=MyISAM;
+
+CREATE TABLE evento (
+  id bigint(20) NOT NULL auto_increment,
+  idTicket bigint(20) NOT NULL default '0',
+  inicio datetime NOT NULL default '0000-00-00 00:00:00',
+  duracao float NOT NULL default '0',
+  periodicidade char(1) NOT NULL default 'S',
+  status char(1) NOT NULL default 'A',
+  horario int(3) NOT NULL default '0',
+  PRIMARY KEY  (id),
+  KEY idTicket (idTicket)
+) TYPE=MyISAM;
+
+CREATE TABLE perfil (
+  id int(11) default NULL,
+  notificar_email char(1) default NULL,
+  email varchar(200) default NULL,
+  titulo_email varchar(200) default NULL,
+  idGrupo int(11) default NULL,
+  diaInicio int(1) NOT NULL default '1',
+  diaFim int(1) NOT NULL default '5',
+  horarioInicio int(1) NOT NULL default '9',
+  horarioFim int(1) NOT NULL default '18',
+  grade char(1) NOT NULL default '1',
+  alinhaMenu char(1) default NULL,
+  alinhaPrior char(1) default NULL,
+  categoriaPadrao int(9) default NULL,
+  atualizarUltimos char(1) default NULL,
+  ordemComentarios char(1) default NULL,
+  KEY idGrupo (idGrupo)
+) TYPE=MyISAM;
+
+CREATE TABLE prioridades (
+  id int(9) NOT NULL auto_increment,
+  nome varchar(100) NOT NULL default '',
+  texto text NOT NULL,
+  cor varchar(20) NOT NULL default '',
+  valor smallint(5) NOT NULL default '0',
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+CREATE TABLE processos_ticket (
+  idTicket int(9) NOT NULL default '0',
+  idUsuario int(9) NOT NULL default '0',
+  idStatus int(9) NOT NULL default '0',
+  data datetime NOT NULL default '0000-00-00 00:00:00',
+  texto text NOT NULL,
+  KEY idTicket (idTicket),
+  KEY idUsuario (idUsuario),
+  KEY idStatus (idStatus),
+  KEY idTicket_2 (idTicket,idUsuario,idStatus,data),
+  KEY idUsuario_2 (idUsuario),
+  KEY idTicket_3 (idTicket),
+  KEY idStatus_2 (idStatus)
+) TYPE=MyISAM;
+
+CREATE TABLE status (
+  id int(9) NOT NULL auto_increment,
+  nome varchar(50) NOT NULL default '',
+  texto text NOT NULL,
+  valor varchar(20) NOT NULL default '',
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket (
+  id int(9) NOT NULL auto_increment,
+  assunto varchar(200) NOT NULL default '',
+  data datetime NOT NULL default '0000-00-00 00:00:00',
+  texto text NOT NULL,
+  idUsuario int(9) NOT NULL default '0',
+  idPrioridade int(9) NOT NULL default '0',
+  idCategoria int(9) NOT NULL default '0',
+  status char(1) default NULL,
+  protocolo varchar(15) default NULL,
+  PRIMARY KEY  (id),
+  KEY idUsuario (idUsuario),
+  KEY idPrioridade (idPrioridade),
+  KEY idCategoria (idCategoria)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket_comentario (
+  id int(11) NOT NULL auto_increment,
+  idTicket int(9) NOT NULL default '0',
+  idUsuario int(9) NOT NULL default '0',
+  data datetime NOT NULL default '0000-00-00 00:00:00',
+  texto text,
+  PRIMARY KEY  (id),
+  KEY idTicket (idTicket),
+  KEY idUsuario (idUsuario),
+  KEY data (data)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket_detalhes (
+  id int(11) NOT NULL auto_increment,
+  idTicket int(9) default NULL,
+  parametro varchar(20) default NULL,
+  valor text,
+  PRIMARY KEY  (id),
+  KEY idTicket (idTicket)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket_email (
+  idTicket int(9) NOT NULL default '0',
+  idUsuario int(9) NOT NULL default '0',
+  idStatus int(9) NOT NULL default '0',
+  dataProcesso datetime NOT NULL default '0000-00-00 00:00:00',
+  dataEnvio datetime default NULL,
+  email varchar(200) default NULL,
+  PRIMARY KEY  (idTicket,idUsuario,idStatus,dataProcesso),
+  KEY idTicket (idTicket),
+  KEY idUsuario (idUsuario),
+  KEY idStatus (idStatus)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket_empresa (
+  id int(11) NOT NULL auto_increment,
+  idMaquina int(11) default NULL,
+  idEmpresa int(11) default NULL,
+  idTicket int(11) default NULL,
+  titulo varchar(200) default NULL,
+  data datetime default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket_tempo (
+  id int(12) NOT NULL auto_increment,
+  idTicket int(12) default NULL,
+  idUsuario int(12) default NULL,
+  data datetime default NULL,
+  segundos int(12) default NULL,
+  expediente char(1) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket_chat (
+  id int(12) NOT NULL auto_increment,
+  idTicket int(12) default NULL,
+  data datetime default NULL,
+  idUsuario int(12) default NULL,
+  status char(1) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket_chat_conteudo (
+  id int(12) NOT NULL auto_increment,
+  idChat int(12) default NULL,
+  idUsuario int(12) default NULL,
+  data datetime default NULL,
+  texto text,
+  ip varchar(15) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+CREATE TABLE ticket_feedback (
+  id int(12) NOT NULL auto_increment,
+  idTicket int(12) default NULL,
+  data datetime default NULL,
+  nota int(2) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+INSERT INTO prioridades VALUES (2,'Baixa','Prioridade nivel 5','#aeadff',9);
+INSERT INTO prioridades VALUES (4,'Media Alta','Prioridade nivel 2','#ffb159',2);
+INSERT INTO prioridades VALUES (5,'Alta','Prioridade nivel 1','#ff723f',1);
+INSERT INTO prioridades VALUES (6,'Baixa Media','Prioridade nivel 4','#dddd90',7);
+INSERT INTO prioridades VALUES (7,'Intermediário','Prioridade nivel 3','#f2ef5e',5);
+
+
+INSERT INTO status VALUES (1,'Novo','Tickets novos','N');
+INSERT INTO status VALUES (2,'Aberto','Tickets abertos pelo responsável','A');
+INSERT INTO status VALUES (3,'Parado','Ticket parado por motivos externos (dependências, etc)','P');
+INSERT INTO status VALUES (8,'Reaberto','Tickets Reabertos para re-trabalho','R');
+INSERT INTO status VALUES (7,'Fechado','Tickets Fechados','F');
+
+INSERT INTO categorias VALUES ('','Soluções','Soluções desenvolvidas pela empresa.',NOW());
+INSERT INTO categorias VALUES ('','Suporte','Suporte técnico a clientes.',NOW());
+INSERT INTO categorias VALUES ('','Atualizações','Atualizações de pacotes e outros.',NOW());
+INSERT INTO categorias VALUES ('','Network','Atendimentos relacionados a network.',NOW());
+
+INSERT INTO categorias_grupos VALUES (1, 1);
+INSERT INTO categorias_grupos VALUES (2, 1);
+INSERT INTO categorias_grupos VALUES (3, 1);
+INSERT INTO categorias_grupos VALUES (4, 1);
+@

@@ -1,0 +1,145 @@
+Motorview - SIP Trace Viewer - v2.1
+
+Search this topic…
+9 posts • Page 1 of 1
+LRU
+Motorview - SIP Trace Viewer - v2.1
+Post by LRU » 26 Apr 2010 05:50
+
+Motorview is a utility to view log files containing SIP messages. It generates a browsable line-by-line summary of SIP messages from traces and displays them in color. It can also be used to filter on specific messages. The tool features a graphical user interface (GUI) but can also be used from the command line in order to print the summary to the console or a file.
+
+As of version 2.0, it works for:
+* OminPCX Enterprise (OXE) motortrace, including OXE R10 with changed date format
+* Integrated Communications Server (ICS/OTUC) SIP logs
+* OmniTouch FAX Server (OFS) SIP logs (6.5)
+* Genesys SIP Server (ICE) logs
+
+Important Note: The application comes in form of a Python script. It requires Python 2.7 or above, but below 3.0.
+
+* Download Python 2.7 for Windows: http://www.python.org/ftp/python/2.7.1/python-2.7.1.msi
+* Choose Python for another platform: http://www.python.org/download/
+
+Tip for Windows users: Create a link on your desktop with the following Target: "C:\Python27\pythonw.exe C:\Programs\motview.py" (Replace with whereever you installed Python and the script) This link can be used to launch the application without the console window and to drag&drop motortrace files into it or integrate it to the "Send To" menu.
+
+For Help, see readme.txt and viewme.gif.
+
+Changelog:
+Version 2.1
+Added request filter and -r REQUEST command line parameter.
+Fixed: Problems with OXE R10 logs with bizarre message endings.
+
+Version 2.0
+Modified parsing engine:
+Better support for SIP motortrace log files from OXE R10 (new date format)
+Now possible to parse SIP log files from Omnitouch FAX server (FaxDriver.log)
+Now possible to parse SIP log files from Genesys SIP server (ICE)
+Known issues: Display issue with large files:
+Only the last 3278 summary lines are displayed in the summary pane. Previous lines are left blank. This is probably a limitation of the GUI widget.
+ATTACHMENTS
+ motview-2.1.zip
+(58.55 KiB) Downloaded 764 times
+Last edited by LRU on 22 Jul 2011 09:48, edited 4 times in total.
+Top
+User avatarfrank
+Alcatel Unleashed Certified Guru
+Alcatel Unleashed Certified Guru
+Posts: 3169
+Joined: 06 Jul 2004 00:18
+Location: New York
+Contact: Contact frank
+Post by frank » 05 May 2010 15:56
+
+Great software !
+Thanks for sharing.
+Code Free Or Die
+Top
+chapman1507
+Post by chapman1507 » 21 Jun 2010 03:01
+
+Very nice
+Top
+User avatardryhouse
+Member
+Posts: 165
+Joined: 06 Apr 2010 06:11
+Location: Madrid,Spain
+Post by dryhouse » 06 Aug 2010 05:45
+
+Very good aplication.
+
+Gracias
+
+P.D: Thnks again
+Last edited by dryhouse on 23 Feb 2011 06:17, edited 1 time in total.
+Top
+zic
+Post by zic » 12 Aug 2010 01:12
+
+Hi LRU, seems like an interesting software... is there any download link outside that you could point me to... still moderated...
+Now i've been using wireshark to test out the traces... just updated OXE to release 9.0 but got problem with SIP ... maybe this could help me find the problem ...
+Thx
+Top
+icsguru
+Re: Motorview - SIP Motortrace Viewer - v1.6
+Post by icsguru » 18 Feb 2011 05:43
+
+Hello,
+
+I hust installed Python 2.6.2 from the link mentioned above.
+If I try to start motview 1.6 I receive the following error message:
+RuntimeError: Bad magic number in .pyc file
+
+morview 1.3 works fine.
+
+Thank your for your help
+Top
+LRU
+Re: Motorview - SIP Motortrace Viewer - v1.6
+Post by LRU » 23 Feb 2011 03:26
+
+Hi,
+you're right! This is because i compiled the Motorview v1.6 with Python 2.7.1.
+Sorry for that, you need to install the latest Python 2.7 instead of 2.6.
+I'll update the documentation accordingly.
+LRU.
+Top
+Richard_Quonex
+Re: Motorview - SIP Trace Viewer - v2.1
+Post by Richard_Quonex » 26 Jun 2017 05:03
+
+Hello,
+
+The software "motview" exists it for windows 10 ?
+Top
+User avatarmtclkk
+Member
+Posts: 1
+Joined: 03 Aug 2010 09:30
+Re: Motorview - SIP Trace Viewer - v2.1
+Post by mtclkk » 24 May 2018 04:47
+
+Hello,
+Geat tool.
+There is some new version with Python 3.x support?
+Best Regards,
+Top
+Quick Reply
+
+Subject:
+Re: Motorview - SIP Trace Viewer - v2.1
+   
+9 posts • Page 1 of 1
+Return to “motview”
+WHO IS ONLINE
+Users browsing this forum: nintendo1889 and 3 guests
+
+HomeBoard indexAll times are UTC-04:00Delete cookiesMembersThe team
+Powered by phpBB® Forum Software © phpBB Limited
+
+Privacy | Terms
+
+Creative Commons License
+AlcatelUnleashed is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+AlcatelUnleashed is NOT affiliated with or endorsed by Alcatel-Lucent nor Alcatel-Lucent Enterprise.
+
+CONTACT US

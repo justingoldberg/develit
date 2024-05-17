@@ -1,0 +1,129 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para configurações
+
+
+
+# Função de configurações
+function config($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html, $sessLogin;
+
+	# Permissão do usuario
+	$permissao=buscaPermissaoUsuario($sessLogin[login],'login','igual','login');
+	
+	if(!$permissao[admin]) {
+		# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+		$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Acesso Negado", $msg, $url, 760);
+	}
+	else {
+		
+		if(!$sub) {
+			### Menu principal - usuarios logados apenas
+			novaTabela2("[Configurações]", "center", '100%', 0, 3, 1, $corFundo, $corBorda, 3);
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('65%', 'left', $corFundo, 0, 'tabfundo1');
+						echo "<br><img src=".$html[imagem][configuracoes]." border=0 align=left >
+						<b class=bold>Configurações</b>
+						<br><span class=normal10>Configurações $configAppName.</span>";
+					htmlFechaColuna();			
+					$texto=htmlMontaOpcao("<br>Usuários", 'usuario');
+					itemLinha($texto, "?modulo=$modulo&sub=usuarios", 'center', $corFundo, 0, 'normal');
+					$texto=htmlMontaOpcao("<br>Grupos", 'grupo');
+					itemLinha($texto, "?modulo=$modulo&sub=grupos", 'center', $corFundo, 0, 'normal');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('65%', 'left', $corFundo, 0, 'tabfundo1');
+						echo "&nbsp;";
+					htmlFechaColuna();			
+					$texto=htmlMontaOpcao("<br>Categorias", 'categorias');
+					itemLinha($texto, "?modulo=$modulo&sub=categorias", 'center', $corFundo, 0, 'normal');
+					$texto=htmlMontaOpcao("<br>Prioridades", 'prioridades');
+					itemLinha($texto, "?modulo=$modulo&sub=prioridades", 'center', $corFundo, 0, 'normal');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('65%', 'left', $corFundo, 0, 'tabfundo1');
+						echo "&nbsp;";
+					htmlFechaColuna();			
+					$texto=htmlMontaOpcao("<br>Status", 'status');
+					itemLinha($texto, "?modulo=$modulo&sub=status", 'center', $corFundo, 0, 'normal');
+					$texto=htmlMontaOpcao("<br>Parametros", 'parametros');
+					itemLinha($texto, "?modulo=$modulo&sub=parametros", 'center', $corFundo, 0, 'normal');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('65%', 'left', $corFundo, 0, 'tabfundo1');
+						echo "&nbsp;";
+					htmlFechaColuna();			
+					$texto=htmlMontaOpcao("<br>Empresas", 'empresas');
+					itemLinha($texto, "?modulo=$modulo&sub=empresas", 'center', $corFundo, 0, 'normal');
+					$texto=htmlMontaOpcao("<br>Usuários de<br>Empresas", 'usuariosempresas');
+					itemLinha($texto, "?modulo=$modulo&sub=usuariosempresas", 'center', $corFundo, 0, 'normal');
+				fechaLinhaTabela();
+			fechaTabela();
+		}
+		
+		# Usuários
+		elseif($sub=='usuarios') {
+			# Menu de modulos
+			cadastroUsuarios($modulo, $sub, $acao, $registro, $matriz);	
+		}
+		
+		# Grupos
+		elseif($sub=='grupos') {
+			# Menu de parametros
+			cadastroGrupos($modulo, $sub, $acao, $registro, $matriz);
+		}
+		# verificação dos submodulos
+		elseif($sub=='categorias') {
+			categorias($modulo, $sub, $acao, $registro, $matriz);
+		}
+		elseif($sub=='prioridades') {
+			prioridades($modulo, $sub, $acao, $registro, $matriz);
+		}
+		elseif($sub=='status') {
+			status($modulo, $sub, $acao, $registro, $matriz);
+		}
+		elseif($sub=='categorias_grupos') {
+			categoriasGrupos($modulo, $sub, $acao, $registro, $matriz);
+		}
+		elseif($sub=='parametros') {
+			parametros($modulo, $sub, $acao, $registro, $matriz);
+		}
+		elseif($sub=='empresas') {
+			empresas($modulo, $sub, $acao, $registro, $matriz);
+		}
+		elseif($sub=='usuariosempresas') {
+			usuariosEmpresas($modulo, $sub, $acao, $registro, $matriz);
+		}
+	}
+	
+}
+
+
+?>
+@

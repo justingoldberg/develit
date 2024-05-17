@@ -1,0 +1,28 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.38.34;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<tr bgcolor=#ffffff>
+	<td width=60% class=normal10 align=left>%_0_%</td>
+	<td width=20% class=normal10 align=center>%_1_%</td>
+	<td width=20% class=normal10 align=center>%_2_%</td>
+</tr>
+@

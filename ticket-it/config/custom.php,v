@@ -1,0 +1,43 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.10.46;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Configurações para Conexão com banco de dados
+
+# Configurações para Conexão com banco de dados (Coloque os dados da conexão de seu banco de dados)
+
+# IP ou nome do servidor MySQL
+$configHostMySQL="localhost";
+# usuário do MySQL
+$configUserMySQL="usuario";
+# senha do MySQL
+$configPasswdMySQL="senha";
+# Nome da base de dados que será utilizada
+$configDBMySQL="ticket";
+
+# Host externo do servidor (que pode ser acessado externamente)
+$configAppHost="nome_do_host.dominio.com.br";
+
+?>
+@

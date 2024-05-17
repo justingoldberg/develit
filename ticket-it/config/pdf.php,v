@@ -1,0 +1,34 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.10.46;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?php
+################################################################################
+# Função:
+#    Configurações utilizadas pela aplicação
+
+# Configurações da Aplicação
+$configPDF[layout]='portait';
+$configPDF[linhas]='40';
+$configPDF[]='';
+
+?>
+@

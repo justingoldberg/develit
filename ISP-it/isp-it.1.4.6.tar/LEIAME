@@ -1,0 +1,21 @@
+Requerimentos:
+
+o PHP 4.1.x ou superior com as opções do php.ini:  
+  - register_globals = on 
+  - max_execution_time = 30
+  - max_input_time = 60
+  - memory_limit = 32M 
+o MySQL 3.23+;
+  - uma base de dados vazia (sugestão de nome: "isp_it")
+  - um usuário com permissão total para esta base (sugestão de nome: "isp_it")
+o Servidor Apache (1.3 ou superior)
+  - um diretório web chamado isp-it
+  - um alias para acesso (Ex: isp.seudominio.com.br)
+  - charset = iso-8859-1
+o Biblioteca Pear instalada (Para mais informações acesse http://pear.php.net);
+o Aplicativos html2ps e ps2html (devem ter alguma referencia em /usr/bin)
+o htmldoc (www.htmldoc.org)
+o Sistema Operacional Unix/Linux;
+o Certificar no arquivo de inicialização do apache se a variavel TMPDIR está 
+  apontando para /var/tmp (TMPDIR=/var/tmp)
+

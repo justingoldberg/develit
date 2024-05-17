@@ -1,0 +1,73 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.10.46;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@ <?php
+################################################################################
+# Função:
+#    Configurações utilizadas pela aplicação
+
+# Configurações da Aplicação
+$configAppName="Devel-IT - .:Ticket IT:.";
+$configAppVersion="Versão 2.9";
+	
+# Configurações de cor
+$corFundo="#ffffff";
+$corBorda="#223366";
+
+#############################################
+# Limites de listagens e paginações
+$limite[lista][usuarios]=10;
+$limite[lista][grupos]=5;
+$limite[lista][categorias]=5;
+$limite[lista][prioridades]=5;
+$limite[lista][status]=5;
+$limite[lista][tickets]=10;
+$limite[lista][ticket_grupo]=50;
+$limite[lista][parametros]=50;
+$limite[lista][empresas]=50;
+$limite[lista][usuariosempresas]=10;
+
+# Limites de listagem de tickets
+$limite[ticket][novo]=20;
+$limite[ticket][aberto]=20;
+$limite[ticket][fechado]=20;
+
+# Limites de listagem em resumos
+$limite[resumo][novos]=10;
+$limite[resumo][ultimos]=20;
+
+# Status
+$statusTicket[novo]='N';
+$statusTicket[fechado]='F';
+$statusTicket[aberto]='A';
+$statusTicket[parado]='P';
+
+# Cores
+$cores[Verde]="#11c411";
+$cores[Vermelho]="#ff723f";
+$cores[Bege]="#dddd90";
+$cores[Azul]="#aeadff";
+$cores[Laranja]="#ffb159";
+$cores[Amarelo]="#f2ef5e";
+
+?>
+@

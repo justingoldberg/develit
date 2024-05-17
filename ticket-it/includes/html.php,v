@@ -1,0 +1,586 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Funções para formatação de pagina e saidas HTML
+
+/**
+ * @@return void
+ * @@param unknown $titulo
+ * @@param unknown $alinhamento
+ * @@param unknown $tamanho
+ * @@param unknown $borda
+ * @@param unknown $spcCel
+ * @@param unknown $spcCarac
+ * @@param unknown $corFundo
+ * @@param unknown $corBorda
+ * @@param unknown $colunas
+ * @@desc Função para criação de tabelas
+*/
+function novaTabela($titulo, $alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Criar nova tabela
+	echo "<!-- Cria nova tabela [$titulo] -->\n
+	<table width=$tamanho border=$borda cellpadding=0 cellspacing=0 bgcolor=$corBorda>\n
+	<tr><td>\n
+	<table width=$tamanho border=$borda cellpadding=$spcCel cellspacing=$spcCarac>\n
+	<th $colspan width=$tamanho class=tabtitulo align=$alinhamento background=$corFundo>$titulo</th>\n";
+} # Fecha função tabelanova
+
+
+/**
+ * @@return void
+ * @@param unknown $titulo
+ * @@param unknown $alinhamento
+ * @@param unknown $tamanho
+ * @@param unknown $borda
+ * @@param unknown $spcCel
+ * @@param unknown $spcCarac
+ * @@param unknown $corFundo
+ * @@param unknown $corBorda
+ * @@param unknown $colunas
+ * @@desc Função para criação de tabelas
+*/
+function novaTabela2($titulo, $alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+	
+	# Criar nova tabela
+	echo "<!-- Cria nova tabela [$titulo] -->\n
+	<table width=$tamanho border=$borda cellpadding=0 cellspacing=$spcCarac bgcolor=$corBorda>\n
+	<tr><td>\n
+	<table width=$tamanho border=0 cellpadding=$spcCel cellspacing=0>\n
+	<th $colspan width=$tamanho class=tabtitulo align=$alinhamento background=$corFundo>$titulo</th>\n";
+} # Fecha função tabelanova
+
+
+/**
+ * @@return void
+ * @@param unknown $alinhamento
+ * @@param unknown $tamanho
+ * @@param unknown $borda
+ * @@param unknown $spcCel
+ * @@param unknown $spcCarac
+ * @@param unknown $corFundo
+ * @@param unknown $corBorda
+ * @@param unknown $colunas
+ * @@desc Função para criação de tabelas - Sem Header
+*/
+function novaTabela2SH($alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+	
+	# Criar nova tabela
+	echo "<!-- Cria nova tabela [$titulo] -->\n
+	<table width=$tamanho border=$borda cellpadding=0 cellspacing=$spcCarac bgcolor=$corBorda>\n
+	<tr><td>\n
+	<table width=$tamanho border=0 cellpadding=$spcCel cellspacing=0>\n";
+} # Fecha função tabelanova
+
+
+/**
+ * @@return void
+ * @@param unknown $alinhamento
+ * @@param unknown $tamanho
+ * @@param unknown $borda
+ * @@param unknown $spcCel
+ * @@param unknown $spcCarac
+ * @@param unknown $corFundo
+ * @@param unknown $corBorda
+ * @@param unknown $colunas
+ * @@desc Função para criação de tabelas - Sem Header
+*/
+function htmlAbreTabelaSH($alinhamento, $tamanho, $borda, $spcCel, $spcCarac, $corFundo, $corBorda, $colunas)
+{
+	# Criar nova tabela
+	echo "
+	<table width=$tamanho border=$borda cellpadding=0 cellspacing=0 bgcolor=$corBorda>\n
+	<tr><td>\n
+	<table width=$tamanho border=$borda cellpadding=$spcCel cellspacing=$spcCarac>\n";
+} # Fecha função tabelanova
+
+
+/**
+ * @@return void
+ * @@param unknown $corFundo
+ * @@desc Função para crição de nova linha
+*/
+function htmlAbreLinha($corFundo)
+{
+	echo "<tr bgcolor=$corFundo>\n";
+} #fecha função de abertura de nova linha
+
+
+/**
+ * @@return void
+ * @@desc Função para fechar linha aberta
+*/
+function htmlFechaLinha()
+{
+	echo "</tr>\n";
+} # fecha função de fechamento de linha
+
+
+/**
+ * @@return void
+ * @@param unknown $tamanho
+ * @@param unknown $alinhamento
+ * @@param unknown $corFundo
+ * @@param unknown $colunas
+ * @@param unknown $classeCSS
+ * @@desc Função para abrir nova coluna - Sem alinhamento vertical
+*/
+function htmlAbreColuna($tamanho, $alinhamento, $corFundo, $colunas, $classeCSS)
+{
+	# Adicionar item
+	echo "<td width=$tamanho colspan=$colunas align=$alinhamento class=$classeCSS>\n";
+} # fecha função abrir nova coluna
+
+# Função para abrir nova coluna
+/**
+ * @@return void
+ * @@param unknown $tamanho
+ * @@param unknown $alinhamento
+ * @@param unknown $alinhamentov
+ * @@param unknown $corFundo
+ * @@param unknown $colunas
+ * @@param unknown $classeCSS
+ * @@desc Função para abrir nova coluna - Com alinhamento vertical
+*/
+function htmlAbreColunaForm($tamanho, $alinhamento, $alinhamentov, $corFundo, $colunas, $classeCSS)
+{
+	# Adicionar item
+	echo "<td width=$tamanho colspan=$colunas align=$alinhamento valign=$alinhamentov class=$classeCSS>\n";
+} # fecha função abrir nova coluna
+
+# Função para fechar nova coluna
+/**
+ * @@return void
+ * @@desc Função para fechar nova coluna
+*/
+function htmlFechaColuna()
+{
+	# Adicionar item
+	echo "</td>\n";
+} # fecha função fecha coluna aberta
+
+
+# Função para adicionar items a tabela
+/**
+ * @@return void
+ * @@param unknown $item
+ * @@param unknown $url
+ * @@param unknown $alinhamento
+ * @@param unknown $corFundo
+ * @@param unknown $colunas
+ * @@param unknown $classeCSS
+ * @@desc Função para adicionar items a tabela - Com link
+*/
+function itemTabela($item, $url, $alinhamento, $corFundo, $colunas, $classeCSS)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Adicionar item
+	echo "
+	<tr bgcolor=$corFundo>\n
+	<td $colspan align=$alinhamento class=$classeCSS><a href=$url>$item</a></td>\n
+	</tr>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items a tabela
+/**
+ * @@return void
+ * @@param unknown $item
+ * @@param unknown $alinhamento
+ * @@param unknown $corFundo
+ * @@param unknown $colunas
+ * @@param unknown $classeCSS
+ * @@desc Função para adicionar items a tabela - sem link
+*/
+function itemTabelaNOURL($item, $alinhamento, $corFundo, $colunas, $classeCSS)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Adicionar item
+	echo "
+	<tr bgcolor=$corFundo>\n
+	<td $colspan align=$alinhamento class=$classeCSS>$item</td>\n
+	</tr>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items a tabela
+function itemLinha($item, $url, $alinhamento, $corFundo, $colunas, $classeCSS)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Adicionar item
+	echo "<td $colspan align=$alinhamento class=$classeCSS><a href=$url>$item</a></td>\n";
+} # fecha função para adicionar items a tabela
+
+# Função para adicionar items a tabela
+function itemLinhaForm($item, $alinhamento, $alinhamentov, $corFundo, $colunas, $classeCSS)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Adicionar item 
+	echo "<td $colspan align=$alinhamento valign=$alinhamentov class=$classeCSS>$item</td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items com link na tabela
+/**
+ * @@return void
+ * @@param unknown $item
+ * @@param unknown $url
+ * @@param unknown $alinhamento
+ * @@param unknown $alinhamentov
+ * @@param unknown $tamanho
+ * @@param unknown $corFundo
+ * @@param unknown $colunas
+ * @@param unknown $classeCSS
+ * @@desc Célula de tabela com link e com alinhamento h e v
+*/
+function itemLinhaTM($item, $url, $alinhamento, $alinhamentov, $tamanho, $corFundo, $colunas, $classeCSS)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Adicionar item 
+	echo "<td $colspan align=$alinhamento valign=$alinhamentov class=$classeCSS width=$tamanho><a href=$url>$item</a></td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items sem link na tabela
+/**
+ * @@return void
+ * @@param unknown $item
+ * @@param unknown $alinhamento
+ * @@param unknown $alinhamentov
+ * @@param unknown $tamanho
+ * @@param unknown $corFundo
+ * @@param unknown $colunas
+ * @@param unknown $classeCSS
+ * @@desc Celula com alinhamento h e v
+*/
+function itemLinhaTMNOURL($item, $alinhamento='left', $alinhamentov='middle', $tamanho='100%', $corFundo, $colunas, $classeCSS)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+	
+	$align="align=".$alinhamento; 
+	$valign="valign=".$alinhamentov; 
+	
+	# Adicionar item 
+	echo "<td $colspan $align $valign width=$tamanho class=$classeCSS>$item</td>\n";
+} # fecha função para adicionar items a tabela
+
+
+/**
+ * @@return void
+ * @@param unknown $item
+ * @@param unknown $alinhamento
+ * @@param unknown $corFundo
+ * @@param unknown $colunas
+ * @@param unknown $classeCSS
+ * @@desc Função para adicionar celulas a tabela
+*/
+function itemLinhaNOURL($item, $alinhamento, $corFundo, $colunas, $classeCSS)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Adicionar item
+	echo "<td $colspan align=$alinhamento class=$classeCSS>$item</td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items a tabela
+function itemLinhaCorNOURL($item, $alinhamento, $corFundo, $colunas, $classeCSS, $cor)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Adicionar item
+	echo "<td $colspan align=$alinhamento class=$classeCSS bgcolor=$cor>$item</td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para adicionar items a tabela
+function itemLinhaCor($item, $url, $alinhamento, $corFundo, $colunas, $classeCSS, $cor)
+{
+	if($colunas>0) {
+		$colspan="colspan=".$colunas; 
+	}
+
+	# Adicionar item
+	echo "<td $colspan align=$alinhamento class=$classeCSS bgcolor=$cor><a href=$url>$item</a></td>\n";
+} # fecha função para adicionar items a tabela
+
+
+# Função para criação de linha na tabela (usado para items de coluna)
+function novaLinhaTabela($fundo, $tamanho)
+{
+	echo "<tr bgcolor=$fundo>\n";
+} # fecha função de criação de linha na tabela
+
+
+# Função para adicionar itens de coluna
+function titLinhaTabela($item, $alinhamento, $tamanho, $classeCSS)
+{
+	# Adicionar item
+	echo "<td class=$classeCSS width=$tamanho align=$alinhamento>$item</td>\n";
+} # fecha função para adicionar itens de coluna
+
+
+# Função para adicionar itens de coluna
+function itemLinhaTabela($item, $alinhamento, $tamanho, $classeCSS)
+{
+	# Adicionar item
+	echo "<td width=$tamanho align=$alinhamento class=$classeCSS valign=middle>$item</td>\n";
+} # fecha função para adicionar itens de coluna
+
+
+
+# Função para fechar linha na tabela (usado para itens de coluna)
+function fechaLinhaTabela()
+{
+	echo "</tr>\n";
+} #fecha função para fechar linha da tabela
+
+
+
+
+# função para finalizar tabela
+function fechaTabela()
+{
+	echo "</table></td></tr></table>\n";
+} # Fecha função fechatabela
+
+
+
+
+# Funções para resultados HTML em tela
+function aviso($titulo, $msg, $url, $tamanho)
+{
+	global $corFundo, $corBorda;
+
+	novaTabela("$titulo", "left", $tamanho, 0, 2, 1, $corFundo, $corBorda, 0);
+	itemTabelaNOURL($msg,'left',$corFundo, 0, 'txtaviso');
+	itemTabela("Voltar",$url,'right',$corFundo, 0, 'normal');
+	fechaTabela();
+	
+} # fecha função aviso
+
+
+
+# Funções para resultados HTML em tela
+function avisoNOURL($titulo, $msg, $tamanho)
+{
+	global $corFundo, $corBorda;
+
+	novaTabela("$titulo", "left", $tamanho, 0, 2, 1, $corFundo, $corBorda, 0);
+	itemTabelaNOURL($msg,'left',$corFundo, 0, 'txtaviso');	
+	fechaTabela();
+	
+} # fecha função aviso
+
+
+
+# Funções para resultados HTML em tela
+function avisoFechar($titulo, $msg, $url, $tamanho)
+{
+	global $corFundo, $corBorda;
+
+	novaTabela("$titulo", "left", $tamanho, 0, 2, 1, $corFundo, $corBorda, 0);
+	itemTabelaNOURL($msg,'left',$corFundo, 0, 'txtaviso');
+	itemTabela("Fechar",$url,'right',$corFundo, 0, 'normal');
+	fechaTabela();
+	
+} # fecha função aviso
+
+
+
+# Função de cabeçalho
+function html_header($titulo, $versao)
+{
+	global $modulo,$sub, $acao;
+	
+	if($acao) {
+		# Mostrar cabeçalho HTML
+		$opcFocus="onLoad=\"javascript:if(document.forms[0]){document.forms[0].elements[4].focus()}\"";
+	}
+	echo "<html>
+<head>
+<title>$titulo - $versao</title>
+<link rel=stylesheet type=text/css href=estilos.css>
+</head>";
+	
+if($sub != 'chat' && $modulo != 'protocolo') echo "<body $opcFocus>";
+
+} # fim da função de cabeçalho
+
+
+
+
+# Função de rodapé
+function html_footer($rodape)
+{
+	echo "<p class=rodape align=left>$rodape</p>\n
+</body>\n
+</html>\n";
+} # fim da função de rodapé
+
+
+
+# Função para mostrar tipo de Status da Fila de Processos
+function fila_chk_status($status)
+{
+	# Verificar tipo de status recebido
+	if($status=="N")
+	{
+		$retorno="<span class=fila_novo>Novo</span>";
+	}
+	elseif($status=="L")
+	{
+		$retorno="<span class=fila_lib>Liberado</span>";
+	}
+	elseif($status=="E")
+	{
+		$retorno="<span class=fila_exec>Executando</span>";
+	}
+	elseif($status=="P")
+	{
+		$retorno="<span class=fila_proc>Processado</span>";
+	}
+	elseif($status=="I")
+	{
+		$retorno="<span class=fila_ig>Ignorado</span>";
+	}
+	elseif($status=="F")
+	{
+		$retorno="<span class=fila_falha>FALHOU</span>";
+	}
+	else
+	{
+		$retorno="<span class=fila_erro>INVÁLIDO</span>";
+	}
+	
+	return($retorno);
+	
+} # fim da função de mostragem de tipo de status dos processos
+
+
+# função para montagem de opções para URLs e Links
+function htmlMontaOpcao($texto, $tipo)
+{
+	global $htmlDirImagem, $html;
+
+	return("<img src=".$html[imagem][$tipo]." border=0>$texto&nbsp;");
+	
+}
+
+
+# Função para montar campo de formulario
+function formStatus()
+{
+	
+	$item="<select name=matriz[status]>\n";
+	$item.= "<option value=D>Desativado\n";
+	$item.= "<option value=A>Ativado\n";
+	$item.="</select>";
+	
+	return($item);
+	
+} #fecha funcao de montagem de campo de form
+
+# Função para montar campo de formulario - selecionando atual situacao
+function formChecaStatus($status)
+{
+	# Status ativo
+	if($status=='A') { $opcAtivo='selected'; }
+	if($status=='D') { $opcDesativo='selected'; }
+	
+	$item="<select name=matriz[status]>\n";
+	$item.= "<option value=D $opcDesativo>Desativado\n";
+	$item.= "<option value=A $opcAtivo>Ativado\n";
+	$item.="</select>";
+	
+	return($item);
+	
+} #fecha funcao de montagem de campo de form
+
+# Função para checagem de status
+function checaStatus($status)
+{
+	if($status=='A') {
+		$retorno="<span class=txtok>Ativado</span>";
+	}
+	elseif($status=='D') {
+		$retorno="<span class=txtaviso>Desativado</span>";
+	}
+	elseif($status=='N') {
+		$retorno="<span class=txtaviso>Novo (desativado)</span>";
+	}
+	
+	return($retorno);
+}
+
+# Função para montar campo de formulario - selecionando opções
+function formGeraSelect($nome, $opcoes, $valores)
+{
+	# Status ativo
+	$item="<select name=$nome>\n";
+	if(count($valores) > 0 && count($opcoes) > 0 && count($valores) == count($opcoes)) {
+		for($i=0;$i<count($valores);$i++) {
+			$item.= "<option value=$valores[$i]>$opcoes[$i]</option>\n";
+		}
+	}
+	$item.="</select>";
+	
+	return($item);
+} #fecha Função para montar campo de formulario - selecionando opções
+?>
+@

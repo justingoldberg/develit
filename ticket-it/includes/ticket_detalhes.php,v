@@ -1,0 +1,432 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para processos de tickets
+
+
+# função de busca 
+function buscaTicketDetalhes($texto, $campo, $tipo, $ordem)
+{
+	global $conn, $tb, $corFundo, $modulo;
+	
+	if($tipo=='todos') {
+		$sql="SELECT * FROM $tb[TicketDetalhes] ORDER BY $ordem";
+	}
+	elseif($tipo=='contem') {
+		$sql="SELECT * from $tb[TicketDetalhes] WHERE $campo LIKE '%$texto%' ORDER BY $ordem";
+	}
+	elseif($tipo=='igual') {
+		$sql="SELECT * from $tb[TicketDetalhes] WHERE $campo='$texto' ORDER BY $ordem";
+	}
+	elseif($tipo=='custom') {
+		$sql="SELECT * from $tb[TicketDetalhes] WHERE $texto ORDER BY $ordem";
+	}
+	
+	# Verifica consulta
+	if($sql){
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta
+		return($consulta);
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+	
+} # fecha função de busca
+
+
+# Detalhes do Ticket
+function detalhesTicket($idTicket) {
+
+	$consulta=buscaTicketDetalhes("parametro='email' and idTicket=$idTicket",'','custom','idTicket');
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		for($a=0;$a<contaConsulta($consulta);$a++) {
+			$retorno[$a]=resultadoSQL($consulta, $a, 'valor');
+		}
+		return($retorno);
+	}
+}
+
+
+# Detalhes do Ticket
+function carregarEncaminhamentosTicket($idTicket) {
+
+	$consultaNomes=buscaTicketDetalhes("parametro='nome' and idTicket=$idTicket",'','custom','idTicket');
+	$consultaEmails=buscaTicketDetalhes("parametro='email' and idTicket=$idTicket",'','custom','idTicket');
+	
+	if($consultaNomes && contaConsulta($consultaNomes)>0) {
+		$i=0;
+		for($a=0;$a<contaConsulta($consultaNomes);$a++) {
+			$valor=resultadoSQL($consultaNomes, $a, 'valor');
+			$id=resultadoSQL($consultaNomes, $a, 'id');
+			$retorno[idNome][$i]=$id;
+			$retorno[nome][$i++]=$valor;
+		}
+	}
+	if($consultaEmails && contaConsulta($consultaEmails)>0) {
+		$i=0;
+		for($a=0;$a<contaConsulta($consultaEmails);$a++) {
+			$valor=resultadoSQL($consultaEmails, $a, 'valor');
+			$id=resultadoSQL($consultaEmails, $a, 'id');
+			$retorno[idEmail][$i]=$id;
+			$retorno[email][$i++]=$valor;
+		}
+	}
+	
+	return($retorno);
+}
+
+
+# Gravar detalhes Ticket
+function gravaDetalhesTicket($idTicket, $matriz) {
+
+	global $conn, $tb;
+	
+	$keys=array_keys($matriz);
+	for($a=0;$a<count($keys);$a++) {
+	
+		$parametro=$keys[$a];
+		
+		if($parametro=='nome' || $parametro=='email') {
+			$valor=$matriz[$parametro];
+		
+			# Gravar
+			if($parametro == 'email') $valor=trim($valor);
+			$sql="INSERT INTO $tb[TicketDetalhes] VALUES (0, $idTicket, '$parametro','$valor')";
+			
+			$consulta=consultaSQL($sql, $conn);
+		}
+	}
+}
+
+
+# Função para gravação em banco de dados
+function dbDetalhesTicket($matriz, $tipo)
+{
+	global $conn, $tb, $modulo, $acao, $sessLogin;
+	
+	# Data do sistema 
+	$data=dataSistema();
+	# Busca o ID do usuário logado
+	if($sessLogin[login]) $idUser=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+	else $idUser=buscaIDUsuario('convidado', 'login','igual','login');
+		
+	# Incluir Comentarios
+	if($tipo=='incluir') {
+	
+		$sql="INSERT INTO $tb[TicketDetalhes] VALUES (
+			0,
+			$matriz[ticket],
+			$idUser,
+			'$data[dataBanco]',
+			'$matriz[descricao]'	
+		)";
+	} #fecha abertura
+	
+	elseif($tipo=='excluirtodos') {
+		$sql="DELETE FROM $tb[TicketDetalhes] WHERE idTicket='$matriz[id]'";
+	}
+	
+	elseif($tipo=='excluir') {
+		$sql="DELETE FROM $tb[TicketDetalhes] WHERE id='$matriz[id]'";
+	}
+	
+	elseif($tipo=='alterar') {
+		$sql="UPDATE $tb[TicketDetalhes] SET valor='$matriz[valor]' WHERE id='$matriz[id]'";
+	}
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+	
+} # fecha função de gravação em banco de dados
+
+
+# Função para listagem de detalhes do ticket
+function listarDetalhesTicket($modulo, $sub, $acao, $matriz, $registro) {
+	
+	global $html, $corFundo, $corBorda;
+
+	# Verificar comentários já postados
+	$consulta=buscaTicketDetalhes($registro, 'idTicket','igual','idTicket');
+
+	#nova tabela para mostrar informações
+	novaTabela("Encaminhamentos", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+
+		if(!$consulta || contaConsulta($consulta)==0) {
+			novaLinhaTabela($corFundo, '100%');
+				itemLinhaNOURL("Nenhum encaminhamento para este ticket", 'left', $corFundo, 2, 'txtaviso');
+			fechaLinhaTabela();
+		}
+		else {
+			
+			# Carregar detalhes do ticket
+			$detalhesTicket=carregarEncaminhamentosTicket($registro);
+			
+			if(is_array($detalhesTicket)) {
+				$keys=array_keys($detalhesTicket[nome]);
+				
+				for($i=0;$i<count($keys);$i++) {
+					
+					# Detalhes dos encaminhamentos
+					$id=resultadoSQL($consulta, $i, 'id');
+					
+					# Atribuir Valores
+					$fundo2=$i%2+3;
+					
+					novaLinhaTabela($corFundo, '100%');
+						if($modulo=='ticket') {
+							$opcAdicional="<a href=?modulo=ticket&sub=encaminhar&acao=alterar&registro=" . $detalhesTicket[idNome][$i] . ":" . $detalhesTicket[idEmail][$i] . " border=0><img src=" .$html[imagem][alterar] . " border=0></a>";
+							$opcAdicional.="<a href=?modulo=ticket&sub=encaminhar&acao=excluir&registro=" . $detalhesTicket[idNome][$i] . ":" . $detalhesTicket[idEmail][$i] . " border=0><img src=" .$html[imagem][fechar] . " border=0></a>";
+						}
+						else {
+							$opcAdicionalNome='';
+							$opcAdicionalEmail='';
+						}
+						
+						$texto="$opcAdicional<b>Nome:</b> " . $detalhesTicket[nome][$i] . " - <b>Email:</b> " . $detalhesTicket[email][$i];
+						itemLinhaNOURL("$texto", 'left', $corFundo, 2, "tabfundo$fundo2");
+					fechaLinhaTabela();
+				}				
+			}
+		}
+		
+	fechaTabela();	
+	# fim da tabela
+}
+
+
+
+# Função para Form encaminhamento de tickets
+function formAlterarEncaminhamento($modulo, $sub, $acao, $matriz, $registro) {
+	
+	global $html, $corFundo, $corBorda;
+	
+	novaTabela2("Encaminhar Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Nome do Destinatário: </b><br>
+				<span class=normal10>Informe o nome, contato ou empresa para destino</span>";
+			htmlFechaColuna();
+			$texto="<input type=text name=matriz[nome] size=60 value='$matriz[nome]'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Email de Destino: </b><br>
+				<span class=normal10>Informe os emails de destino (separados por ',')</span>";
+			htmlFechaColuna();
+			$texto="<input type=text name=matriz[email] size=60 value='$matriz[email]'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "&nbsp;";
+			htmlFechaColuna();
+			$texto="<input type=submit name=matriz[bntAlterar] value='Alterar Encaminhamento'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();
+	
+	echo "<br>";
+	verTicket($modulo, $sub, 'ver', $matriz, $matriz[idTicket]);
+	
+}
+
+
+# Função para Form encaminhamento de tickets
+function formExcluirEncaminhamento($modulo, $sub, $acao, $matriz, $registro) {
+	
+	global $html, $corFundo, $corBorda;
+	
+	novaTabela2("Excluir Encaminhamento", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Nome do Destinatário: </b>";
+			htmlFechaColuna();
+			itemLinhaForm($matriz[nome], 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Email de Destino: </b>";
+			htmlFechaColuna();
+			itemLinhaForm($matriz[email], 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "&nbsp;";
+			htmlFechaColuna();
+			$texto="<input type=submit name=matriz[bntExcluir] value='Excluir Encaminhamento'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();
+	
+	echo "<br>";
+	verTicket($modulo, $sub, 'ver', $matriz, $matriz[idTicket]);
+	
+}
+
+
+
+function alterarEncaminhamentoTicket($modulo, $sub, $acao, $matriz, $registro) {
+	
+	global $corFundo, $corBorda, $sessLogin;
+	
+	$permissao=buscaPermissaoUsuario($sessLogin[login]);
+	
+	if(!$permissao[abrir] && !$permissao[admin]) {
+		# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+		$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Acesso Negado", $msg, $url, 760);
+	}
+	else {
+		
+		# Buscar dados do ticket para o encaminhamento
+		$registros=explode(":",$registro);
+		$dadosTicketNome=dadosTicketDetalhe($registros[0]);
+		$dadosTicketEmail=dadosTicketDetalhe($registros[1]);
+		$ticket=dadosTicket($dadosTicketNome[idTicket]);
+		$matriz[idTicket]=$ticket[id];
+		
+		if(!$matriz[nome] || !$matriz[email] || checkMailDominio($matriz[email], 'check')) {
+			if($matriz[bntEncaminhar]) {
+				$msg="ATENÇÃO: Todos os campos devem ser preenchidos!";
+				$url="?modulo=$modulo&sub=$sub&acao=abrir&registro=$idTicket";
+				aviso("Aviso", $msg, $url, 760);
+				echo "<br>";
+			}
+			
+			# Form de abertura de Ticket
+			$matriz[nome]=$dadosTicketNome[valor];
+			$matriz[email]=$dadosTicketEmail[valor];
+			formAlterarEncaminhamento($modulo, $sub, $acao, $matriz, $registro);
+		}
+		else {
+			# Gravar Nome
+			$matriz[id]=$registros[0];
+			$matriz[valor]=$matriz[nome];
+			$grava=dbDetalhesTicket($matriz, 'alterar');
+			
+			# Gravar Email
+			$matriz[id]=$registros[1];
+			$matriz[valor]=$matriz[email];
+			$grava=dbDetalhesTicket($matriz, 'alterar');
+	
+			verTicket($modulo, $sub, 'ver', $matriz, $matriz[idTicket]);
+		}
+	}
+}
+
+
+function excluirEncaminhamentoTicket($modulo, $sub, $acao, $matriz, $registro) {
+	
+	global $corFundo, $corBorda, $sessLogin;
+	
+	$permissao=buscaPermissaoUsuario($sessLogin[login]);
+	
+	if(!$permissao[abrir] && !$permissao[admin]) {
+		# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+		$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Acesso Negado", $msg, $url, 760);
+	}
+	else {
+		
+		# Buscar dados do ticket para o encaminhamento
+		$registros=explode(":",$registro);
+		$dadosTicketNome=dadosTicketDetalhe($registros[0]);
+		$dadosTicketEmail=dadosTicketDetalhe($registros[1]);
+		$ticket=dadosTicket($dadosTicketNome[idTicket]);
+		$matriz[idTicket]=$ticket[id];
+		
+		if(!$matriz[bntExcluir]) {
+			# Form de abertura de Ticket
+			$matriz[nome]=$dadosTicketNome[valor];
+			$matriz[email]=$dadosTicketEmail[valor];
+			formExcluirEncaminhamento($modulo, $sub, $acao, $matriz, $registro);
+		}
+		else {
+			
+			$i=0;
+			while($registros[$i]) {
+				$matriz[id]=$registros[$i++];
+				$grava=dbDetalhesTicket($matriz, 'excluir');
+			}
+	
+			verTicket($modulo, $sub, 'ver', $matriz, $matriz[idTicket]);
+		}
+	}
+}
+
+
+
+function dadosTicketDetalhe($registro) {
+	global $conn, $tb;
+	
+	$consulta=buscaTicketDetalhes($registro,'id','igual','id');
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$retorno[id]=resultadoSQL($consulta, 0, 'id');
+		$retorno[idTicket]=resultadoSQL($consulta, 0, 'idTicket');
+		$retorno[parametro]=resultadoSQL($consulta, 0, 'parametro');
+		$retorno[valor]=resultadoSQL($consulta, 0, 'valor');
+	}
+	
+	return($retorno);
+
+}
+
+?>
+@

@@ -1,0 +1,245 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Funções para leitura de arquivos
+
+# Função para ler matriz de dados de
+function arquivoLerDados($origem, $tipo, $linha, $coluna, $tamanho) {
+	
+	if($tipo=='matriz') {
+		$coluna--;
+		return(substr($origem[$linha],$coluna,$tamanho));
+	}
+}
+
+
+function k_fileOpen($arquivo, $modo) {
+
+	$handler=@@fopen($arquivo, $modo);
+	
+	if($handler) {
+		$retorno[handler]=$handler;
+		$retorno[size]=@@filesize($arquivo);
+	}
+	
+	return($retorno);
+}
+
+
+function k_fileRead($handler) {
+
+	if(is_array($handler)) {
+		$retorno=fread($handler[handler], $handler[size]);
+	}
+	
+	return($retorno);
+}
+
+
+function arquivoQuebrarColunas($linhas, $matriz) {
+	
+	global $tb;
+	
+	$data=dataSistema();
+	
+	if(is_array($linhas)) {
+		
+		$linha=0;
+		
+		for($a=0;$a<count($linhas);$a++) {
+			# Quebrar a linha em colunas
+			$tmpLinha=$linhas[$a];
+			
+			$tmpColunasLinha=explode($matriz[separador],$tmpLinha);
+
+			if(is_array($tmpColunasLinha) && count($tmpColunasLinha)>1) {
+				if($matriz[debug]=='S') echo "Gravando linha $a<br>";
+
+				# Identificar colunas
+				for($b=0;$b<count($tmpColunasLinha);$b++) {
+					
+					if($a==0) {
+						# titulos
+						$titulo[]=$tmpColunasLinha[$b];
+
+						
+						if($matriz[debug]=='S') echo "$b: $tmpColunasLinha[$b]<br>";
+					}
+					else {
+						$conteudo[$linha][$titulo[$b]]=$tmpColunasLinha[$b];
+						
+						if($matriz[debug]=='S') echo "$titulo[$b]: $tmpColunasLinha[$b]<br>";
+					}
+				}
+
+				if($matriz[debug]=='S') echo "<hr>";
+				$linha++;
+			}
+		}
+	}
+
+	# Verificar se foi confirmada a gravação dos dados
+	if($matriz[importar]=='S') {
+
+		/* Colunas
+			0: tipoPessoa
+			1: nome
+			2: email
+			3: dtNascimento
+			4: contato
+			5: cidade
+			6: uf
+			7: endereco
+			8: bairro
+			9: cep
+			10: fone1
+			11: fone2
+			12: celular
+			13: rg
+			14: documento
+			15: ie
+			16: servico
+			17: valor
+			18: dtCadastro
+			19: dtInativacao
+			20: status
+			
+			$coluna[pessoaTipo]=0
+			$coluna[nome]=1
+			$coluna[razao]
+			$coluna[site]
+			$coluna[email]=2
+			$coluna[dtNascimento]=3
+			$coluna[dtCadastro]=$data[dataBanco]
+			$coluna[pop]=verificar pop
+			$coluna[contato]=1
+		*/
+			
+		$contadorImportados=0;
+		
+		for($a=1;$a<count($conteudo);$a++) {
+			$dadosGravar[id]=buscaIDNovoPessoa();
+			$dadosGravar[pessoaTipo]=DBManagerImportarTipoPessoa($conteudo[$a][$titulo[0]]);
+			$dadosGravar[nome]=$conteudo[$a][$titulo[1]];
+			if($dadosGravar[pessoaTipo]=='J') $dadosGravar[razao]=$conteudo[$a][$titulo[1]];
+			else $dadosGravar[razao]='';
+			$dadosGravar[email]=$conteudo[$a][$titulo[2]];
+			$dadosGravar[dtNascimento]=converteData($conteudo[$a][$titulo[3]],'banco','formdata');
+			$dadosGravar[dtCadastro]=$data[dataBanco];
+			$dadosGravar[pop]=5;
+			$dadosGravar[contato]=$conteudo[$a][$titulo[1]];
+			
+			
+			// Buscar pessoa para identificar se já não foi importada
+			$buscaPessoa=buscaPessoas("upper(nome) like '$dadosGravar[nome]'", '','custom','id');
+			if(!$buscaPessoa || contaConsulta($buscaPessoa)==0) {
+				
+				// Adicionar Pessoa
+				dbPessoa($dadosGravar, 'incluir');
+	
+				// Adicionar PessoaTipo
+				$dadosGravar[idPessoaTipo]=buscaIDNovoPessoaTipo();
+				$dadosGravar[id]=$dadosGravar[id];
+				$dadosGravar[dtCadastro]=$data[dataBanco];
+				$dadosGravar[tipoPessoa]='cli';
+				dbPessoaTipo($dadosGravar, 'incluir');
+	
+				// Adicionar Endereço para pessoa
+				$dadosGravar[tipoEndereco]=2;
+				$dadosGravar[cidade]=buscaIDCidade($conteudo[$a][$titulo[5]], $conteudo[$a][$titulo[6]]);
+				$dadosGravar[endereco]=$conteudo[$a][$titulo[7]];
+				$dadosGravar[complemento]='';
+				$dadosGravar[bairro]=$conteudo[$a][$titulo[8]];
+				$dadosGravar[cep]=$conteudo[$a][$titulo[9]];
+				$dadosGravar[pais]="Brasil";
+				$dadosGravar[caixaPostal]='';
+				
+				# Verificação de Fones
+				$dadosGravar[fone1]=$conteudo[$a][$titulo[10]];
+				$dadosGravar[fone2]=$conteudo[$a][$titulo[11]];
+				$dadosGravar[celular]=$conteudo[$a][$titulo[12]];
+				$dadosGravar=DBManagerImportarFones($dadosGravar);
+				dbEndereco($dadosGravar, 'incluir');
+				
+				// Adicionar Documento
+				$dadosGravar[rg]=$conteudo[$a][$titulo[13]];
+				$dadosGravar[documento]=$conteudo[$a][$titulo[14]];
+				$dadosGravar=DBManagerImportarDocumentos($dadosGravar);
+				dbDocumento($dadosGravar, 'incluir');
+				
+				// Adicionar Planos e Serviços
+				$dadosGravar[idPlano]=buscaNovoID($tb[PlanosPessoas]);
+				$dadosGravar[vencimento]=10;
+				$dadosGravar[forma_cobranca]=2;
+				//$dadosGravar[dtCadastro]=$conteudo[$a][$titulo[18]];
+				$dadosGravar[nome]="Acesso Discado";
+				$dadosGravar[especial]='S';
+				$dadosGravar[status]=$conteudo[$a][$titulo[20]];
+				dbPlano($dadosGravar, 'incluirplano');
+				
+				// Serviços ao Plano - ID 24
+				$dadosGravar[idServico]=24;
+				$dadosGravar[valor]=$conteudo[$a][$titulo[17]];
+				$dadosGravar[dtCadastro]=$conteudo[$a][$titulo[18]];
+				$dadosGravar[dtAtivacao]=$conteudo[$a][$titulo[18]];
+				$dadosGravar[dtInativacao]=$conteudo[$a][$titulo[19]];
+				$dadosGravar[dtCancelamento]='';
+				# Verificar Status
+				if($dadosGravar[status]=='A')  {
+					$iAtivos++;
+					$totalAtivos+=$dadosGravar[valor];
+					$dadosGravar[status]=4;
+				}
+				else {
+					$iInativos++;
+					$totalInativos+=$dadosGravar[valor];
+					$dadosGravar[status]=6;
+				}
+				$dadosGravar[trial]=0;
+				dbServicosPlano($dadosGravar, 'incluir');
+
+				$contadorImportados++;
+			}
+			
+			// Zerar variável
+			$dadosGravar=array();
+			
+		}
+		
+		$linha-=2;
+		
+		echo "<br>";
+		avisoNOURL("Importação", "Dados Importados com sucesso<br>
+		Total de cadastros lidos: $linha cadastros<br>
+		Total de cadastros importados: $contadorImportados cadastros<br>
+		Ativos: $iAtivos - Valor: $totalAtivos<br>
+		Inativos: $iInativos - Valor: $totalInativos", 500); 
+		
+	}
+	
+}
+
+?>
+@

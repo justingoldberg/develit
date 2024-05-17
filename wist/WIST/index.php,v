@@ -1,0 +1,72 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.12.35;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Function:
+#    Main page's application (index)
+
+
+# Load settings
+
+include('config.php');
+
+# globais variables
+global $configAppName, $configAppVersion, $corFundo, $corBorda;
+
+# Load functions
+include('html.php');
+include('data.php');
+
+# Filter
+include("filter.php");
+
+
+###########################################
+# Show header
+html_header($configAppName, $configAppVersion);
+###########################################
+
+$data=dataSistema();
+	
+# Mount screen -  Main Frame
+
+abreCaixaDiv("<span style=\"color:#FFFFFF\">$configAppName - $configAppVersion</span>", "left", "760px");
+	menuLanguage($lang);
+	formFiltro( $modulo, $acao, $sip );
+	if( $_REQUEST['sip']){
+		echo "<br />";
+		$titulo = _("Results");
+		abreCaixaDiv("[$titulo]", "left", "750px");
+			filtrarSocket( $_REQUEST['sip'], $sipLog);
+		fechaCaixaDiv();
+	}
+fechaCaixaDiv();
+# Fecha separação
+
+###########################################
+# Show footer
+html_footer($configAppName . " - " . _($configAppVersion) );
+###########################################
+
+?>
+@

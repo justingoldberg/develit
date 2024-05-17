@@ -1,0 +1,372 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Página principal (index) da aplicação - formulários
+
+# Função para alimentar valores de formulário
+function alimentaForm($matriz, $sessCadastro) {
+        # Alimentar sessção (retornar valor) com dados de formulário alterados
+
+
+        # Alimentar Sessão com variáveis já contidas
+        if(is_array($sessCadastro)) $keys=array_keys($sessCadastro);
+
+        for($i=0;$i<count($keys);$i++) {
+                $tmpVariavel[$keys[$i]]=$sessCadastro[$keys[$i]];
+        }
+
+
+        # Alimentar variável para retorno
+        if($matriz) {
+                $keys=array_keys($matriz);
+                for($i=0;$i<count($keys);$i++) {
+                        # alimentar variável
+                        #echo "gravando: $keys[$i]\n<br>";
+                        if($keys[$i]=='cpf') $tmpVariavel[$keys[$i]]=cpfFormatar($matriz[$keys[$i]]);
+                        if($keys[$i]=='cnpj') $tmpVariavel[$keys[$i]]=cnpjFormatar($matriz[$keys[$i]]);
+                        elseif($keys[$i]=='nome') $tmpVariavel[$keys[$i]]=formatarString($matriz[$keys[$i]],'maiuscula');
+                        else $tmpVariavel[$keys[$i]]=$matriz[$keys[$i]];
+                }
+        }
+
+
+        # retornar valor
+        return($tmpVariavel);
+
+} # fecha funcao de alimentação de sessao
+
+
+
+# Função para alimentar valores de formulário
+function visualizaForm($matriz) {
+        # Alimentar sessção (retornar valor) com dados de formulário alterados
+
+        $keys=array_keys($matriz);
+
+        # Alimentar variável para retorno
+        for($i=0;$i<count($keys);$i++) {
+                # alimentar variável
+                echo "Visualizando: $keys[$i]: ".$matriz[$keys[$i]]."\n<br>";
+        }
+
+} # fecha funcao de alimentação de sessao
+
+
+# Calcular Totais
+function calculaTotal($consulta, $campo, $limite, $decimal) {
+
+        for($i=0;$i<$limite;$i++) {
+                $retorno+=resultadoSQL($consulta, $i, $campo);
+        }
+
+        if($decimal) {
+                $retorno=number_format($retorno,$decimal,',','.');
+        }
+
+        return($retorno);
+}
+
+
+# Calcular Totais
+function calculaTotalDesconto($consulta, $valor, $desconto, $limite, $decimal) {
+
+        for($i=0;$i<$limite;$i++) {
+                $tmpValor=resultadoSQL($consulta, $i, $valor);
+                $tmpDesconto=resultadoSQL($consulta, $i, $desconto);
+                $retorno+=$tmpValor-($tmpValor*($tmpDesconto/100));
+        }
+
+        if($decimal) {
+                $retorno=number_format($retorno,$decimal,',','.');
+        }
+
+        return($retorno);
+}
+
+
+# Calcular Totais
+function calculaDesconto($consulta, $valor, $desconto, $limite, $decimal) {
+
+        for($i=0;$i<$limite;$i++) {
+                $tmpValor=resultadoSQL($consulta, $i, $valor);
+                $tmpDesconto=resultadoSQL($consulta, $i, $desconto);
+                $retorno+=($tmpValor*($tmpDesconto/100));
+        }
+
+        if($decimal) {
+                $retorno=number_format($retorno,$decimal,',','.');
+        }
+
+        return($retorno);
+}
+
+
+
+# Verifica formato informado para CPF
+function formFormatarDoc($doc) {
+
+                $doc=str_replace(".","",$doc);
+                $doc=str_replace("-","",$doc);
+                $doc=str_replace("/","",$doc);
+                $doc=str_replace("\\","",$doc);
+
+                return($doc);
+}
+
+
+
+
+# Função para conversão de valores de formulário
+function formFormatarString($texto, $tipo){
+
+        # Converter acentuação para maiúscula
+        $matMinuscula=array('ç'
+        ,'â','ã','à','á','ä'
+        ,'é','è','ê','ë'
+        ,'í','ì','î','ï'
+        ,'ó','ò','ô','õ','ö'
+        ,'ú','ù','û','ü');
+
+        $matMaiuscula=array('Ç'
+        ,'Â','Ã','Á','À','Ä'
+        ,'É','È','Ê','Ë'
+        ,'Í','Ì','Î','Ï'
+        ,'Ó','Ò','Õ','Ô','Ö'
+        ,'Ú','Ù','Û','Ü');
+
+
+        if($tipo=='minuscula') {
+                # Converter para maiúscula
+                $texto=strtolower($texto);
+                for($i=0;$i<count($matMinuscula);$i++) {
+                        $texto=str_replace($matMinuscula[$i], $matMaiuscula[$i], $texto);
+                }
+        }
+        elseif($tipo=='maiuscula') {
+                # Converter para maiúscula
+                $texto=strtoupper($texto);
+                for($i=0;$i<count($matMinuscula);$i++) {
+                        $texto=str_replace($matMinuscula[$i], $matMaiuscula[$i], $texto);
+                }
+        }
+
+        return($texto);
+}
+
+# Função para montar select de cores
+function formSelectCor ($selected,$campo) {
+        global $cores;
+        $texto="<select name=matriz[$campo]>";
+        while(list($key, $value) = each($cores)) {
+                if($value == $selected) {
+                        $texto.="<option value=$value selected>$key</option>";
+                } else {
+                        $texto.="<option value=$value>$key</option>";
+                }
+        }
+        $texto.="</select>";
+        return($texto);
+}
+
+# Função para montar select de números/prioridades
+function formSelectNumeros ($selected,$campo) {
+        $texto="<select name=matriz[$campo]>";
+        for($i=0;$i<10;$i++) {
+                if($i == $selected) {
+                        $texto.="<option value=$i selected>$i</option>";
+                } else {
+                        $texto.="<option value=$i>$i</option>";
+                }
+        }
+        $texto.="</select>";
+        return($texto);
+}
+
+# Função para montar select de números/prioridades
+function formSelectLetras ($selected,$campo) {
+        $texto="<select name=matriz[$campo]>";
+        for($i="A";$i<="Z" && strlen($i)==1;$i++) {
+                if($i == $selected) {
+                        $texto.="<option value=$i selected>$i</option>";
+                } else {
+                        $texto.="<option value=$i>$i</option>";
+                }
+        }
+        $texto.="</select>";
+        return($texto);
+}
+
+
+# Função para form de seleção de alinhamento (Direita / Esquerda)
+function formSelectPosicaoDirEsq($posicao, $campo) {
+	
+	if($posicao) {
+		if($posicao == 'D') $opcDireita='selected';
+		elseif($posicao == 'E') $opcEsquerda='selected';
+		elseif($posicao == 'I') $opcIcone='selected';
+		elseif($posicao == 'L') $opcLinha='selected';
+	}
+	
+	$texto="<select name=matriz[$campo]>\n";
+	$texto.="<option value=D $opcDireita>Direita\n";
+	$texto.="<option value=E $opcEsquerda>Esquerda\n";
+	$texto.="<option value=I $opcIcone>Ícone\n";
+	$texto.="<option value=L $opcLinha>Linha\n";
+	$texto.="</select>";
+	
+	return($texto);
+	
+}
+
+# Função para form de seleção de alinhamento (Direita / Esquerda)
+function formSelectPosicaoDireitaEsquerda($posicao, $campo) {
+	
+	if($posicao) {
+		if($posicao == 'D') $opcDireita='selected';
+		elseif($posicao == 'E') $opcEsquerda='selected';
+	}
+	
+	$texto="<select name=matriz[$campo]>\n";
+	$texto.="<option value=D $opcDireita>Direita\n";
+	$texto.="<option value=E $opcEsquerda>Esquerda\n";
+	$texto.="</select>";
+	
+	return($texto);
+	
+}
+
+
+#  Função para mostrar form de seleçao Sim/Não
+function formSelectSimNao($valor, $campo, $tipo) {
+
+	if($valor=='S') $opcSelectSim='selected';
+	if($valor=='N') $opcSelectNao='selected';
+	
+	if($tipo=='form') {
+		$texto="<select name=matriz[$campo]>
+			<option value=S $opcSelectSim>Sim\n
+			<option value=N $opcSelectNao>Não\n
+		</select>";
+	}
+	elseif($tipo=='check') {
+		if($valor=='S') $texto="<span class=txtok>Sim</span>";
+		elseif($valor=='N') $texto="<span class=txtcheck>Não</span>";
+	}
+	
+	return($texto);
+	
+}
+
+
+
+#  Função para mostrar form de seleçao Sim/Não
+function formSelectOrdem($valor, $campo, $tipo) {
+
+	if($valor=='A') $opcSelectAsc='selected';
+	if($valor=='D') $opcSelectDesc='selected';
+	
+	if($tipo=='form') {
+		$texto="<select name=matriz[$campo]>
+			<option value=A $opcSelectAsc>Crescente\n
+			<option value=D $opcSelectDesc>Decrescente\n
+		</select>";
+	}
+	elseif($tipo=='check') {
+		if($valor=='A') $texto="<span class=txtok>Crescente</span>";
+		elseif($valor=='D') $texto="<span class=txtcheck>Decrescente</span>";
+	}
+	
+	return($texto);
+	
+}
+
+
+# Icone do ticket
+/**
+ * @@return icone de ticket
+ * @@param $usuario
+ * @@param $idUsuario 
+ * @@desc Montar Icone do ticket
+   <b>usuario</b> id do usuario da sessLogin
+   <b>idUsuario</b> idUsuario do ticket
+*/
+function iconeTicket($usuario, $idUsuario, $idTicket=0) {
+	
+	global $html;
+	
+	if(buscaIDUsuario('convidado','login','igual','id') == $idUsuario) {
+		$imagem=$html[imagem][help];
+		$alt="Ticket Externo";
+	}
+	elseif($usuario == $idUsuario) {
+		$imagem=$html[imagem][usuario];
+		$alt="Meu Ticket";
+	}
+	else {
+		$imagem=$html[imagem][grupo];
+		$alt="Ticket de outro usuário";
+	}
+	
+	if($idTicket>0) {
+		# Verificar ultimo comentário do ticket
+		# e caso usuário do comentário != $idusuario
+		# utilizar novo icone
+		$comentarioTicket=buscaUltimoComentarioTicket($idTicket);
+		if($comentarioTicket[idUsuario]>0 && $comentarioTicket[idUsuario] != $usuario) $imagem=$html[imagem][alerta];
+	}
+
+	$retorno="<img src=".$imagem." border=0 title='$alt'>";
+
+	return($retorno);
+}
+
+
+
+#  Função para mostrar form de seleçao Sim/Não
+function formSelectStatus($valor, $campo, $tipo) {
+
+	if($valor=='A') $opcSelectAtivo='selected';
+	if($valor=='I') $opcSelectInativo='selected';
+	if($valor=='C') $opcSelectCancelado='selected';
+	
+	if($tipo=='form') {
+		$texto="<select name=matriz[$campo]>
+			<option value=A $opcSelectAtivo class=txtok>Ativado\n
+			<option value=I $opcSelectInativo class=txtaviso>Inativo\n
+			<option value=C $opcSelectCancelado class=txtaviso>Cancelado\n
+		</select>";
+	}
+	elseif($tipo=='check') {
+		if($valor=='A') $texto="<span class=txtok>Ativo</span>";
+		elseif($valor=='I') $texto="<span class=txtaviso>Inativo</span>";
+		elseif($valor=='C') $texto="<span class=txtaviso>Cancelado</span>";
+	}
+	
+	return($texto);
+	
+}
+?>
+
+@

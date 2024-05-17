@@ -1,0 +1,549 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Menus da aplicação
+
+
+# Função para verificação de menus da aplicação
+/**
+ * @@return void
+ * @@param unknown $html
+ * @@desc Função para verificação de menus da aplicação
+*/
+function menuPrincipal($tipo)
+{
+	global $corFundo, $corBorda, $html;
+	
+	
+	# Receber ID do Grupo do usuario
+	if($grupoUsuario && contaConsulta($grupoUsuario)>0) {
+		$idGrupo=resultadoSQL($grupoUsuario, 0, 'idGrupo');	
+		
+		# Buscar informações do grupo
+		# receber informações do grupo
+		$infoGrupo=buscaInfoGrupo($idGrupo);
+	}
+	
+	if($tipo=='usuario') {
+		$classe='menusuperior';
+		htmlAbreTabelaSH("center", 760, 0, 1, 0, $corFundo, $corBorda, 7);
+			htmlAbreLinha($corFundo);
+				itemLinha("<img src=".$html[imagem][ticket]." border=0>TICKET", "?modulo=ticket", 'center', $corFundo, 0, $classe);
+				itemLinha("<img src=".$html[imagem][protocolo]." border=0>PROTOCOLO", "?modulo=protocolo", 'center', $corFundo, 0, $classe);
+				itemLinha("<img src=".$html[imagem][relogio]." border=0>AGENDA", "?modulo=evento", 'center', $corFundo, 0, $classe);
+				itemLinha("<img src=".$html[imagem][procurar]." border=0>PROCURAR", "?modulo=ticket&acao=procurar", 'center', $corFundo, 0, $classe);
+				itemLinha("<img src=".$html[imagem][perfil]." border=0>MEU PERFIL", "?modulo=perfil", 'center', $corFundo, 0, $classe);
+				itemLinha("<img src=".$html[imagem][config]." border=0>CONFIGURAÇÕES", "?modulo=configuracoes", 'center', $corFundo, 0, $classe);
+				itemLinha("<img src=".$html[imagem][imprimir]." border=0>RELATORIOS", "?modulo=relatorios", 'center', $corFundo, 0, $classe);
+				itemLinha("<img src=".$html[imagem][fechar]." border=0>LOGOFF", "?modulo=logoff", 'center', $corFundo, 0, $classe);
+			htmlFechaLinha();
+		fechaTabela();
+	}
+	
+
+} # fecha visualizacao de menu
+
+
+
+# Função para verificação de menus da aplicação
+/**
+ * @@return void
+ * @@param unknown $modulo
+ * @@param unknown $sub
+ * @@param unknown $acao
+ * @@param unknown $registro
+ * @@param unknown $matriz
+ * @@desc Função para verificação de menus da aplicação
+*/
+function verMenu($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html, $sessLogin;
+
+	### Menu principal - usuarios logados apenas
+	if($modulo=='login' || !$sessLogin)
+	{
+		validacao($sessLogin, $modulo, $sub, $acao, $registro);
+	}
+	
+	### MODULOS QUE REQUEREM AUTENTICAÇÃO
+	else {
+		if(checaLogin($sessLogin) ) {
+			$consultaPerfil= buscaPerfil($sessLogin[id], 'id', 'igual', 'id');
+			if($consultaPerfil && contaConsulta($consultaPerfil)==1) {
+				## CONFIGURAÇÕES
+				if($modulo=='configuracoes') {
+					config($modulo, $sub, $acao, $registro, $matriz);
+				}
+				## TICKETS
+				elseif($modulo=='ticket' || $modulo=='principal' || !$modulo) {
+					$modulo='ticket';
+					ticket($modulo, $sub, $acao, $registro, $matriz);
+				}
+				## PERFIL
+				elseif($modulo=='perfil') {
+					perfil($modulo, $sub, $acao, $registro, $matriz);
+				}
+				## PROTOCOLO
+				elseif($modulo=='protocolo') {
+					protocolo($modulo, $sub, $acao, $registro, $matriz);
+				}
+				## eventos
+				elseif($modulo=='evento') {
+					evento($modulo, $sub, $acao, $registro, $matriz);
+				}
+				## relatorios
+				elseif($modulo=='relatorios') {
+					relatorios($modulo, $sub, $acao, $registro, $matriz);
+				}
+			} else {
+				$msg = "É necessário preencher o seu perfil para acessar os demais modulos.";
+				avisoNOURL("Atenção:", $msg, "100%");
+				echo "<br />";
+				perfil($modulo, $sub, $acao, $registro, $matriz);
+			}
+		}
+	}
+} # fecha visualizacao de menu
+
+
+
+# Visualização de menu adicional em cadastros
+/**
+ * @@return void
+ * @@param unknown $modulo
+ * @@param unknown $sub
+ * @@param unknown $acao
+ * @@param unknown $registro
+ * @@param unknown $matriz
+ * @@desc Função para verificação de menus da aplicação
+*/
+function menuOpcAdicional($modulo, $sub, $acao, $registro)
+{
+	global $corFundo, $moduloApp, $sessLogin;
+
+
+	## ACESSO
+	if($modulo=='acesso') {
+		# USUARIOS
+		if($sub=='usuarios') {
+			if($acao=='adicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=grupos&acao=listar>Selecionar Grupo</a>",'usuario');
+			}
+			elseif($acao=='alterar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$registro>Excluir</a>",'excluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			elseif($acao=='excluir') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$registro>Alterar</a>",'alterar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+		}
+		elseif($sub=='grupos') {
+			if($acao=='adicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			if($acao=='usuariosadicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=usuarios&acao=adicionar>Novo usuário</a>",'usuario');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=usuarios&registro=$registro>Listar</a>",'listar');
+			}
+			if($acao=='excluir') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$registro>Alterar</a>",'alterar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			if($acao=='alterar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$registro>Excluir</a>",'excluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+		}
+	}
+	
+	
+	## CONFIGURAÇÕES
+	elseif($modulo=='configuracoes') {
+		# CATEGORIAS
+		if($sub=='categorias') {
+			if($acao=='adicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			elseif($acao=='excluir') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$registro>Alterar</a>",'alterar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=grupos&registro=$registro>Grupos</a>",'grupo');
+			}
+			elseif($acao=='alterar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$registro>Excluir</a>",'excluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=grupos&registro=$registro>Grupos</a>",'grupo');
+			}
+			elseif($acao=='gruposexcluir') {
+				$registro=explode(":",$registro);
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=grupos&registro=$registro[0]>Adicionar</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=grupos&registro=$registro[0]>Listar</a>",'listar');
+			}
+			elseif($acao=='gruposadicionar') {
+				$registro=explode(":",$registro);
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=grupos&registro=$registro[0]>Listar</a>",'listar');
+			}
+		}
+		elseif($sub=='grupos') {
+			if($acao=='adicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			if($acao=='usuariosadicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=usuarios&acao=adicionar>Novo usuário</a>",'usuario');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=usuarios&registro=$registro>Listar</a>",'listar');
+			}
+			if($acao=='excluir') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$registro>Alterar</a>",'alterar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			if($acao=='alterar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$registro>Excluir</a>",'excluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+		}
+		elseif($sub=='prioridades' || $sub=='status') {
+			if($acao=='adicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			if($acao=='excluir') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$registro>Alterar</a>",'alterar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			if($acao=='alterar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$registro>Excluir</a>",'excluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+		}
+		elseif($sub=='usuariosempresas') {
+			if($acao=='adicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			elseif($acao=='excluir') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$registro>Alterar</a>",'alterar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			elseif($acao=='alterar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Adicionar</a>",'incluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$registro>Excluir</a>",'excluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=procurar>Procurar</a>",'procurar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=listar>Listar</a>",'listar');
+			}
+			elseif($acao=='empresas') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$registro>Alterar</a>",'alterar');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$registro>Excluir</a>",'excluir');
+				$opcoes.="&nbsp;&nbsp;";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=empresas&registro=$registro>Empresas</a>",'empresas');
+			}
+		}
+	}
+	
+	### TICKETS
+	elseif($modulo=='ticket') {
+		if(!$sub && !$acao) {
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=adicionar>Novo Ticket</a>",'incluir');
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar>Procurar</a>",'procurar');
+
+		}
+		if($sub=='grupo') {
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo>Meus Tickets</a>",'usuario');
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=adicionar>Novo Ticket</a>",'incluir');
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar>Procurar</a>",'procurar');
+
+		}
+		else {
+			if($acao=='adicionar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo>Meus Tickets</a>",'usuario');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar>Procurar</a>",'procurar');
+			}
+			if($acao=='alterar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo>Meus Tickets</a>",'usuario');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=ver&registro=$registro>Ver Ticket</a>",'ver');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Novo Ticket</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$registro>Excluir</a>",'excluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar>Procurar</a>",'procurar');
+			}
+			if($acao=='fechar') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo>Meus Tickets</a>",'usuario');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=ver&registro=$registro>Ver Ticket</a>",'ver');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Novo Ticket</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar>Procurar</a>",'procurar');
+			}
+			if($acao=='abrir') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo>Meus Tickets</a>",'usuario');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=ver&registro=$registro>Ver Ticket</a>",'ver');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Novo Ticket</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar>Procurar</a>",'procurar');
+			}
+			elseif($acao=='excluir') {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo>Meus Tickets</a>",'usuario');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=ver&registro=$registro>Ver Ticket</a>",'ver');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=adicionar>Novo Ticket</a>",'incluir');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$registro>Alterar</a>",'alterar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar>Procurar</a>",'procurar');
+			}
+		}
+
+	}
+	
+	
+	/*
+	# Código comentado por mal funcionamento
+	# Opção default - VOLTAR
+	if($sessLogin[modulo]=='ticket' && !$sessLogin[sub] && !$sessLogin[acao] && !$sessLogin[registro]) {
+		$opcoes.="&nbsp;";
+		$opcoes.=htmlMontaOpcao("<a href=?modulo=>Voltar</a>",'setaesquerda');
+	}
+	else {
+		$opcoes.="&nbsp;";
+		$opcoes.=htmlMontaOpcao("<a href=# onClick=voltar()>Voltar</a>",'setaesquerda');
+	}
+	*/
+	
+	
+	if($opcoes) {
+		# Mostrar opção adicional
+		novaLinhaTabela($corFundo, '100%');
+		itemLinhaNOURL($opcoes, 'right', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+	}
+	
+}
+# fecha menu adicional
+
+
+
+# Função para mostrar o menu de ticket
+/**
+ * @@return void
+ * @@param unknown $idStatus
+ * @@param unknown $ticket
+ * @@param unknown $titulo
+ * @@param unknown $$alinhamento
+ * @@param unknown $tamanho
+ * @@param unknown $corFundo
+ * @@param unknown $corBorda
+ * @@param unknown $classeCSS
+ * @@desc Função para mostrar o menu de ticket
+*/
+function menuTicket($idStatus, $ticket, $titulo, $alinhamento, $tamanho, $corFundo, $corBorda, $classeCSS) {
+	global $html, $sessLogin, $modulo, $categoria, $sessChat;
+	
+	# Permissão do usuario
+	$permissao=buscaPermissaoUsuario($sessLogin[login],'login','igual','login');
+	
+	# Status do ticket
+	$consulta=buscaStatus($idStatus, 'id','igual','id');
+	$valorStatus=resultadoSQL($consulta, 0, 'valor');
+	
+	$separador="<br>";
+	
+	if($permissao[admin] || $permissao[visualizar]) {
+		//$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket>Meus Tickets</a>",'usuario');
+		//$opcoes.=$separador;
+	}
+	if($permissao[admin] || $permissao[adicionar]) {
+		$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=$sub&acao=adicionar>Novo</a>",'incluir');
+		$opcoes.=$separador;
+	}
+	if($permissao[admin] || $permissao[excluir]) {
+		$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=$sub&acao=excluir&registro=$ticket>Excluir</a>",'excluir');
+		$opcoes.=$separador;
+	}
+	if($permissao[admin] || $permissao[alterar]) {
+		$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=$sub&acao=alterar&registro=$ticket>Alterar</a>",'alterar');
+		$opcoes.=$separador;
+		
+		# Checar Status - Status NOVO
+		if($valorStatus=='N') {
+			if($permissao[admin] || $permissao[abrir]) {
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=$sub&acao=abrir&registro=$ticket>Abrir</a>",'abrir');
+				$opcoes.=$separador;
+			}
+		}
+		elseif($valorStatus=='A' || $valorStatus=='R') {
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=$sub&acao=prioridade&registro=$ticket>Prioridade</a>",'prioridades');
+			$opcoes.=$separador;			
+		}
+	}
+	if($permissao[admin] || $permissao[fechar]) {
+		
+		# Checar status - Status Aberto, Resolvido
+		if($valorStatus=='A' || $valorStatus=='R') {
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=$sub&acao=fechar&registro=$ticket>Fechar</a>",'fechar');
+			$opcoes.=$separador;
+		}
+	}
+	if($permissao[admin] || $permissao[comentar]) {
+		if($valorStatus=='A' || $valorStatus=='N' || $valorStatus=='R') {
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=comentario&acao=adicionar&registro=$ticket>Comentar</a>",'comentar');
+			$opcoes.=$separador;
+		}
+	}
+	if($permissao[admin] || $permissao[abrir]) {
+		# Checar status - Status Aberto, Resolvido
+		if($valorStatus=='F') {
+			# Re-Abrir ticket
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=$sub&acao=reabrir&registro=$ticket>Re-Abrir</a>",'pasta');
+			$opcoes.=$separador;
+
+			# Feedback do ticket
+			$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&sub=feedback&acao=incluir&registro=$ticket>Feedback</a>",'feedback');
+			$opcoes.=$separador;
+		}
+	}
+	
+	# Encaminhar protocolo
+	$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&acao=encaminhar&registro=$ticket>Encaminhar</a>",'encaminhar');
+	$opcoes.=$separador;
+	
+	# Transferir ticket
+	$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&acao=transferir&registro=$ticket>Transferir</a>",'transferir');
+	$opcoes.=$separador;
+	
+	# Agenda
+	$opcoes.=htmlMontaOpcao("<a href=?modulo=evento&acao=agendar&registro=$ticket&matriz[ticket]=$ticket>Agendar</a>",'relogio');
+	$opcoes.=$separador;
+	
+	# Relacionar a empresa
+	$opcoes.=htmlMontaOpcao("<a href=?modulo=ticket&acao=relacionar&registro=$ticket>Relacionar</a>",'empresas');
+	$opcoes.=$separador;
+	
+	# Procurar
+	$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=ver&registro=$ticket>Visualizar</a>",'ver');
+	$opcoes.=$separador;
+	
+	# Visualizar
+	$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar>Procurar</a>",'procurar');
+	$opcoes.=$separador;
+	
+	# Contabilizar Tempo
+	$opcoes.=htmlMontaOpcao("<a href=javascript:novaJanela(\"?modulo=$modulo&sub=tempoticket&acao=adicionar&registro=$ticket\",\"tempo$ticket\",\"width=640,height=400,resizable=No,scrollbars=Yes,title=Atendimento,toolbar=No\")>Atender</a>",'atender');
+	$opcoes.=$separador;
+	
+	# Chat
+	$opcoes.=htmlMontaOpcao("<a href=javascript:novaJanela(\"?modulo=$modulo&sub=chat&acao=montar&registro=$ticket\",\"chat$ticket\",\"width=640,height=600,resizable=No,scrollbars=Yes,title=ChatOnline,toolbar=No\")>Chat&nbsp;Online</a>",'usuario');
+	$opcoes.=$separador;
+	
+	# Feedback
+	/*
+	$opcoes.=htmlMontaOpcao("<a href=javascript:novaJanela(\"?modulo=$modulo&sub=feedback&acao=montar&registro=$ticket\",\"feedback$ticket\",\"width=640,height=600,resizable=No,scrollbars=Yes,title=FeedBack,toolbar=No\")>Avaliação</a>",'feedback');
+	$opcoes.=$separador;
+	*/
+
+		
+	if(!$sessLogin[login] ) {
+		//$opcoes=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=incluir&categoria=$categoria>Novo Ticket</a>",'incluir');
+		$opcoes=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=comentar&registro=$ticket>Adicionar Comentario</a>",'comentar');
+		$opcoes.=$separador;
+		$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=verprotocolo&registro=$ticket>Visualizar Ticket</a>",'procurar');
+		$opcoes.=$separador;
+		
+		# Checar Chat
+		# Caso por protocolo, procurar ticket
+		if(!$ticket || !is_numeric($ticket)) {
+			
+			$detalhesTicket=dadosTicketProtocolo($ticket,'protocolo','igual','id');
+			
+			$tmpRegistro=$detalhesTicket[id];
+			# Chechar Chat em aberto
+			$idChatAberto=checkChatTicket($tmpRegistro);
+			if($idChatAberto) $sessChat[id]=$idChatAberto;
+		
+			if($sessChat[id] && checkChatStatus($sessChat[id])) {
+				$opcoes.=htmlMontaOpcao("<a href=javascript:novaJanela(\"?modulo=ticket&sub=chat&acao=montar&registro=$ticket\",\"chat$ticket\",\"width=640,height=600,resizable=No,scrollbars=Yes,title=ChatOnline,toolbar=No\")>Chat&nbsp;Online</a>",'usuario');
+				$opcoes.=$separador;
+			}
+		}
+
+	}
+		
+	novaTabela2("Opções",'center' , $tamanho, 0, 2, 1, $corFundo, $corBorda, 0);
+	novaLinhaTabela($corFundo, '100%');
+		itemLinhaForm($opcoes, 'left nowrap', 'middle', $corFundo, 0,  'normal8');
+	fechaLinhaTabela();
+	fechaTabela();
+}
+
+?>
+@

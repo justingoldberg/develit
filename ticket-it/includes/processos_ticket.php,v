@@ -1,0 +1,272 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para processos de tickets
+
+
+# Função para gravação em banco de dados
+function dbProcessosTicket($matriz, $tipo)
+{
+	global $conn, $tb, $modulo, $acao, $sessLogin;
+	
+	# Data do sistema 
+	$data=dataSistema();
+	# Busca o ID do usuário logado
+	if($sessLogin[login]) $idUser=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+	else $idUser=buscaIDUsuario('convidado', 'login','igual','login');
+	
+	# Incluir Ticket
+	if($tipo=='incluir') {
+	
+		# Busca ID Status Novo
+		if(!$matriz[status]) {
+			$matriz[status]=buscaIDStatus('N','valor');
+		}
+		
+		$sql="INSERT INTO $tb[ProcessosTicket] VALUES ($matriz[idTicket],
+		$idUser,
+		$matriz[status],
+		'$data[dataBanco]',
+		'Criação de Ticket: $matriz[assunto]'
+		)";
+	} #fecha inclusao
+	
+	# Abrir Ticket
+	elseif($tipo=='abrir') {
+	
+		# Busca ID Status Novo
+		if(!$matriz[status]) {
+			$matriz[status]=buscaIDStatus('A','valor');
+		}
+		
+		$sql="INSERT INTO $tb[ProcessosTicket] VALUES ($matriz[ticket],
+		$idUser,
+		$matriz[status],
+		'$data[dataBanco]',
+		'$matriz[descricao]'
+		)";
+	} #fecha abertura
+	
+	# Transferir Ticket
+	elseif($tipo=='transferir') {
+		$sql="INSERT INTO $tb[ProcessosTicket] VALUES ($matriz[ticket],
+		'$matriz[idUsuario]',
+		'$matriz[idStatus]',
+		'$data[dataBanco]',
+		'$matriz[descricao]'
+		)";
+		
+	} #fecha abertura
+	
+	# Transferir Ticket
+	elseif($tipo=='transferir_totalmente') {
+		$sql="UPDATE $tb[ProcessosTicket] SET idUsuario='$matriz[idUsuario]' WHERE idTicket='$matriz[ticket]'";
+		
+	} #fecha abertura
+	
+	# Re-Abrir Ticket
+	elseif($tipo=='reabrir') {
+	
+		# Busca ID Status Novo
+		if(!$matriz[status]) {
+			$matriz[status]=buscaIDStatus('R','valor');
+		}
+		
+		$sql="INSERT INTO $tb[ProcessosTicket] VALUES ($matriz[ticket],
+		$idUser,
+		$matriz[status],
+		'$data[dataBanco]',
+		'$matriz[descricao]'
+		)";
+	} #fecha abertura
+	
+	# Abrir Ticket
+	elseif($tipo=='fechar') {
+	
+		# Busca ID Status Novo
+		if(!$matriz[status]) {
+			$matriz[status]=buscaIDStatus('F','valor');
+		}
+		
+		$sql="INSERT INTO $tb[ProcessosTicket] VALUES ($matriz[ticket],
+		$idUser,
+		$matriz[status],
+		'$data[dataBanco]',
+		'$matriz[descricao]'
+		)";
+	} #fecha abertura
+
+	
+	elseif($tipo=='excluirtodos') {
+		$sql="DELETE FROM $tb[ProcessosTicket] WHERE idTicket=$matriz[id]";
+	}
+
+	elseif($tipo=='excluirusuario') {
+		$sql="DELETE FROM $tb[ProcessosTicket] WHERE idUsuario=$matriz[id]";
+	}
+	
+	# Alterar
+	elseif($tipo=='alterar') {
+		# Verificar se o ticket existe
+		$sql="UPDATE $tb[Ticket] SET texto='$matriz[texto]', nome='$matriz[nome]', cor='$matriz[cor]', valor='$matriz[valor]' WHERE id=$matriz[id]";
+	}
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+	
+} # fecha função de gravação em banco de dados
+
+
+
+# função de busca 
+function buscaProcessosTicket($texto, $campo, $tipo, $ordem)
+{
+	global $conn, $tb, $corFundo, $modulo;
+	
+	if($tipo=='todos') {
+		$sql="SELECT * FROM $tb[ProcessosTicket] ORDER BY $ordem";
+	}
+	elseif($tipo=='contem') {
+		$sql="SELECT * from $tb[ProcessosTicket] WHERE $campo LIKE '%$texto%' ORDER BY $ordem";
+	}
+	elseif($tipo=='igual') {
+		$sql="SELECT * from $tb[ProcessosTicket] WHERE $campo='$texto' ORDER BY $ordem";
+	}
+	elseif($tipo=='custom') {
+		$sql="SELECT * from $tb[ProcessosTicket] WHERE $texto ORDER BY $ordem";
+	}
+	
+	# Verifica consulta
+	if($sql){
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta
+		return($consulta);
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+	
+} # fecha função de busca
+
+
+# Listagem de comentarios
+function listarProcessosTicket($modulo, $sub, $acao, $matriz, $registro) {
+	global $html, $corFundo, $corBorda;
+
+	# Verificar comentários já postados
+	$consulta=buscaProcessosTicket($registro, 'idTicket','igual','data');
+
+	#nova tabela para mostrar informações
+	novaTabela("Processos", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+
+		if(!$consulta || contaConsulta($consulta)==0) {
+			novaLinhaTabela($corFundo, '100%');
+				itemLinhaNOURL("Nenhum processo encontrado para este Ticket", 'left', $corFundo, 2, 'txtaviso');
+			fechaLinhaTabela();
+		}
+		else {
+		
+			for($i=0;$i<contaConsulta($consulta);$i++) {
+				$usuario=resultadoSQL($consulta, $i, 'idUsuario');
+				$status=resultadoSQL($consulta, $i, 'idStatus');
+				$data=converteData(resultadoSQL($consulta, $i, 'data'),'banco','formdata');
+				$hora=converteData(resultadoSQL($consulta, $i, 'data'),'banco','formhora');
+				$texto=resultadoSQL($consulta, $i, 'texto');
+				
+				# Informações do usuario
+				$status=checaStatusTicket($status);
+				$consultaUsuario=buscaUsuarios($usuario, 'id','igual','id');
+				$loginUsuario=resultadoSQL($consultaUsuario, 0, 'login');
+				
+				# Atribuir Valores
+				$fundo=$i%2+1;
+				$fundo2=$i%2+3;
+				
+				novaLinhaTabela($corFundo, '100%');
+					$info="<b>Postado Por:</b> $loginUsuario<br>
+					<b>Status:</b> $status[nome]<br>
+					<b>Data:</b> $data<br>
+					<b>Hora:</b> $hora</br>";
+					itemLinhaTabela($info, 'left', '30%', "tabfundo$fundo");
+					itemLinhaNOURL(nl2br($texto), 'left', $corFundo, 0, "tabfundo$fundo2");
+				fechaLinhaTabela();
+			}
+		}
+		
+	fechaTabela();	
+	# fim da tabela
+}
+
+
+
+
+# Função para obter dados do ultimo processo do ticket
+function ultimoProcessoTicket($idTicket) {
+
+	global $conn, $tb;
+	
+	$sql="
+		SELECT
+			$tb[ProcessosTicket].data dtProcesso, 
+			$tb[ProcessosTicket].idTicket, 
+			$tb[ProcessosTicket].idUsuario, 
+			$tb[Status].nome status, 
+			$tb[ProcessosTicket].idStatus idStatus, 
+			$tb[Usuarios].login login, 
+			$tb[ProcessosTicket].texto  texto
+		FROM
+			$tb[ProcessosTicket],
+			$tb[Status],
+			$tb[Usuarios]
+		WHERE
+			$tb[ProcessosTicket].idStatus = $tb[Status].id  
+			AND $tb[ProcessosTicket].idUsuario = $tb[Usuarios].id  
+			AND $tb[ProcessosTicket].idTicket=$idTicket
+		ORDER BY
+			$tb[ProcessosTicket].data DESC";
+			
+	$consulta=consultaSQL($sql, $conn);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$retorno[idTicket]=$idTicket;
+		$retorno[data]=converteData(resultadoSQL($consulta, 0, 'dtProcesso'),'banco','form');
+		$retorno[idUsuario]=resultadoSQL($consulta, 0, 'idUsuario');
+		$retorno[status]=resultadoSQL($consulta, 0, 'status');
+		$retorno[idStatus]=resultadoSQL($consulta, 0, 'idStatus');
+		$retorno[login]=resultadoSQL($consulta, 0, 'login');
+		$retorno[texto]=resultadoSQL($consulta, 0, 'texto');
+	}
+	
+	return($retorno);
+}
+
+
+?>
+@

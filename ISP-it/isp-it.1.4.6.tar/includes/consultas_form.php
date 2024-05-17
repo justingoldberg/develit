@@ -1,0 +1,14 @@
+<?
+################################################################################
+#       Criado por: José Roberto Kerne - joseroberto@kerne.org
+#  Data de criação: 18/08/2003
+# Ultima alteração: 14/04/2004
+#    Alteração No.: 004
+#
+# Função:
+# Funções para relatórios
+
+
+
+
+?>

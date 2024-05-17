@@ -1,0 +1,29 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.05.33;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@o Security improvements on siptraced (user/IP Authentication);
+o Optional limit of concurrent TCP connections (siptraced);
+o Let the user select which tag (From, To, INVITE, etc) he want to match the 
+  filter;
+o Save a SIP Trace to file;
+o Let the user to select colors;
+@

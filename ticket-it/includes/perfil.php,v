@@ -1,0 +1,551 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para cadastro de tickets
+
+
+# Função para cadastro
+function perfil($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+
+	# Mostrar menu
+	novaTabela2("[Perfil do Usuário]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 4);
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('55%', 'left', $corFundo, 0, 'tabfundo1');
+				echo "<br><img src=".$html[imagem][perfilg]." border=0 align=left>
+				<b class=bold>Perfil</b><br>
+				<br><span class=normal10>Perfil e preferência do usuário para utilização do
+				$configAppName.</span>";
+			htmlFechaColuna();
+			htmlAbreColuna('5%', 'left', $corFundo, 0, 'normal');
+				echo "&nbsp;";
+			htmlFechaColuna();									
+			$texto=htmlMontaOpcao("<br>Meu Perfil", 'perfil');
+			itemLinha($texto, "?modulo=perfil&acao=config", 'center', $corFundo, 0, 'normal');
+			$texto=htmlMontaOpcao("<br>Alterar Senha", 'chave');
+			itemLinha($texto, "?modulo=perfil&acao=senha", 'center', $corFundo, 0, 'normal');
+		fechaLinhaTabela();
+	fechaTabela();
+	
+	if(!$sub) {
+		# Mostrar Status caso não seja informada a ação
+		# Inclusão
+		if($acao=="senha") {
+			itemTabelaNOURL("&nbsp;", 'left', $corFundo, 0, 'normal');	
+			perfilSenha($modulo, $sub, $acao, $registro, $matriz);
+		}
+		# Configurações
+		elseif($acao=="config") {
+			itemTabelaNOURL("&nbsp;", 'left', $corFundo, 0, 'normal');	
+			perfilConfig($modulo, $sub, $acao, $registro, $matriz);
+		}
+	}
+} #fecha menu principal 
+
+
+
+# Alteração de senha
+function perfilSenha($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html, $sessLogin;
+	
+	# Identificar se usuário é o mesmo que está sendo trocada a senha
+	$idUsuario=buscaIDUsuario($sessLogin[login],'login','igual','id');
+	
+	if($registro == $idUsuario || !$registro && idUsuario) {
+		
+		# Form de inclusao
+		if(!$matriz[bntAlterar]) {
+			# Buscar informações do usuario
+			$consulta=buscaUsuarios($idUsuario, 'id','igual','id');
+			
+			#verificar consulta
+			if($consulta && contaConsulta($consulta)>0) {
+				# receber valores
+				$id=resultadoSQL($consulta, 0, 'id');
+				$login=resultadoSQL($consulta, 0, 'login');
+				$senha=resultadoSQL($consulta, 0, 'senha');
+				$status=resultadoSQL($consulta, 0, 'status');
+			
+				# Motrar tabela de busca
+				novaTabela2("[Alteração de Senha do Usuário]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+					# Opcoes Adicionais
+					menuOpcAdicional($modulo, $sub, $acao, $idUsuario);				
+					#fim das opcoes adicionais
+					novaLinhaTabela($corFundo, '100%');
+					$texto="			
+						<form method=post name=matriz action=index.php>
+						<input type=hidden name=modulo value=$modulo>
+						<input type=hidden name=matriz[id] value=$id>
+						<input type=hidden name=acao value=$acao>&nbsp;";
+						itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Login: </b><br>
+							<span class=normal10>Login de acesso do usuário</span>";
+						htmlFechaColuna();					
+						itemLinhaForm($login, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Senha: </b><br>
+							<span class=normal10>Senha de acesso do usuário</span>";
+						htmlFechaColuna();
+						$texto="<input type=password name=matriz[senha] size=20>";
+						itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Confirmação de Senha: </b><br>
+							<span class=normal10>Confirmação de de Senha de acesso do usuário</span>";
+						htmlFechaColuna();
+						$texto="<input type=password name=matriz[confirma_senha] size=20>";
+						itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "&nbsp;";
+						htmlFechaColuna();
+						$texto="<input type=submit name=matriz[bntAlterar] value=Alterar>";
+						itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+				fechaTabela();
+			}
+			# registro nao encontrado
+			else {
+				# Mensagem de aviso
+				$msg="Registro não foi encontrado!";
+				$url="?modulo=$modulo&sub=$sub&acao=listar";
+				aviso("Aviso", $msg, $url, 760);
+			}
+		} #fecha form
+		elseif($matriz[bntAlterar]) {
+			# Conferir campos
+			if($matriz[senha] && $matriz[confirma_senha]) {
+				# conferir senha e confirmação
+				if( $matriz[senha] != $matriz[confirma_senha]){
+					# Erro - campo inválido
+					# Mensagem de aviso
+					$msg="Senha informada não é igual a confirmação de senha. Tente novamente";
+					$url="?modulo=$modulo&sub=$sub&acao=$acao";
+					aviso("Aviso: Dados incorretos", $msg, $url, 760);
+				}
+				# continuar - campos OK
+				else {
+					# Cadastrar em banco de dados
+					$grava=dbUsuario($matriz, 'alterar');
+					
+					# Verificar inclusão de registro
+					if($grava) {
+						# acusar falta de parametros
+						# Mensagem de aviso
+						$msg="Registro Gravado com Sucesso!";
+						$url="?modulo=$modulo&sub=$sub&acao=listar";
+						aviso("Aviso", $msg, $url, 760);
+						
+						# Atualizar senha na session
+						$sessLogin[senha]=$matriz[senha];
+					}
+					
+				}
+			}
+			
+			# falta de parametros
+			else {
+				# acusar falta de parametros
+				# Mensagem de aviso
+				$msg="Falta de parâmetros necessários. Informe os campos obrigatórios e tente novamente";
+				$url="?modulo=$modulo&sub=$sub&acao=$acao";
+				aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+			}
+		}
+	}
+	else {
+		# Mensagem de aviso
+		$msg="Operação não permitida!";
+		$url="?modulo=$modulo";
+		aviso("Aviso", $msg, $url, 760);	
+	}
+}
+
+
+
+
+# Alteração de parametros
+function perfilConfig($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html, $sessLogin;
+	
+	# Identificar se usuário é o mesmo que está sendo trocada a senha
+	$idUsuario=buscaIDUsuario($sessLogin[login],'login','igual','id');
+	
+	if($registro == $idUsuario || !$registro && idUsuario) {
+		
+		# Form de inclusao
+		if(!$matriz[bntConfirmar]) {
+			# Buscar informações do usuario
+			$consulta=buscaUsuarios($idUsuario, 'id','igual','id');
+			
+			#verificar consulta
+			if($consulta && contaConsulta($consulta)>0) {
+				# receber valores
+				$id=resultadoSQL($consulta, 0, 'id');
+				$login=resultadoSQL($consulta, 0, 'login');
+				$senha=resultadoSQL($consulta, 0, 'senha');
+				$status=resultadoSQL($consulta, 0, 'status');
+				
+				# Buscar perfil do usuario
+				$consultaPerfil=buscaPerfil($id, 'id','igual','id');
+				if($consultaPerfil && contaConsulta($consultaPerfil)>0) {
+					# Dados do perfil
+					$notificar_email=resultadoSQL($consultaPerfil, 0, 'notificar_email');
+					$email=resultadoSQL($consultaPerfil, 0, 'email');
+					$titulo=resultadoSQL($consultaPerfil, 0, 'titulo_email');
+					$idGrupo=resultadoSQL($consultaPerfil, 0, 'idGrupo');
+					$diaInicio=resultadoSQL($consultaPerfil, 0, 'diaInicio');
+					$diaFim=resultadoSQL($consultaPerfil, 0, 'diaFim');
+					$horarioInicio=resultadoSQL($consultaPerfil, 0, 'horarioInicio');
+					$horarioFim=resultadoSQL($consultaPerfil, 0, 'horarioFim');
+					$grade=resultadoSQL($consultaPerfil, 0, 'grade');
+					$alinhaMenu=resultadoSQL($consultaPerfil, 0, 'alinhaMenu');
+					$alinhaPrior=resultadoSQL($consultaPerfil, 0, 'alinhaPrior');
+					$categoriaPadrao=resultadoSQL($consultaPerfil, 0, 'categoriaPadrao');
+					$atualizarUltimos=resultadoSQL($consultaPerfil, 0, 'atualizarUltimos');
+					$ordemComentarios=resultadoSQL($consultaPerfil, 0, 'ordemComentarios');
+					$acaoPerfil='alterar';
+				}
+				else $acaoPerfil='incluir';
+			
+				# Motrar tabela de busca
+				novaTabela2("[Configurações de Parâmetros]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+					#fim das opcoes adicionais
+					novaLinhaTabela($corFundo, '100%');
+					$texto="			
+						<form method=post name=matriz action=index.php>
+						<input type=hidden name=modulo value=$modulo>
+						<input type=hidden name=matriz[id] value=$id>
+						<input type=hidden name=matriz[acaoPerfil] value=$acaoPerfil>
+						<input type=hidden name=acao value=$acao>&nbsp;";
+						itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Login: </b>";
+						htmlFechaColuna();					
+						itemLinhaForm($login, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Notificações por e-mail: </b><br>
+							<span class=normal10>Receber notificações por e-mail</span>";
+						htmlFechaColuna();
+						if($notificar_email) $opcNotificar='checked';
+						$texto="<input type=checkbox name=matriz[notificar_email] value='S' $opcNotificar>";
+						itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>E-mail: </b><br>
+							<span class=normal10>Endereço de destino de e-mails de notificação</span>";
+						htmlFechaColuna();
+						$texto="<input type=text name=matriz[email] size=60 value='$email'>";
+						itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Titulo do E-mail: </b><br>
+							<span class=normal10>Título da notificação enviada por e-mail</span>";
+						htmlFechaColuna();
+						$texto="<input type=text name=matriz[titulo_email] size=60 value='$titulo'>";
+						itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Grupo padrão: </b><br>
+							<span class=normal10>Selecione seu grupo padrão</span>";
+						htmlFechaColuna();
+						itemLinhaForm(formListaGruposUsuario($idUsuario, $idGrupo), 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					# diaInicio
+					$texto="<b class=bold>Primeiro dia:</b><br>
+							<span class=normal10>Selecione o primeiro dia útil da semana</span>";
+					if (! $diaInicio) $diaInicio='Segunda';
+					getCampo('combo', $texto, '', getComboSemana($diaInicio, 'matriz[diaInicio]', 'form'));
+					
+					# dia Fim 
+					$texto="<b class=bold>Último dia:</b><br>
+							<span class=normal10>Selecione o último dia útil da semana</span>";
+					if (! $diaFim) $diaFim='Sexta';
+					getCampo('combo', $texto, '', getComboSemana($diaFim, 'matriz[diaFim]', 'form'));
+					
+					# horario inicio
+					$texto="<b class=bold>Entrada:</b><br>
+							<span class=normal10>Digite a hora da entrada (h)</span>";
+					if (! $horarioInicio) $horarioInicio='8';
+					getCampo('text', $texto, 'matriz[horarioInicio]', $horarioInicio,'','','2');
+					
+					# horario final
+					$texto="<b class=bold>Saída:</b><br>
+							<span class=normal10>Digite a hora da saída(h)</span>";
+					if (! $horarioFim) $horarioFim='18';
+					getCampo('text', $texto, 'matriz[horarioFim]', $horarioFim,'','','2');
+					
+					#com grade
+					$texto="<b class=bold>Agenda com grade:</b><br>
+							<span class=normal10>Exibe as linhas de tabelas na agenda</span>";
+					getCampo('check', $texto, 'matriz[grade]', $grade);
+					
+					# alinhamento do Menu de Opções
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Posição do Menu de Opções:</b><br>
+							<span class=normal10>Posicionamento do Menu de Opções do Ticket</span>";
+						htmlFechaColuna();					
+						itemLinhaForm(formSelectPosicaoDireitaEsquerda($alinhaMenu, 'alinhaMenu'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					# alinhamento da cor da prioridade
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Posição da Prioridade:</b><br>
+							<span class=normal10>Posicionamento da cor de indicação da prioridade</span>";
+						htmlFechaColuna();					
+						itemLinhaForm(formSelectPosicaoDirEsq($alinhaPrior, 'alinhaPrior'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					# alinhamento da cor da prioridade
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Categoria Padrão:</b><br>
+							<span class=normal10>Categoria automaticamente selecionada ao abrir tickets</span>";
+						htmlFechaColuna();					
+						itemLinhaForm(formCategorias($categoriaPadrao, 'categoriaPadrao'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					# alinhamento da cor da prioridade
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Atualizar Últimos Tickets:</b><br>
+							<span class=normal10>Atualizar automaticamente a lista de últimos tickets</span>";
+						htmlFechaColuna();					
+						itemLinhaForm(formSelectSimNao($atualizarUltimos, 'atualizarUltimos', 'form'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					# alinhamento da cor da prioridade
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Ordem dos Comentários:</b><br>
+							<span class=normal10>Ordem dos comentários postados no ticket</span>";
+						htmlFechaColuna();					
+						itemLinhaForm(formSelectOrdem($ordemComentarios, 'ordemComentarios', 'form'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					
+					# botao confirmar
+					getBotaoConfirmar($matriz, 'Confirmar');
+					
+				fechaTabela();
+			}
+			# registro nao encontrado
+			else {
+				# Mensagem de aviso
+				$msg="Registro não foi encontrado!";
+				$url="?modulo=$modulo&sub=$sub&acao=listar";
+				aviso("Aviso", $msg, $url, 760);
+			}
+		} #fecha form
+		elseif($matriz[bntConfirmar]) {
+			# Conferir campos
+			# Conferir campos
+			if($matriz[notificar_email] == "S" && !$matriz[email]) {
+				# acusar falta de parametros
+				# Mensagem de aviso
+				$msg="Falta de parâmetros necessários. Informe os campos obrigatórios e tente novamente";
+				$url="?modulo=$modulo&sub=$sub&acao=$acao";
+				aviso("Aviso: Ocorrência de erro", $msg, $url, 760);			
+			}
+			else {
+				# Cadastrar em banco de dados
+				$grava=dbPerfil($matriz, $matriz[acaoPerfil]);
+				
+				# Verificar inclusão de registro
+				if($grava) {
+					# OK 
+					$msg="Perfil Alterado com sucesso!";
+					$url="?modulo=$modulo";
+					aviso("Aviso", $msg, $url, 760);
+				}
+			}
+		}
+	}
+	else {
+		# Mensagem de aviso
+		$msg="Operação não permitida!";
+		$url="?modulo=$modulo";
+		aviso("Aviso", $msg, $url, 760);	
+	}
+}
+
+
+
+# Função para gravação de dados de perfil
+function dbPerfil($matriz, $tipo) {
+
+	global $conn, $tb, $modulo, $sub, $acao;
+	
+	if($matriz[grade]=='on') $matriz[grade]=1;
+	else $matriz[grade]=0;
+	
+	if($tipo=='alterar') {
+		$sql="
+			UPDATE 
+				$tb[Perfil] 
+			SET 
+				email='$matriz[email]', 
+				notificar_email='$matriz[notificar_email]',
+				titulo_email='$matriz[titulo_email]' ,
+				idGrupo='$matriz[grupo]',
+				diaInicio='$matriz[diaInicio]',
+				diaFim='$matriz[diaFim]',
+				horarioInicio='$matriz[horarioInicio]',
+				horarioFim='$matriz[horarioFim]',
+				grade='$matriz[grade]',
+				alinhaMenu='$matriz[alinhaMenu]',
+				alinhaPrior='$matriz[alinhaPrior]',
+				categoriaPadrao='$matriz[categoriaPadrao]',
+				atualizarUltimos='$matriz[atualizarUltimos]',
+				ordemComentarios='$matriz[ordemComentarios]'
+			WHERE 
+				id=$matriz[id]";
+	}
+	elseif($tipo=='incluir') {
+		$sql="
+			INSERT INTO 
+				$tb[Perfil] 
+			VALUES (
+				$matriz[id], 
+				'$matriz[notificar_email]', 
+				'$matriz[email]',
+				'$matriz[titulo_email]',
+				'$matriz[grupo]',
+				'$matriz[diaInicio]',
+				'$matriz[diaFim]',
+				'$matriz[horarioInicio]',
+				'$matriz[horarioFim]',
+				'$matriz[grade]',
+				'$matriz[alinhaMenu]',
+				'$matriz[alinhaPrior]',
+				'$matriz[categoriaPadrao]',
+				'$matriz[atualizarUltimos]',
+				'$matriz[ordemComentarios]'
+			)";
+	}
+	elseif($tipo=='excluir') {
+		$sql="DELETE FROM $tb[Perfil] where id='$matriz[id]'";
+	}
+
+	elseif($tipo=='excluirusuario') {
+		$sql="DELETE FROM $tb[Perfil] where idUsuario='$matriz[id]'";
+	}
+
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+	
+}
+
+
+
+# função de busca 
+function buscaPerfil($texto, $campo, $tipo, $ordem)
+{
+	global $conn, $tb, $corFundo, $modulo, $sub;
+	
+	if($tipo=='todos') {
+		$sql="SELECT * FROM $tb[Perfil] ORDER BY $ordem";
+	}
+	elseif($tipo=='contem') {
+		$sql="SELECT * from $tb[Perfil] WHERE $campo LIKE '%$texto%' ORDER BY $ordem";
+	}
+	elseif($tipo=='igual') {
+		$sql="SELECT * from $tb[Perfil] WHERE $campo='$texto' ORDER BY $ordem";
+	}
+	elseif($tipo=='custom') {
+		$sql="SELECT * from $tb[Perfil] WHERE $texto ORDER BY $ordem";
+	}
+	
+	# Verifica consulta
+	if($sql){
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta
+		return($consulta);
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+	
+} # fecha função de busca de usuarios
+
+
+
+# Função para carregar parametros do perfil do usuairo
+function dadosPerfilUsuario($idUsuario) {
+
+	$consulta=buscaPerfil($idUsuario,'id','igual','id');
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$retorno[id]=resultadoSQL($consulta, 0, 'id');
+		$retorno[notificar_email]=resultadoSQL($consulta, 0, 'notificar_email');
+		$retorno[email]=resultadoSQL($consulta, 0, 'email');
+		$retorno[titulo_email]=resultadoSQL($consulta, 0, 'titulo_email');
+		$retorno[idGrupo]=resultadoSQL($consulta, 0, 'idGrupo');
+		$retorno[diaInicio]=resultadoSQL($consulta, 0, 'diaInicio');
+		$retorno[diaFim]=resultadoSQL($consulta, 0, 'diaFim');
+		$retorno[horarioInicio]=resultadoSQL($consulta, 0, 'horarioInicio');
+		$retorno[horarioFim]=resultadoSQL($consulta, 0, 'horarioFim');
+		$retorno[grade]=resultadoSQL($consulta, 0, 'grade');
+		$retorno[alinhaMenu]=resultadoSQL($consulta, 0, 'alinhaMenu');
+		$retorno[alinhaPrior]=resultadoSQL($consulta, 0, 'alinhaPrior');
+		$retorno[categoriaPadrao]=resultadoSQL($consulta, 0, 'categoriaPadrao');
+		$retorno[atualizarUltimos]=resultadoSQL($consulta, 0, 'atualizarUltimos');
+		$retorno[ordemComentarios]=resultadoSQL($consulta, 0, 'ordemComentarios');
+	}
+
+	return($retorno);
+}
+
+?>
+@

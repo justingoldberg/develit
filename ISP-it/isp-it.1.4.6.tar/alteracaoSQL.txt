@@ -1,0 +1,46 @@
+# alteracoes desde a ultima versao!
+CREATE TABLE  IF NOT EXISTS TipoCarteira(
+  id bigint(20) not null auto_increment,
+  nome varchar(50) not null default '',
+  descricao varchar(255) not null default '',
+  valor char(1) not null default 'R',
+  PRIMARY KEY (id)
+) TYPE=MyISAM;
+#
+CREATE TABLE  IF NOT EXISTS ClienteBanco(
+  id bigint(20) NOT NULL auto_increment,
+  idPlanosPessoas bigint(20) NOT NULL default '0',
+  agencia varchar(20) NOT NULL default '',
+  contacorrente varchar(20) NOT NULL default '',
+  identificacao varchar(14) NOT NULL default '',
+  digAg char(1) NOT NULL default '',
+  digCC char(1) NOT NULL default '',
+  PRIMARY KEY  (id),
+  INDEX idPlanosPessoas (idPlanosPessoas)
+) TYPE=MyISAM;
+#
+ALTER TABLE FormaCobranca ADD COLUMN idTipoCarteira INT NOT NULL DEFAULT 0 AFTER digConta;
+ALTER TABLE FormaCobranca ADD INDEX (idTipoCarteira);
+ALTER TABLE FormaCobranca ADD COLUMN arquivoremessa INT NOT NULL DEFAULT 0;
+ALTER TABLE Email ADD COLUMN idServicosPlanos bigint NOT NULL DEFAULT 0;
+
+CREATE TABLE `TiposImpostos` (
+ `id` INT(11)  NOT NULL AUTO_INCREMENT,
+ `tipo` varchar(100)  NOT NULL,
+ `descricao` varchar(255) ,
+  PRIMARY KEY(`id`)
+)
+TYPE = MYISAM;
+
+CREATE TABLE `ImpostosPessoas` (
+ `id` INT(11)  NOT NULL AUTO_INCREMENT,
+ `idTipoImposto` INT(11)  NOT NULL,
+ `idPessoa` INT(11)  NOT NULL,
+ `valor` DOUBLE  NOT NULL,
+ PRIMARY KEY(`id`)
+)
+TYPE = MYISAM;
+
+ alter table NotaFiscal add column ISSQN double not null ;
+ alter table NotaFiscal add column idPop int(11) default 1 ;
+

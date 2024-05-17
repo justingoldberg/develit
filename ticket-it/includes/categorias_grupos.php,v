@@ -1,0 +1,502 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para cadastro de categorias
+
+
+
+# Função para listagem 
+function listarCategoriasGrupos($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html, $limite;
+
+	# Seleção de registros
+	$consulta=buscaCategorias($registro, 'id', 'igual', 'id');
+	
+	if(!$consulta || contaConsulta($consulta)==0) {
+		# Servidor não encontrado
+		itemTabelaNOURL('Não há registros cadastrados!', 'left', $corFundo, 3, 'txtaviso');
+	}
+	else {
+		# Mostrar Informações sobre Servidor
+		verCategoria($registro);
+		
+		$consulta=buscaCategoriasGrupos($registro, 'idCategoria','igual','idCategoria');
+		
+		# Cabeçalho		
+		# Motrar tabela de busca
+		novaTabela("[Grupos da Categoria]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 10);
+		$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=$acao"."adicionar&registro=$registro>Adicionar</a>",'incluir');
+		itemTabelaNOURL($opcoes, 'right', $corFundo, 10, 'tabfundo1');
+		
+		
+		# Caso não hajam servicos para o servidor
+		if(!$consulta || contaConsulta($consulta)==0) {
+			# Não há registros
+			itemTabelaNOURL('Não há grupos cadastrados para esta categoria', 'left', $corFundo, 10, 'txtaviso');
+		}
+		else {
+		
+			# Cabeçalho
+			novaLinhaTabela($corFundo, '100%');
+				itemLinhaTabela('Grupo', 'center', '25%', 'tabfundo0');
+				itemLinhaTabela('Admin', 'center', '5%', 'tabfundo0');
+				itemLinhaTabela('Incluir', 'center', '5%', 'tabfundo0');
+				itemLinhaTabela('Alterar', 'center', '5%', 'tabfundo0');
+				itemLinhaTabela('Excluir', 'center', '5%', 'tabfundo0');
+				itemLinhaTabela('Ver', 'center', '5%', 'tabfundo0');
+				itemLinhaTabela('Abrir', 'center', '5%', 'tabfundo0');
+				itemLinhaTabela('Fechar', 'center', '5%', 'tabfundo0');
+				itemLinhaTabela('Comentar', 'center', '5%', 'tabfundo0');
+				itemLinhaTabela('Opções', 'center', '40%', 'tabfundo0');
+			fechaLinhaTabela();
+
+			$i=0;
+			
+			while($i < contaConsulta($consulta)) {
+				# Mostrar registro
+				$idGrupo=resultadoSQL($consulta, $i, 'idGrupo');
+				
+				# Buscar informações sobre o serviço
+				$consultaGrupo=buscaGrupos($idGrupo, 'id','igual','id');
+				
+				# Informações sobre grupo
+				$idGrupo=resultadoSQL($consultaGrupo, 0, 'id');
+				$nome=resultadoSQL($consultaGrupo, 0, 'nome');
+				$admin="&nbsp;".resultadoSQL($consultaGrupo, 0, 'admin');
+				$incluir="&nbsp;".resultadoSQL($consultaGrupo, 0, 'incluir');
+				$alterar="&nbsp;".resultadoSQL($consultaGrupo, 0, 'alterar');
+				$excluir="&nbsp;".resultadoSQL($consultaGrupo, 0, 'excluir');
+				$visualizar="&nbsp;".resultadoSQL($consultaGrupo, 0, 'visualizar');
+				$abrir="&nbsp;".resultadoSQL($consultaGrupo, 0, 'abrir');
+				$fechar="&nbsp;".resultadoSQL($consultaGrupo, 0, 'fechar');
+				$comentar="&nbsp;".resultadoSQL($consultaGrupo, 0, 'comentar');
+
+				$opcoes="";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=$acao".excluir."&registro=$registro:$idGrupo>Excluir</a>",'excluir');
+
+				novaLinhaTabela($corFundo, '100%');
+					itemLinhaTabela($nome, 'left', '40%', 'normal10');
+					itemLinhaTabela($admin, 'center', '5%', 'normal10');
+					itemLinhaTabela($incluir, 'center', '5%', 'normal10');
+					itemLinhaTabela($alterar, 'center', '5%', 'normal10');
+					itemLinhaTabela($excluir, 'center', '5%', 'normal10');
+					itemLinhaTabela($visualizar, 'center', '5%', 'normal10');
+					itemLinhaTabela($abrir, 'center', '5%', 'normal10');					
+					itemLinhaTabela($fechar, 'center', '5%', 'normal10');
+					itemLinhaTabela($comentar, 'center', '5%', 'normal10');
+					itemLinhaTabela($opcoes, 'center', '20%', 'normal10');
+				fechaLinhaTabela();
+				
+				# Incrementar contador
+				$i++;
+			} #fecha laco de montagem de tabela
+			
+			fechaTabela();
+		} #fecha servicos encontrados
+	} #fecha listagem
+
+	
+}#fecha função de listagem
+
+
+
+# Função para busca de Servidor de Servidores
+function buscaCategoriasGrupos($texto, $campo, $tipo, $ordem)
+{
+	global $conn, $tb, $corFundo, $modulo, $sub;
+	
+	if($tipo=='todos') {
+		$sql="SELECT * FROM $tb[CategoriasGrupos] ORDER BY $ordem";
+	}
+	elseif($tipo=='igual') {
+		$sql="SELECT * from $tb[CategoriasGrupos] WHERE $campo='$texto' ORDER BY $ordem";
+	}
+	elseif($tipo=='custom') {
+		$sql="SELECT * from $tb[CategoriasGrupos] WHERE $texto ORDER BY $ordem";
+	}
+	
+	# Verifica consulta
+	if($sql){
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta
+		return($consulta);
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+} #fecha busca de serviços por servidor
+
+
+
+# Funcao para cadastro de servicos
+function adicionarCategoriasGrupos($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+	
+	# Form de inclusao
+	if(!$matriz[bntAdicionar]) {
+
+		# Seleção de registros
+		$consulta=buscaCategorias($registro, 'id', 'igual', 'id');
+		
+		if(!$consulta || contaConsulta($consulta)==0) {
+			# Servidor não encontrado
+			itemTabelaNOURL('Categoria não encontrada!', 'left', $corFundo, 3, 'txtaviso');
+		}
+		else {
+			# Mostrar Informações sobre Servidor
+			verCategoria($registro);
+	
+			# Motrar tabela de busca
+			novaTabela2("[Adicionar]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				# Opcoes Adicionais
+				menuOpcAdicional($modulo, $sub, $acao, $registro);				
+				#fim das opcoes adicionais
+				novaLinhaTabela($corFundo, '100%');
+				$texto="			
+					<form method=post name=matriz action=index.php>
+					<input type=hidden name=modulo value=$modulo>
+					<input type=hidden name=sub value=$sub>
+					<input type=hidden name=registro value=$registro>
+					<input type=hidden name=matriz[categoria] value=$registro>
+					<input type=hidden name=acao value=$acao>&nbsp;";
+					itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold>Grupo: </b><br>
+						<span class=normal10>Selecione o grupo a participar desta categoria</span>";
+					htmlFechaColuna();
+					$item=formListaGruposCategoria($registro, 'grupo');
+					itemLinhaForm($item, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "&nbsp;";
+					htmlFechaColuna();
+					$texto="<input type=submit name=matriz[bntAdicionar] value=Adicionar>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+			fechaTabela();
+		} # fecha servidor informado para cadastro
+	} #fecha form
+	elseif($matriz[bntAdicionar]) {
+		# Conferir campos
+		if($matriz[categoria] && $matriz[grupo]) {
+			# Cadastrar em banco de dados
+			$grava=dbCategoriasGrupo($matriz, 'incluir');
+				
+			# Verificar inclusão de registro
+			if($grava) {
+				# acusar falta de parametros
+				# Mensagem de aviso
+				$msg="Registro Gravado com Sucesso!";
+				$url="?modulo=$modulo&sub=$sub&acao=$acao&registro=$registro";
+				aviso("Aviso", $msg, $url, 760);
+			}
+		}
+		
+		# falta de parametros
+		else {
+			# acusar falta de parametros
+			# Mensagem de aviso
+			$msg="Falta de parâmetros necessários. Informe os campos obrigatórios e tente novamente";
+			$url="?modulo=$modulo&sub=$sub&acao=$acao&registro=$registro";
+			aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+		}
+	}
+} # fecha funcao de inclusao de servicos
+
+
+# Funcao para exclusão de servicos
+function excluirCategoriasGrupos($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+
+	$matTMP=explode(":",$registro);
+	$matriz[categoria]=$matTMP[0];
+	$matriz[grupo]=$matTMP[1];
+	
+	$consultaGrupo=buscaGrupos($matriz[grupo], 'id', 'igual', 'id');
+	$nome=resultadoSQL($consultaGrupo, 0, 'nome');
+	
+	$consultaCategoriasGrupos=buscaCategoriasGrupos('idCategoria='.$matriz[categoria].' AND idGrupo='.$matriz[grupo], $campo, 'custom', 'idCategoria');
+	
+	# Form de exclusão
+	if(!$matriz[bntRemover]) {
+
+		# Seleção de registros
+		$consulta=buscaCategorias($matriz[categoria], 'id', 'igual', 'id');
+		
+		if(!$consulta || contaConsulta($consulta)==0) {
+			# Servidor não encontrado
+			itemTabelaNOURL('Categoria não encontrada!', 'left', $corFundo, 3, 'txtaviso');
+		}
+		else {
+			# Mostrar Informações sobre Servidor
+			verCategoria($matriz[categoria]);
+	
+			# Motrar tabela de busca
+			novaTabela2("[Excluir]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				# Opcoes Adicionais
+				menuOpcAdicional($modulo, $sub, $acao, $registro);				
+				#fim das opcoes adicionais
+				novaLinhaTabela($corFundo, '100%');
+				$texto="			
+					<form method=post name=matriz action=index.php>
+					<input type=hidden name=modulo value=$modulo>
+					<input type=hidden name=sub value=$sub>
+					<input type=hidden name=registro value=$registro>
+					<input type=hidden name=matriz[categoria] value=$matriz[categoria]>
+					<input type=hidden name=matriz[grupo] value=$matriz[grupo]>
+					<input type=hidden name=acao value=$acao>&nbsp;";
+					itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold>Grupo: </b>";
+					htmlFechaColuna();
+					itemLinhaForm($nome, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "&nbsp;";
+					htmlFechaColuna();
+					$texto="<input type=submit name=matriz[bntRemover] value=Remover>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+			fechaTabela();
+		} # fecha servidor informado para cadastro
+	} #fecha form
+	elseif($matriz[bntRemover]) {
+		# Conferir campos
+		if($matriz[grupo] && $matriz[categoria]) {
+		
+			# Cadastrar em banco de dados
+			$grava=dbCategoriasGrupo($matriz, 'excluir');
+				
+			# Verificar inclusão de registro
+			if($grava) {
+				# acusar falta de parametros
+				# Mensagem de aviso
+				$msg="Registro Excluído com Sucesso!";
+				$url="?modulo=$modulo&sub=$sub&acao=grupos&registro=$matriz[grupo]";
+				aviso("Aviso", $msg, $url, 760);
+			}
+		}
+		
+		# falta de parametros
+		else {
+			# acusar falta de parametros
+			# Mensagem de aviso
+			$msg="Falta de parâmetros necessários. Informe os campos obrigatórios e tente novamente";
+			$url="?modulo=$modulo&sub=$sub&acao=grupos";
+			aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+		}
+	}
+} # fecha funcao de exclusão
+
+
+
+
+# Função para gravação em banco de dados
+function dbCategoriasGrupo($matriz, $tipo)
+{
+	global $conn, $tb, $modulo, $sub, $acao;
+	
+	# Sql de inclusão
+	if($tipo=='incluir') {
+		# Verificar se serviço existe
+		$tmpConsulta=buscaCategoriasGrupos("idCategoria='$matriz[categoria]' AND idGrupo='$matriz[grupo]'", $campo, 'custom', 'idCategoria');
+		
+		# Registro já existe
+		if($tmpConsulta && contaConsulta($tmpConsulta)>0) {
+			# Mensagem de aviso
+			$msg="Registro já existe no banco de dados";
+			$url="?modulo=$modulo&sub=$sub&acao=$acao";
+			aviso("Aviso: Erro ao incluir registro", $msg, $url, 760);
+		}
+		else {
+			$sql="INSERT INTO $tb[CategoriasGrupos] VALUES ('$matriz[categoria]', '$matriz[grupo]')";
+		}
+	} #fecha inclusao
+	
+	elseif($tipo=='excluir') {
+		# Verificar se serviço existe
+		$tmpConsulta=buscaCategoriasGrupos("idCategoria='$matriz[categoria]' AND idGrupo='$matriz[grupo]'", $campo, 'custom', 'idCategoria');
+		
+		# Registro já existe
+		if(!$tmpConsulta|| contaConsulta($tmpConsulta)==0) {
+			# Mensagem de aviso
+			$msg="Registro não existe no banco de dados";
+			$url="?modulo=$modulo&sub=$sub&acao=$acao";
+			aviso("Aviso: Erro ao alterar registro", $msg, $url, 760);
+		}
+		else {
+			$sql="DELETE FROM $tb[CategoriasGrupos] WHERE idCategoria=$matriz[categoria] AND idGrupo=$matriz[grupo]";
+		}
+	}
+	
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+	
+} # fecha função de gravação em banco de dados
+
+
+# Função para montar campo de formulario
+function formListaGruposCategoria($categoria, $campo)
+{
+	global $conn, $tb;
+	
+	# Buscar Serviços de servidor (ja cadastrados)
+	$tmpConsulta=buscaCategoriasGrupos($categoria, 'idCategoria','igual','idCategoria');
+	
+	$consulta=buscaGrupos($texto, $campo, 'todos', 'nome');
+	
+	$item="<select name=matriz[$campo]>\n";
+	
+	# Listargem
+	$i=0;
+	while($i < contaConsulta($consulta)) {
+		# Zerar flag de registro já cadastrado
+		$flag=0;
+		
+		# Valores dos campos
+		$nome=resultadoSQL($consulta, $i, 'nome');
+		$id=resultadoSQL($consulta, $i, 'id');
+
+		# Verificar se serviço já está cadastrado
+		$x=0;
+		while($x < contaConsulta($tmpConsulta) ) {
+		
+			# Verificar
+			$idTmp=resultadoSQL($tmpConsulta, $x, 'idGrupo');
+			
+			if($idTmp == $id) {
+				# Setar Flag de registro já cadastrado
+				$flag=1;
+				break;
+			}
+
+			# Incrementar contador
+			$x++;
+		}
+
+		if(!$flag) {
+			# Mostrar serviço		
+			$item.= "<option value=$id>$nome\n";
+		}
+
+		#Incrementar contador
+		$i++;
+	}
+	
+	$item.="</select>";
+	
+	return($item);
+	
+} #fecha funcao de montagem de campo de form
+
+
+
+# Formulário para seleção de usuarios pertencentes aos grupos/categorias do usuario
+function formSelectUsuariosGruposCategorias($idUsuario, $campo, $tipo="", $default="") {
+	
+	global $tb, $conn;
+	
+	# Selecionar Grupos
+	$sql="
+		SELECT
+			$tb[UsuariosGrupos].idGrupo
+		FROM
+			$tb[UsuariosGrupos]
+		WHERE
+			$tb[UsuariosGrupos].idUsuario='$idUsuario'
+	";
+	
+	$consultaGrupos=consultaSQL($sql, $conn);
+	
+	if($consultaGrupos && contaConsulta($consultaGrupos)>0) {
+		
+		# Montar lista de grupos
+		for($a=0;$a<contaConsulta($consultaGrupos);$a++) {
+			$idGrupo=resultadoSQL($consultaGrupos, $a, 'idGrupo');
+			
+			$sqlGrupos.="$idGrupo";
+			
+			if(($a+1) < contaConsulta($consultaGrupos)) $sqlGrupos.=",";
+		}
+	
+		# Selecionar Usuários
+		$sql="
+			SELECT
+				$tb[Usuarios].login login,
+				$tb[Usuarios].id idUsuario
+			FROM
+				$tb[Grupos], 
+				$tb[Usuarios], 
+				$tb[UsuariosGrupos], 
+				$tb[CategoriasGrupos]
+			WHERE  
+				$tb[UsuariosGrupos].idUsuario=$tb[Usuarios].id 
+				and $tb[UsuariosGrupos].idGrupo = $tb[Grupos].id 
+				and $tb[UsuariosGrupos].idGrupo = $tb[CategoriasGrupos].idGrupo 
+				and $tb[Grupos].id in ($sqlGrupos)  
+			GROUP BY 
+				$tb[Usuarios].id";
+		
+		$consulta=consultaSQL($sql, $conn);
+		
+		if ($tipo!='change') $retorno="\n<select name=matriz[$campo]>";
+		else $retorno="\n<select name=matriz[$campo] onChange=javascript:submit();>";
+		
+		if($consulta && contaConsulta($consulta)>0) {
+			# form de seleção
+			for($a=0;$a<contaConsulta($consulta);$a++) {
+				$id=resultadoSQL($consulta, $a, 'idUsuario');
+				$login=resultadoSQL($consulta, $a, 'login');
+				
+				if ($id!=$default)
+					$retorno.="<option value='$id'>$login";
+				else
+					$retorno.="<option value='$id' SELECTED>$login";
+			}
+		}
+		
+		$retorno.="</select>";
+	}
+	
+	return($retorno);
+}
+
+?>
+@

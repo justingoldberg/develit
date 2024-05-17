@@ -1,0 +1,31 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.19.52.40;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@- Internacionalizar o código (gettext?) para permitir utilização de outros
+  idiomas;
+
+- Criar um assistente de instalação via Web no qual cria ou seleciona uma base
+  de dados já existente; 
+
+- Criar um controle de Flood de modo a não permitir que seja cadastrado o mesmo
+  registro mais de uma vez; 
+@

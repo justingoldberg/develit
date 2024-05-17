@@ -1,0 +1,108 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Funções de TicketChatConteudo
+
+# Banco de dados
+function dbTicketChatConteudo($matriz, $tipo) {
+	
+	global $conn, $tb, $modulo, $acao, $sessLogin;
+	
+	# Data do sistema 
+	$data=dataSistema();
+
+	# Busca o ID do usuário logado
+	if($sessLogin[login]) $idUser=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+	else $idUser=buscaIDUsuario('convidado', 'login','igual','login');
+	
+	# Incluir Comentarios
+	if($tipo=='incluir') {
+		
+		$matriz[ip]=$_SERVER[REMOTE_ADDR];
+		$matriz[mensagem]=addslashes($matriz[mensagem]);
+	
+		$sql="INSERT INTO $tb[TicketChatConteudo] VALUES (
+			0,
+			$matriz[chat],
+			$idUser,
+			'$data[dataBanco]',
+			'$matriz[mensagem]',
+			'$matriz[ip]'	
+		)";
+		
+	} #fecha abertura
+
+	elseif($tipo=='excluirtodos') {
+		$sql="DELETE FROM $tb[TicketChatConteudo] WHERE idChat='$matriz[id]'";
+	}
+	
+	elseif($tipo=='excluir') {
+		$sql="DELETE FROM $tb[TicketChatConteudo] WHERE id='$matriz[id]'";
+	}
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+}
+
+
+# Função para gravação de ChatConteudo em TicketComentário
+function gravaChatComentario($idChat) {
+	
+	global $tb;
+	
+	# Buscar chatConteudo
+	$consulta=buscaRegistro($idChat,'idChat','igual','data ASC',$tb[TicketChatConteudo]);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		
+		$linhaComentario="Registro de Atendimento - ChatOnline:\n\n";
+		for($a=0;$a<contaConsulta($consulta);$a++) {
+			$id=resultadoSQL($consulta, $a, 'id');
+			$idChat=resultadoSQL($consulta, $a, 'idChat');
+			$dadosChat=dadosChat($idChat);
+			$idUsuario=resultadoSQL($consulta, $a, 'idUsuario');
+			$data=converteData(resultadoSQL($consulta, $a, 'data'),'banco','form');
+			$texto=resultadoSQL($consulta, $a, 'texto');
+			$ip=resultadoSQL($consulta, $a, 'ip');
+			
+			$usuario=buscaLoginUsuario($idUsuario,'id','igual','id');
+			
+			$linhaComentario.="$data $usuario: $texto\n";
+			
+		}
+	}
+	
+	# Gravar
+	if(is_array($dadosChat)) {
+		$matriz[ticket]=$dadosChat[idTicket];
+		$matriz[descricao]=$linhaComentario;
+		dbComentariosTicket($matriz, 'incluir');
+	}
+}
+
+?>
+@

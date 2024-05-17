@@ -1,0 +1,143 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.36.16;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Página principal (index) da aplicação
+
+# Carregar Sessoes para informações de usuario
+session_start();
+session_register("sessLogin", "sessNavegacao");
+
+# Verifica se sessão deve ser matada
+if($modulo=='logoff' && session_is_registered("sessLogin")) {
+	session_destroy();
+	$sessLogin[login]='';
+	$sessLogin[senha]='';
+}
+
+# Carregar configurações
+include('config/config.php');
+include('config/db.php');
+include('config/html.php');
+
+# Variáveis globais
+global $configHostMySQL, $configUserMySQL, $configPasswdMySQL, $configDBMySQL, $configAppName, $configAppVersion, $corFundo, $corBorda;
+
+# Carregar funções
+include('includes/db.php');
+include('includes/html.php');
+include('includes/menu.php');
+include('lib/data.php');
+
+# Validação de Formulários
+include('includes/valida_form.php');
+
+# Funções de E-mail
+include('includes/mail.php');
+
+# Funções de Usuario
+include('includes/usuarios.php');
+
+# Funções de Grupos
+include('includes/grupos.php');
+include('includes/usuarios_grupos.php');
+
+# Paginador
+include('includes/paginador.php');
+
+# Formulários
+include('includes/form.php');
+
+# Categorias
+include('includes/categorias.php');
+
+# Categorias Grupos
+include('includes/categorias_grupos.php');
+
+# Configurações
+include('includes/configuracoes.php');
+
+# Prioridades
+include('includes/prioridades.php');
+
+# Status
+include('includes/status.php');
+
+# Tickets
+include('includes/ticket.php');
+
+# Tickets Grupos
+include('includes/ticket_grupo.php');
+
+# Processos dos Tickets
+include('includes/processos_ticket.php');
+
+# Comentários
+include('includes/comentarios.php');
+
+# Perfil
+include('includes/perfil.php');
+
+# Protocolo
+include('includes/protocolo.php');
+
+
+### CARRETAMENTO DE VALORES PARA SESSION - Validação
+if($matValida) $sessLogin=usuariosValidaForm($matValida);
+### CARRETAMENTO DE VALORES PARA SESSION - Navegação
+if($matriz) $sessNavegacao=alimentaForm($matriz, $sessNavegacao);
+### 
+
+###########################################
+# Conectar com banco de dados
+$conn=conectaMySQL($configHostMySQL, $configUserMySQL, $configPasswdMySQL);
+$db=selecionaDB($configDBMySQL);
+###########################################
+
+
+$consulta=buscaUsuarios('','','todos','id');
+
+for($a=0;$a<contaConsulta($consulta);$a++) {
+
+	$id=resultadoSQL($consulta, $a, 'id');
+
+	# Consulta primeiro grupo do usuario no banco de dados
+	$consultagrupos=buscaUsuariosGrupos("idUsuario=$id AND idGrupo!=1", '','custom','idUsuario');
+
+	if($consultagrupos && contaConsulta($consultagrupos)>0) {
+		$idGrupo=resultadoSQL($consultagrupos,0,'idGrupo');
+		
+		# Atualizar perfil do usuario
+		$sql="UPDATE perfil set idGrupo=$idGrupo WHERE id=$id";
+		
+		$grava=consultaSQL($sql, $conn);
+	}
+
+}
+
+echo "Registros atualizados: $a \n";
+
+
+?>
+@

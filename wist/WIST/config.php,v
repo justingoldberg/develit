@@ -1,0 +1,72 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.09.52;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?php
+################################################################################
+# Function:
+#    Settings used by application
+
+# Application Settings
+$configAppName = "Devel-IT - .:WIST - Web Interface for SIP Trace:.";
+$configAppVersion = _("Version") . " 0.4";
+
+# Server configuration
+$host['host'] = 'localhost';
+$host['port'] = 10027;
+
+# Color Settings
+$corFundo = "#ffffff";
+$corBorda = "#223366";
+
+# Language settings
+
+if ( $_GET['lang'] || !$_COOKIE['lang'] ){
+	
+	switch ( $_GET['lang'] ) {
+		case 'pt_BR':
+			setcookie("lang", 'pt_BR', time() + 3600 * 24 * 30 );
+			$lang = 'pt_BR';
+			break;
+		
+		case 'es_ES':
+			setcookie("lang", 'es_ES', time() + 3600 * 24 * 30 );
+			$lang = 'es_ES';
+			break;
+		
+		default:
+			setcookie("lang", 'en_US', time() + 3600 * 24 * 30 );
+			$lang = 'en_US';
+			break;
+	}
+	
+}
+
+putenv("LANG=$lang");
+setlocale(LC_ALL, $lang);
+$domain = "messages";
+bindtextdomain($domain, "locale/");
+textdomain($domain);
+
+bind_textdomain_codeset("messages", 'ISO-8859-1');
+
+?>
+@

@@ -1,0 +1,88 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.19.52.40;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@A			{text-decoration: none; color: #223366 }
+A:hover		{text-decoration: underline; color: #990020}
+B			{text-decoration: none; font-weight: 700;}
+BODY		{background: #ffffff; color: #000000; font-family: arial,helvetica,verdana,sans-serif; }
+
+input.submit{ background-color: #223366; background-image: url(imagens/fundobotao.gif); background-position: bottom; background-repeat: repeat; border: none; color: #ffffff; cursor: pointer; font-weight: bold; height: 20px;border-left: 0px solid #223366; border-right: 0px solid #223366; border-top: 0px solid #223366; border-bottom: 0px solid #223366;}
+input.submit2{ background-color: #223366; background-image: url(imagens/fundobotao2.gif); background-position: bottom; background-repeat: repeat; border: none; color: #ffffff; cursor: pointer; font-weight: bold; height: 20px;border-left: 0px solid #223366; border-right: 0px solid #223366; border-top: 0px solid #223366; border-bottom: 0px solid #223366;}
+input.submit3{ background-color: #223366; background-image: url(imagens/fundobotao3.gif); background-position: bottom; background-repeat: repeat; border: none; color: #ffffff; cursor: pointer; font-weight: bold; height: 20px;border-left: 0px solid #223366; border-right: 0px solid #223366; border-top: 0px solid #223366; border-bottom: 0px solid #223366;}
+
+.menusuperior	{font-family: arial,helvetica,verdana,sans-serif;font-size: 9pt;font-weight: 700;color: #3060AA}
+
+.titulo		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #ffffff}
+.titulo9	{font-family: arial,helvetica,verdana,sans-serif;font-size:  8pt;font-weight: 700;color: #ffffff}
+.tabtitulo	{font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 700;color: #ffffff; height: 20pt}
+.tabfundo0	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #000000; background: #bbbbbb;}
+.tabfundo1	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000; background: #eeeeee;}
+.tabfundo2	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000; background: #dddddd;}
+.tabfundo2r	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #ff0000; background: #dddddd;}
+.tabfundo3	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000; background: #ffffee;}
+.tabfundo4	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000; background: #ffffcc;}
+.tabfundo81	{font-family: arial,helvetica,verdana,sans-serif;font-size:  9pt;font-weight: 100;color: #000000; background: #eeeeee;}
+.tabfundo82	{font-family: arial,helvetica,verdana,sans-serif;font-size:  9pt;font-weight: 100;color: #000000; background: #dddddd;}
+
+.normal		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000}
+.normal10	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000}
+.normal8	{font-family: arial,helvetica,verdana,sans-serif;font-size: 8pt;font-weight: 100;color: #000000}
+
+.protocolo	{font-family: arial,helvetica,verdana,sans-serif;font-size: 18pt;font-weight: 100;color: #AA0000}
+
+.bold		{font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 700;}
+.bold10		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;}
+.bold8		{font-family: arial,helvetica,verdana,sans-serif;font-size:  8pt;font-weight: 700;}
+
+.rodape		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 00;color: #000000}
+
+.log_txt	{font-family: arial,helvetica,verdana,sans-serif;font-size:  9pt;font-weight: 100;color: #000000}
+
+.txtaviso	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #AA0000}
+.txtok		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #006000}
+.txterr		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #000060}
+.txtaviso10	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #AA0000}
+
+.ativado	{font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 100;color: #000000; background: #EEFFEE}
+.desativado {font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 100;color: #000000; background: #ffEEEE}
+.novo 		{font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 100;color: #000000; background: #eeeeff}
+
+.codigo		{font-family: courier, monospace; font-size: 10pt;font-weight: 100;}
+
+.p0		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;color: #000000; background: #ffffff}
+.p2		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;color: #000000; background: #aeadff}
+.p4		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;color: #000000; background: #ffb159}
+.p5		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;color: #000000; background: #ff723f}
+.p6		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;color: #000000; background: #dddd90}
+.p7		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;color: #000000; background: #f2ef5e}
+
+.pp0 	{font-family: arial,helvetica,verdana,sans-serif;font-size: 7pt;color: #000000; background: #ffffff; text-align: right}
+.pp2	{font-family: arial,helvetica,verdana,sans-serif;font-size: 7pt;color: #000000; background: #aea0f0; text-align: right}
+.pp4	{font-family: arial,helvetica,verdana,sans-serif;font-size: 7pt;color: #000000; background: #f0b050; text-align: right}
+.pp5	{font-family: arial,helvetica,verdana,sans-serif;font-size: 7pt;color: #000000; background: #f06000; text-align: right}
+.pp6	{font-family: arial,helvetica,verdana,sans-serif;font-size: 7pt;color: #000000; background: #ddd090; text-align: right}
+.pp7	{font-family: arial,helvetica,verdana,sans-serif;font-size: 7pt;color: #000000; background: #f2e05e; text-align: right}
+
+.chat0		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #006000}
+.chat1		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #660000}
+.chat2		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #ffb159}
+.chat3		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 700;color: #707070}@

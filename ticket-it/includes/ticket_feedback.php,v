@@ -1,0 +1,370 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?php
+################################################################################
+# Função:
+#     Ticket - Feedback de atendimentos
+
+# Função para cadastro
+function ticketFeedback($modulo, $sub, $acao, $registro, $matriz) {
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+	
+	if($acao=='incluir') {
+		novaTabela2SH('left',768,0,0,0,$corFundo,$corBorda,0);
+		htmlAbreLinha($corFundo);
+			htmlAbreColuna(768,'left',$corFundo,0,'normal10');
+				verTicketFeedback($modulo, $sub, $acao, $registro, $matriz);
+			htmlFechaColuna();
+		htmlFechaLinha();
+		fechaTabela();
+	}
+	
+} #fecha menu principal 
+
+#Envia um email solicitando o feedback do criador
+function enviaEmailticketFeedback($modulo, $sub, $acao, $registro, $matriz) {
+	$consulta=buscaTicket($registro, 'id', 'igual', 'id');
+
+	$idUsuario=resultadoSQL($consulta, 0, 'idUsuario');
+	$protocolo=resultadoSQL($consulta, 0, 'protocolo');
+	$nomeUsuario=resultadoSQL(buscaUsuarios($idUsuario,'id','igual','id'), 0, 'login');
+	if($nomeUsuario=='convidado') {
+		$detalhesTicket=detalhesTicket($registro);
+		if($detalhesTicket) {
+			$matriz[email]=$detalhesTicket;
+			$ch=1;
+		}
+	} else {
+		$matriz[email]=resultadoSQL(buscaPerfil($idUsuario,'id','igual','id'), 0, 'login');
+		$ch=1;	
+	}
+	$matriz[idTicket]=$registro;
+	$matriz[protocolo]=$protocolo;
+	mailTicketProtocolo($matriz, $idUsuario, 'feedback');						
+	
+}
+
+# Função para Visualiação de Ticket a partir de protocolo
+function verTicketFeedback($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $corFundo, $corBorda, $tb, $html, $sessLogin;
+	
+	
+	if($registro) {
+		# Procurar Ticket a partir de protocolo
+		if($modulo=="ticket") {
+			$idTicket=$registro;
+		}
+		else {
+			$consulta=buscaTicket(addslashes($registro), 'protocolo','igual','protocolo');
+			$idTicket=resultadoSQL($consulta, 0, 'id');
+		}
+		$sessLogin[modulo]=$modulo;
+		$sessLogin[sub]=$sub;
+		$sessLogin[acao]=$acao;
+	}
+	
+	if($acao=='incluir') {
+		
+		if(!$matriz[bntConfirmar] || $mensagem) {
+
+			# Form de inclusao
+			$notas = array("10", "9", "8", "7", "6", "5", "4", "3", "2", "1", "0");
+
+			novaTabela2SH('left',768,0,0,0,$corFundo,$corBorda,0);
+			htmlAbreLinha($corFundo);
+				htmlAbreColuna(768,'left',$corFundo,0,'normal10');
+					if($modulo=="protocolo") {
+						verTicketProcotolo($modulo, $sub, 'verprotocolo', $registro, $matriz);
+					}
+					else {
+						verTicket($modulo, $sub, 'ver', $matriz, $registro);
+					}
+				htmlFechaColuna();
+			htmlFechaLinha();
+			fechaTabela();
+					
+			echo "<br>";
+			
+			novaTabela2("[Avalie o Feedback do Ticket]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				#fim das opcoes adicionais
+				novaLinhaTabela($corFundo, '100%');
+				$texto="			
+					<form method=post name=matriz action=index.php>
+					<input type=hidden name=modulo value=$modulo>
+					<input type=hidden name=sub value=$sub>
+					<input type=hidden name=registro value=$registro>
+					<input type=hidden name=acao value=$acao>&nbsp;$mensagem";
+					itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold10>Nota: </b>";
+					htmlFechaColuna();
+					$texto=formGeraSelect("matriz[nota]", $notas, $notas);
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "&nbsp;";
+					htmlFechaColuna();
+					$texto="<input type=submit name=matriz[bntConfirmar] value=Confirmar class=submit>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+			fechaTabela();
+
+			
+		} #fecha form
+		elseif($matriz[bntConfirmar] && $matriz[nota]<=10 && $matriz[nota]>=0) {
+			# Conferir campos
+			if($matriz[nota]) {
+				# Buscar ID de novo Ticket
+				$matriz[idTicket]=$idTicket;
+				
+				# Buscar ID de novo Protocolo
+				$matriz[protocolo]=$registro;
+				
+				# Cadastrar em banco de dados
+				$grava=dbTicketFeedback($matriz, 'incluir');
+				
+				# Verificar inclusão de registro
+				if($grava) {
+					
+					$msg="Registro Gravado com Sucesso!";
+					$url="?modulo=$modulo&sub=$sub&acao=$acao";
+					avisoNOURL("Aviso", $msg, 400);
+					
+					# Gravar Status de Ticket - NOVO
+//					dbProcessosTicket($matriz, 'incluir');
+					
+//					# Buscar Ticket
+//					if($sessLogin[login]) $idUsuario=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+//					else $idUsuario=buscaIDUsuario('convidado', 'login','igual','login');
+//					
+//					# Enviar mensagem para autor da mensagem - verificando detalhes
+//					$detalhesTicket=detalhesTicket($matriz[idTicket]);
+//					if($detalhesTicket) {
+//						$matriz[email]=$detalhesTicket;
+//						mailTicketProtocolo($matriz, $idUsuario, 'incluir');
+//					}
+//					
+//					# Mostrar Ticket
+//					echo "<meta http-equiv=refresh content=0;URL=?modulo=protocolo&acao=ver&registro=$matriz[protocolo]>";
+//					//verTicketProcotolo("protocolo", '', 'ver', $matriz[protocolo], $matriz);
+				}
+			}
+			
+			# falta de parametros
+			else {
+				# acusar falta de parametros
+				# Mensagem de aviso
+				$msg="Falta de parâmetros necessários. Informe os campos obrigatórios e tente novamente";
+				$url="?modulo=$modulo&sub=$sub&acao=$acao&registro=$registro";
+				aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+			}
+			novaTabela2SH('left',768,0,0,0,$corFundo,$corBorda,0);
+			htmlAbreLinha($corFundo);
+				htmlAbreColuna(768,'left',$corFundo,0,'normal10');
+					if($modulo=="protocolo") {
+						verTicketProcotolo($modulo, $sub, 'verprotocolo', $registro, $matriz);
+					}
+					else {
+						verTicket($modulo, $sub, 'ver', $matriz, $registro);
+					}
+				htmlFechaColuna();
+			htmlFechaLinha();
+			fechaTabela();		
+		}
+	}
+	else {
+	
+		if($registro) {
+			# Ticket não pode ser visualizado
+			$msg="Ticket não pode ser encontrado";
+			avisoNOURL("Visualização de Ticket", $msg, 760);
+		}
+	}
+}
+
+# Função para gravação em banco de dados
+function dbTicketFeedback($matriz, $tipo)
+{
+	global $conn, $tb, $modulo, $acao, $sessLogin;
+	
+	# Data do sistema 
+	$data=dataSistema();
+	
+	# Busca o ID do usuário logado
+	if($sessLogin[login]) $idUser=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+	else $idUser=buscaIDUsuario('convidado', 'login','igual','login');
+	
+	# Sql de inclusão
+	if($tipo=='incluir') {
+		$sql="INSERT INTO $tb[TicketFeedback] VALUES (0, '$matriz[idTicket]', '$data[dataBanco]', '$matriz[nota]')";
+	} #fecha inclusao
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+	
+} # fecha função de gravação em banco de dados
+
+//# Controle tempo por ticket
+//function ticketFeedback($modulo, $sub, $acao, $registro, $matriz) {
+//	
+//	global $sessTempo;
+//
+//	$data=dataSistema();
+//	# Iniciar Sessão
+//
+//	$matriz[ticket]=$registro;
+//	
+//	if($acao == 'listar') {
+//		# Listar Atendimentos do ticket
+//		listarTempoTicket($matriz[ticket]);
+//		echo "<br>";
+//		mostraTicket($matriz[ticket], 0);
+//		
+//	}
+//	elseif($acao=='excluir' || $acao=='alterar') {
+//		$matriz[ticket]=idTicketTicketTempo($registro);
+//		mostraTicketTempo($matriz, $registro, $matriz[ticket],$acao);
+//		echo "<br>";
+//		# Buscar ID do Tickete
+//		mostraTicket($matriz[ticket],0);
+//	}
+//	elseif(!$acao || $acao=='adicionar' || $acao=='atualizar') {
+//		
+//		if((!$matriz[bntConfirmar] && !$matriz[bntFinalizar] && $acao!='atualizar') || $matriz[bntIniciar] ) {
+//			$sessTempo[dtInicial][$registro]=$data[timestamp];
+//			$matriz[tempoatendimento]="Atendimento iniciado";
+//		}
+//		
+//		# Iniciar refresh
+//		if($acao=='atualizar' && $sessTempo[dtInicial][$registro] != $data[timestamp]) {
+//			$tmpTempo=converteData($data[timestamp]-$sessTempo[dtInicial][$registro],'timestamp','formhora');
+//			//echo "<span class=txtaviso>Tempo de atendimento: $tmpTempo</span><br>";
+//			$matriz[tempoatendimento]=$tmpTempo;
+//		}
+//		echo "<meta http-equiv=refresh content=10;URL=?modulo=$modulo&sub=tempoticket&acao=atualizar&registro=$registro&$matriz[bntIninciar]=''>";
+//		
+//		if($matriz[bntFinalizar]) {
+//			$sessTempo[dtFinal][$registro]=$data[timestamp];
+//			$matriz[duracao]=$sessTempo[dtFinal][$registro]-$sessTempo[dtInicial][$registro];
+//			$grava=dbFinalizacoesTicket($matriz, 'incluir');
+//			$sessTempo[dtInicial][$registro]=$data[timestamp];
+//			
+//			# Fechar janela
+//		}
+//		
+//		if($matriz[bntConfirmar] && $matriz[tempo]) {
+//			$matriz[duracao]=$matriz[tempo] * 60;
+//			$grava=dbFinalizacoesTicket($matriz, 'incluir');
+//		}
+//		elseif($matriz[bntConfirmar]) {
+//			$tmpTempo=converteData($data[timestamp]-$sessTempo[dtInicial][$registro],'timestamp','formhora');
+//			$matriz[tempoatendimento]="Informe tempo a adicionar! Tempo de atendimento: $tmpTempo";
+//		}
+//		
+//		if($grava) {
+//			$matriz[tempoatendimento]="Tempo adicionado: " . converteData($matriz[duracao],'timestamp','formhora');
+//		}
+//		
+//		# Mostrar Form de inclusão de tempo
+//		formTicketTempo($modulo, $sub, $acao, $registro, $matriz);
+//		
+//		echo "<br>";
+//		mostraTicket($registro,0);
+//	}
+//
+//}
+//
+//# Formulário de Inclusão de Tempo
+//function formTicketFeedback($modulo, $sub, $acao, $registro, $matriz) {
+//
+//	global $corFundo, $corBorda, $sessLogin;
+//	
+//	$data=dataSistema();
+//	
+//	# Motrar tabela de busca
+//	$opcListar="
+//		<table border=0 cellpadding=0 cellspacing=0 width=100% >
+//		<tr><td width=50% align=left class=tabtitulo>Ticket em andamento<td><td width=50% align=right>
+//	";
+//	$opcListar.=htmlMontaOpcao("<a href=?modulo=ticket&sub=tempoticket&acao=listar&registro=$registro class=titulo>Listar</a>",'listar');
+//	$opcListar.="</td></tr></table>";
+//	
+//	novaTabela2("$opcListar","left", '100%', 0, 2, 1, $corFundo, $corBorda, 4);
+//		#fim das opcoes adicionais
+//		novaLinhaTabela($corFundo, '100%');
+//		$texto="			
+//			<form method=post name=matriz action=index.php>
+//			<input type=hidden name=modulo value=$modulo>
+//			<input type=hidden name=sub value=$sub>
+//			<input type=hidden name=acao value=adicionar>
+//			<input type=hidden name=registro value=$registro>";
+//			itemLinhaNOURL($texto, 'right', $corFundo, 2, 'tabfundo1');
+//		fechaLinhaTabela();
+//
+//		novaLinhaTabela($corFundo, '100%');
+//			itemLinhaTMNOURL('<b class=bold10>Tempo de Atendimento:</b>', 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+//			# Buscar Total de Tempo registrado
+//			$texto=$matriz[tempoatendimento];
+//			itemLinhaForm("<span class=txtaviso>$texto</span>", 'left', 'top', $corFundo, 0, 'tabfundo1');
+//		fechaLinhaTabela();
+//		
+//		novaLinhaTabela($corFundo, '100%');
+//			itemLinhaTMNOURL('<b class=bold10>Tempo Registrado:</b>', 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+//			# Buscar Total de Tempo registrado
+//			$texto=converteData(tempoAtendimento($registro),'timestamp','formhora');
+//			itemLinhaForm("<span class=txtaviso>$texto</span>", 'left', 'top', $corFundo, 0, 'tabfundo1');
+//		fechaLinhaTabela();
+//		
+//		novaLinhaTabela($corFundo, '100%');
+//			itemLinhaTMNOURL('<b class=bold10>Minutos:</b>', 'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+//			$texto="<input type=text name=matriz[tempo] size=5>&nbsp;";
+//			$texto.="&nbsp;&nbsp;<input type=submit name=matriz[bntConfirmar] value='Adicionar' class=submit2>";
+//			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+//		fechaLinhaTabela();
+//		
+//		novaLinhaTabela($corFundo, '100%');
+//				( $matriz[expediente] != 'N' ? $check = "CHECKED" : $check1 = "CHECKED" );
+//				itemLinhaTMNOURL("<b class=bold10>Periodo do serviço</b>",  'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+//				$texto = "<input id=durante type=radio name=matriz[expediente] value=S $check >" .
+//						 	"<label for=durante>Durante Horario de Servico</label>&nbsp;" ;
+//				$texto .= "&nbsp;<input id=fora type=radio name=matriz[expediente] value=N $check1 >" .
+//						 	"<label for=fora>Fora de Horario de Servico</label>" ;
+//				itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+//		fechaLinhaTabela();
+//	
+//		novaLinhaTabela($corFundo, '100%');
+//			$texto="<input type=submit name=matriz[bntIniciar] value='Iniciar Atendimento' class=submit>";
+//			$texto.="&nbsp;&nbsp;<input type=submit name=matriz[bntFinalizar] value='Finalizar Atendimento' class=submit2>";
+//			itemLinhaForm($texto, 'center', 'top', $corFundo, 2, 'tabfundo1');
+//		fechaLinhaTabela();
+//	fechaTabela();
+//}
+
+?>
+@

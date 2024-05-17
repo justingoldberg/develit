@@ -1,0 +1,82 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?php
+/*
+ * Created on May 17, 2005
+ *
+ * To change the template for this generated file go to
+ * Window - Preferences - PHPeclipse - PHP - Code Templates
+ */
+ 
+ # Função para gravação em banco de dados
+function dbFinalizacoesTicket($matriz, $tipo)
+{
+	global $conn, $tb, $modulo, $acao, $sessLogin;
+	
+	# Data do sistema 
+	$data=dataSistema();
+	# Busca o ID do usuário logado
+	if($sessLogin[login]) $idUser=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+	else $idUser=buscaIDUsuario('convidado', 'login','igual','login');
+		
+	# Incluir Comentarios
+	if($tipo=='incluir') {
+	
+		$sql="INSERT INTO $tb[TicketFinalizacoes] VALUES (
+			0,
+			$matriz[ticket],
+			'$sessLogin[id]',
+			'$data[dataBanco]',
+			'$matriz[duracao]',
+			'$matriz[expediente]'	
+		)";
+	} #fecha abertura
+
+	elseif($tipo=='excluirtodos') {
+		$sql="DELETE FROM $tb[TicketFinalizacoes] WHERE idTicket='$matriz[id]'";
+	}
+	
+	elseif($tipo=='excluir') {
+		$sql="DELETE FROM $tb[TicketFinalizacoes] WHERE id='$matriz[id]'";
+	}
+	
+	elseif($tipo=='alterar') {
+		$sql="UPDATE 
+				$tb[TicketFinalizacoes] 
+			SET 
+				data='$matriz[data]',
+				segundos='$matriz[duracao]',
+				expediente='$matriz[expediente]'
+			WHERE 
+				id='$matriz[id]'";
+	}	
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+	
+} 
+
+?>
+@

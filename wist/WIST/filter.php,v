@@ -1,0 +1,217 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.11.02;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Function:
+#    To manage the SIP filtering 
+
+
+/**
+ * Show the $sip form filter 
+ *
+ * @@param str $modulo
+ * @@param str $acao
+ * @@param str $sip
+ */
+function formFiltro( $modulo, $acao, $sip ){
+	global $configAppName, $corFundo, $corBorda, $html;
+
+	# Show the table search
+	$titulo = _("Research");
+	novaTabela2( "[$titulo]", "center", '740', 0, 2, 1, $corFundo, $corBorda, 2 );
+	
+
+		echo "<form method=\"get\" name=\"matriz\" action=\"index.php\">";
+
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna( '40%', 'right', $corFundo, 0, 'tabfundo1' );
+				echo "<b class=\"bold10\">SIP: </b><br>
+				<span class=\"normal10\">" . _("User's SIP number") . "</span>";
+			htmlFechaColuna();
+			$texto="<input type=\"text\" id=\"sip\" name=\"sip\" size=\"30\" value=\"$sip\" />";
+			itemLinhaForm( $texto, 'left', 'top', $corFundo, 0, 'tabfundo1' );
+		fechaLinhaTabela();
+					
+		novaLinhaTabela( $corFundo, '100%' );
+			$texto = "<input type=\"submit\" value=\"" . _("Filter") . "\" class=\"submit\" />";
+			itemLinhaForm( $texto, 'center', 'top', $corFundo, 2, 'tabfundo1' );
+		fechaLinhaTabela();
+
+		echo "</form>";
+		
+	fechaTabela();
+	
+	echo "<br />";
+			
+} # close form search
+
+/**
+ * Sockets Client which search $sip
+ *
+ * @@return void
+ * @@param str $sip
+ */
+function filtrarSocket( $sip ){
+	global $host;
+;
+	$capt = 0;
+	$cont = 0;
+	$caracteresLinha = 105;
+	$lines  = array();
+	$callID = array();
+
+	# Open a Socket connection
+	$proto = getprotobyname( 'tcp' );
+	$FS = @@fsockopen( $host['host'], $host['port'], $errno, $errstr, 1 );
+	
+	if (!$FS) {
+		# if it wasn't connected show the error message
+	   echo "<div style=\"color:#FF0000;\">$errstr ($errno)</div>\n";
+	} else {
+		# else, perform the looping
+		while ( !feof( $FS )  ) {
+			
+			#tests server-side conection
+			echo "\n";
+	   		if( connection_status() != 0 ) {
+	   			die();
+	   		}
+	   		
+			$linha = fgets( $FS );
+			if ( preg_match( '/^U /', $linha ) ) {
+				# it verifies if this line is the begin of the message block 
+				$capt = 1;
+				$cont = 0;
+				$lines = array();
+			} 
+			elseif ( preg_match( '/^$/', $linha ) && $capt ) {
+				#  when it's found the End of message block, it realizes the filtering
+				$capt 		 = 0;
+				$j 			 = 0;
+				$chave 		 = true;
+				$linhaCallID = "";
+				
+				# 
+				do{
+					if( substr($lines[$j], 0, 9) == "Call-ID: ") {
+						$linhaCallID = $lines[$j];
+						$chave 		 = false;
+					}
+					$j++;
+				} while( $chave == true && $j != count($lines)-1 );
+				
+				if ( preg_grep( "/^From:[ ]*.*<sip:$sip@@.*$/i", $lines ) 
+					 && !in_array($linhaCallID, $callID) ) {
+					$callID[] = $linhaCallID;
+					exibeBlocoFormatado($lines);
+				}
+				elseif ( in_array($linhaCallID, $callID) ) { 
+					exibeBlocoFormatado($lines);	
+				}
+				# End of the filtering
+
+			}
+			elseif ( preg_match('/^ERR.*$/', $linha ) ) {
+				echo "<div style=\"color:#FF0000;\">$linha</div>\n";
+			}
+			if ( $capt ) {
+				# if this line is the begin of the message block, then it starts collects this block
+				$lines[$cont] = $linha;
+				$cont++;
+			}  
+		}
+		
+		fclose( $FS );
+	}
+}
+
+/**
+ * Formata Linha para ser mostrada como HTML podendo ter o $valor como est
+ * 
+ * @@return void
+ * @@param str $linha
+ * @@param str $style
+ */
+function formataLinha( $linha, $style="" ) {
+
+	$caracteresLinha   = 109;
+	$estilo['CallID']  = 'style="font-weight:bold;color:#FFFFFF;background-color:#0066AA"';
+	$estilo['segunda'] = 'style="font-weight:bold;"';
+	$css = "";
+	
+	if( strlen( $linha ) > $caracteresLinha ) {	
+		$inicioString = $i + $caracteresLinha;
+		$novaLinha = htmlspecialchars( substr( $linha, 0, $caracteresLinha ) ) . 
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . 
+		htmlspecialchars( substr( $linha, $caracteresLinha ) );
+		$linha = $novaLinha;
+	}
+	else {
+		$linha = htmlspecialchars( $linha );
+	}
+	if( array_key_exists( $style, $estilo ) ) {
+		$css = $estilo[$style];
+	}
+	echo "<div class=\"linhaLog\"><span $css>$linha</span></div>";
+}
+
+
+/**
+ * Show the $lines formated
+ *
+ * @@param string $lines
+ */
+function exibeBlocoFormatado($lines) {
+	$corFundo = 0;
+
+	$vetorCores = array("#ffffff", "#ffeac8", "#a3e68b", "#fffdcf", "#ffa237", 
+	"#ff7e7e", "#afcceb");
+	
+	if( preg_match( '/^SIP\/2\.0[ ][1-6][0-9]{2}.*$/i', $lines[1] ) ) {
+		$corFundo = intval(substr($lines[1], 8, 1));
+	}
+	
+	echo "<div style=\"background-color: $vetorCores[$corFundo];\">";
+	
+	foreach ( $lines as $key => $linha ) {
+		if($linha != ".\n") {
+			if( substr($linha, 0, 9) == "Call-ID: " ) {
+				formataLinha( $linha, "CallID" );
+			}
+			if( preg_match( '/^(INVITE|ACK|BYE|REGISTER|CANCEL)[ ]sip:.*$/i', $linha ) 
+				&& $key == 1 ) {
+				formataLinha( $linha, "segunda" );
+			}
+			else {
+				formataLinha( $linha );
+			}
+		}
+	}
+
+	echo "</div>\n<hr />\n";
+	ob_flush();
+	flush();
+}
+
+?>
+@

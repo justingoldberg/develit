@@ -1,0 +1,141 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Funções de conexão com banco de dados
+
+
+# Conecta ao MySQL
+function conectaMySQL($host, $usuario, $senha)
+{
+	# Conectar a banco de dados MySQL
+	return(mysql_connect($host, $usuario, $senha));
+	
+} // fecha função conectaMysQL
+
+
+# Seleciona banco de dados
+function selecionaDB($banco)
+{
+	# Selecionar banco de dados
+	return(mysql_selectdb($banco));
+	
+} // fecha função selecionaDB
+
+
+# Executa query
+function consultaSQL($sql, $conn)
+{
+	$retorno=mysql_query($sql, $conn);
+	
+	if(!$retorno)
+	{
+		# Erro - Consulta nao retorna valor
+		aviso("Consulta","Erro ao realizar consulta em banco de Dados. <br>Verifique configurações!<br><pre>$sql</pre>".mysql_error(), "?modulo=",300);
+//		aviso("Consulta","Erro ao realizar consulta em banco de Dados. <br>Verifique configurações!", "?modulo=",300);		
+	}
+	
+	# retornar consulta
+	return($retorno);
+	
+} #fecha função para executar query no MySQL
+
+# Executa query
+function consultaSQLHide($sql, $conn)
+{
+	$retorno=mysql_query($sql, $conn);
+	
+	# retornar consulta
+	return($retorno);
+	
+} #fecha função para executar query no MySQL
+
+
+# Função para contar linhas retornadas pela matriz de consulta SQL
+function contaConsulta($consulta)
+{
+	# Contar linhas da consulta
+	return(mysql_num_rows($consulta));
+	
+} # fecha função para contagem da consultaSQL
+
+
+# Mostrar resultado da consulta
+function resultadoSQL($consulta, $linha, $coluna)
+{
+	# retornar valor da coluna
+	return(mysql_result($consulta, $linha, $coluna));
+	
+} # fecha função para retorno de valor da coluna
+
+
+
+/**
+ * @@return resultset
+ * @@param id     $texto
+ * @@param string $campo
+ * @@param string $tipo
+ * @@param string $ordem
+ * @@param string $tabela
+ * @@desc Busca registros na tabela
+ texto=conteudo do campo ser pesquisado ou a propria condicao no caso de custom
+ campo=Coluna do banco a ser pesquisada
+ tipo=default todos, contem, igual ou custom
+ tabela=nome da tabela a ser pesquisada
+*/
+function buscaRegistro($texto, $campo='', $tipo="", $ordem="", $tabela)
+{
+	global $conn, $tb, $corFundo, $modulo;
+	#condicao padrao
+	$sql="SELECT * FROM $tabela ";
+	
+	if($tipo=='contem' && $campo) {
+		$sql.="WHERE $campo LIKE '%$texto%' ";
+	}
+	elseif($tipo=='igual' && $campo) {
+		$sql.="WHERE $campo='$texto' ";
+	}
+	elseif($tipo=='custom' && $texto) {
+		$sql.="WHERE $texto ";
+	}
+	
+	if ($ordem) $sql.="ORDER BY $ordem";
+	
+	# Verifica consulta
+	if($sql){
+		#echo "<br>Consulta: $sql<br>";
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta
+		return($consulta);
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+	
+} # fecha função de busca
+?>
+@

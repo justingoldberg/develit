@@ -1,0 +1,2926 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Painel - Funções para cadastro de tickets
+
+
+# Função para cadastro
+function ticket($modulo, $sub, $acao, $registro, $matriz) {
+
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+
+	# Mostrar Status caso não seja informada a ação
+	if(!$sub && !$acao) {
+		# Mostrar Status
+		verTicketUsuario();
+	}
+
+	if(!$sub) {
+		# Mostrar Status caso não seja informada a ação
+		# Inclusão
+		if($acao=="adicionar") {
+			incluirTicket($modulo, $sub, $acao, $registro, $matriz);
+		}
+		# Excluir
+		elseif($acao=="excluir") {
+			excluirTicket($modulo, $sub, $acao, $registro, $matriz);
+		}
+		# Procurar
+		elseif($acao=="procurar") {
+			procurarTicket($modulo, $sub, $acao, $registro, $matriz);
+		}
+		# Procurar
+		elseif($acao=="prioridade") {
+			verTicket($modulo, $sub, $acao, $matriz, $registro);
+		}
+		# Ver
+		elseif($acao=='ver' || $acao=='abrir' || $acao=='fechar' || $acao=='alterar' || $acao=='reabrir' || $acao=='encaminhar' || $acao=='relacionar') {
+			verTicket($modulo, $sub, $acao, $matriz, $registro);
+		}
+		# Transferir
+		elseif($acao=='transferir') {
+			transferirTicket($modulo, $sub, $acao, $matriz, $registro);
+		}
+				
+	}
+	elseif($sub=='comentario') {
+		if($acao=='adicionar') {
+			//itemTabelaNOURL("&nbsp;", 'left', $corFundo, 0, 'normal');
+			adicionarComentario($modulo, $sub, $acao, $matriz, $registro);
+		}
+		elseif($acao=='excluir') {
+			//itemTabelaNOURL("&nbsp;", 'left', $corFundo, 0, 'normal');
+			excluirComentario($modulo, $sub, $acao, $matriz, $registro);
+		}
+		elseif($acao=='alterar') {
+			//itemTabelaNOURL("&nbsp;", 'left', $corFundo, 0, 'normal');
+			alterarComentario($modulo, $sub, $acao, $matriz, $registro);
+		}
+	}
+	elseif($sub=='grupo') {
+		ticketGrupo($modulo, $sub, $acao, $matriz, $registro);
+	}
+	elseif($sub=='listar') {
+		listarTicket($modulo, $sub, $acao, $matriz, $registro);
+	}
+	elseif($sub=='encaminhar') {
+		if($acao=='alterar') alterarEncaminhamentoTicket($modulo, $sub, $acao, $matriz, $registro);
+		elseif($acao=='excluir') excluirEncaminhamentoTicket($modulo, $sub, $acao, $matriz, $registro);
+	}
+	# Feedback
+	elseif($sub=='feedback') {
+		verTicketFeedback($modulo, $sub, 'incluir', $registro, $matriz);
+	}
+
+} #fecha menu principal 
+
+
+# função de busca 
+function buscaTicket($texto, $campo, $tipo, $ordem)
+{
+	global $conn, $tb, $corFundo, $modulo;
+	
+	if($tipo=='todos') {
+		$sql="SELECT * FROM $tb[Ticket] ORDER BY $ordem";
+	}
+	elseif($tipo=='contem') {
+		$sql="SELECT * from $tb[Ticket] WHERE $campo LIKE '%$texto%' ORDER BY $ordem";
+	}
+	elseif($tipo=='igual') {
+		$sql="SELECT * from $tb[Ticket] WHERE $campo='$texto' ORDER BY $ordem";
+	}
+	elseif($tipo=='custom') {
+		$sql="SELECT * from $tb[Ticket] WHERE $texto ORDER BY $ordem";
+	}
+	
+	# Verifica consulta
+	if($sql){
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta
+		return($consulta);
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+	
+} # fecha função de busca
+
+
+
+
+function dadosTicket($idTicket) {
+	global $conn, $tb;
+	
+	$consulta=buscaTicket($idTicket,'id','igual','id');
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$retorno[id]=resultadoSQL($consulta, 0, 'id');
+		$retorno[assunto]=resultadoSQL($consulta, 0, 'assunto');
+		$retorno[data]=resultadoSQL($consulta, 0, 'data');
+		$retorno[texto]=resultadoSQL($consulta, 0, 'texto');
+		$retorno[idUsuario]=resultadoSQL($consulta, 0, 'idUsuario');
+		$retorno[idPrioridade]=resultadoSQL($consulta, 0, 'idPrioridade');
+		$retorno[idCategoria]=resultadoSQL($consulta, 0, 'idCategoria');
+		$retorno[status]=resultadoSQL($consulta, 0, 'status');
+		$retorno[protocolo]=resultadoSQL($consulta, 0, 'protocolo');
+	}
+	
+	return($retorno);
+}
+
+
+function dadosTicketProtocolo($protocolo) {
+	global $conn, $tb;
+	
+	$consulta=buscaTicket($protocolo,'protocolo','igual','id');
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$retorno[id]=resultadoSQL($consulta, 0, 'id');
+		$retorno[assunto]=resultadoSQL($consulta, 0, 'assunto');
+		$retorno[data]=resultadoSQL($consulta, 0, 'data');
+		$retorno[texto]=resultadoSQL($consulta, 0, 'texto');
+		$retorno[idUsuario]=resultadoSQL($consulta, 0, 'idUsuario');
+		$retorno[idPrioridade]=resultadoSQL($consulta, 0, 'idPrioridade');
+		$retorno[idCategoria]=resultadoSQL($consulta, 0, 'idCategoria');
+		$retorno[status]=resultadoSQL($consulta, 0, 'status');
+		$retorno[protocolo]=resultadoSQL($consulta, 0, 'protocolo');
+	}
+	
+	return($retorno);
+
+}
+
+
+# Função para busca de ID 
+function buscaIDTicket($texto, $campo, $tipo, $ordem) {
+	global $conn, $tb, $corFundo, $modulo, $sub;
+	
+	if($tipo=='todos') {
+		$sql="SELECT * FROM $tb[Ticket] ORDER BY $ordem";
+	}
+	elseif($tipo=='contem') {
+		$sql="SELECT * from $tb[Ticket] WHERE $campo LIKE '%$texto%' ORDER BY $ordem";
+	}
+	elseif($tipo=='igual') {
+		$sql="SELECT * from $tb[Ticket] WHERE $campo='$texto' ORDER BY $ordem";
+	}
+	elseif($tipo=='custom') {
+		$sql="SELECT * from $tb[Ticket] WHERE $texto ORDER BY $ordem";
+	}
+	
+	# Verifica consulta
+	if($sql){
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta		
+		return(resultadoSQL($consulta,0,'id'));
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+	
+} # fecha busca por ID 
+
+
+
+
+# Listar 
+function listarTicket($modulo, $sub, $acao, $matriz, $registro)
+{
+	global $conn, $corFundo, $corBorda, $html, $modulo, $sub, $acao, $sessLogin, $limite, $tb;
+	
+	$idUsuario=buscaIDUsuario($sessLogin[login],'login','igual','id');
+	
+	# Iniciar Tabela
+	# Motrar tabela de busca
+	$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=adicionar class=titulo>Novo Ticket</a>",'incluir');
+	$opcoes.="&nbsp;&nbsp;".htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar class=titulo>Procurar</a>",'procurar');
+	
+	htmlAbreTabelaSH('center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		htmlAbreLinha($corBorda);
+			itemLinhaTMNOURL("[Tickets]", 'left', 'middle', '70%', $corFundo, 2, 'tabtitulo');
+			itemLinhaNOURL($opcoes, 'right', $corFundo, 0, 'tabtitulo');
+		htmlFechaLinha();
+	fechaTabela();
+	htmlAbreTabelaSH("center", '100%', 0, 2, 1, $corFundo, $corBorda, 5);
+
+
+	$status=$acao;
+	
+	if($status=='A') $sqlStatus="	AND ( $tb[Ticket].status = '$status' OR $tb[Ticket].status = 'R' )";
+	else $sqlStatus="AND $tb[Ticket].status = '$status'";
+	
+	# Buscar Tickets pertencentes a algum usuario que faz parte do grupo aos quais
+	# o usuario da session pertence
+	$consultaGrupos=buscaUsuariosGrupos($idUsuario,'idUsuario','igual','idUsuario');
+	
+	if($status != "N") {
+	
+		if($consultaGrupos && contaConsulta($consultaGrupos)>0) {
+			$sqlADD="AND ( ";
+			for($a=0;$a<contaConsulta($consultaGrupos);$a++) {
+				$idGrupo=resultadoSQL($consultaGrupos, $a, 'idGrupo');
+				$sqlADD.=" $tb[Grupos].id=$idGrupo ";
+				
+				if( ($a+1) < contaConsulta($consultaGrupos)) $sqlADD.=" OR ";
+			}
+	
+			# Forçar o usuario a participar do grupo padrão do usuario que criou o ticket;
+			
+			$sqlADD.=" ) ";
+		}
+	
+		$sqlGrupo="
+			AND $tb[Usuarios].id = $tb[UsuariosGrupos].idUsuario 
+			AND $tb[UsuariosGrupos].idGrupo = $tb[Grupos].id
+			AND $tb[Ticket].idUsuario = $tb[UsuariosGrupos].idUsuario
+		";
+	
+		$sqlCategoria="AND $tb[Categorias].id = $tb[CategoriasGrupos].idCategoria 
+			AND $tb[CategoriasGrupos].idGrupo = $tb[Grupos].id 
+			AND $tb[Ticket].idCategoria = $tb[Categorias].id";
+		
+		$sql="
+			 SELECT
+			 	$tb[Ticket].id, 
+				$tb[Ticket].assunto, 
+				$tb[Ticket].idUsuario, 
+				$tb[Ticket].status, 
+				$tb[Ticket].idPrioridade, 
+				$tb[Ticket].idCategoria, 
+				$tb[Ticket].protocolo, 
+				$tb[Ticket].data, 
+				$tb[ProcessosTicket].texto, 
+				$tb[ProcessosTicket].idUsuario 
+			FROM
+				$tb[Ticket] LEFT JOIN $tb[Categorias] ON $tb[Ticket].idCategoria = $tb[Categorias].id, 
+				$tb[ProcessosTicket], 
+				$tb[Usuarios], 
+				$tb[UsuariosGrupos], 
+				$tb[Grupos], 
+				$tbPerfil
+				$tb[CategoriasGrupos]
+			WHERE
+				$tb[Ticket].id = $tb[ProcessosTicket].idTicket 
+				$sqlGrupo
+				$sqlCategoria
+				$sqlStatus
+				$sqlADD
+				$sqlADDNovo
+			GROUP BY
+				$tb[Ticket].id;
+		";		
+	}
+	else {
+		# Selecionar apenas ticket do grupo principal do usuario
+		$dadosPerfil=dadosPerfilUsuario($idUsuario);
+
+		# Buscar id do usuário convidado
+		$idConvidado=buscaIDUsuario('convidado','login','igual','id');
+		
+		$sqlGrupo=" AND (  
+			$tb[Ticket].idUsuario=$tb[UsuariosGrupos].idUsuario
+			AND $tb[Grupos].id=$tb[UsuariosGrupos].idGrupo
+			AND ( $tb[Perfil].id = $tb[Ticket].idUsuario)
+			AND $tb[Perfil].idGrupo=$dadosPerfil[idGrupo]
+		) ";
+		
+		$tbPerfil="$tb[Perfil],";
+		
+		$idDemo=buscaIDUsuario('demo','login','igual','id');
+		$idDemo2=buscaIDUsuario('demo2','login','igual','id');
+
+		if($idUsuario != $idDemo && $idUsuario != $idDemo2 ) $sqlADDConvidado="OR $tb[Ticket].idUsuario=$idConvidado";
+		else $sqlADDConvidado='';
+		
+		$sql="
+			SELECT 
+				$tb[Ticket].id, 
+				$tb[Ticket].assunto, 
+				$tb[Ticket].idUsuario, 
+				$tb[Ticket].status, 
+				$tb[Ticket].idPrioridade, 
+				$tb[Ticket].idCategoria, 
+				$tb[Ticket].protocolo, 
+				$tb[Ticket].data 
+			FROM 
+				$tb[Ticket], 
+				$tb[UsuariosGrupos], 
+				$tb[Perfil] 
+			WHERE 
+				$tb[Ticket].status = 'N' 
+				AND 
+				( 
+					( $tb[Ticket].idUsuario=$tb[UsuariosGrupos].idUsuario 
+						AND $tb[Perfil].id = $tb[Ticket].idUsuario 
+						AND $tb[Perfil].idGrupo=$dadosPerfil[idGrupo] ) 
+					$sqlADDConvidado
+				)  
+			GROUP BY 
+				$tb[Ticket].id;
+		";
+	}
+	
+	
+	$consulta=consultaSQL($sql, $conn);
+	
+	
+	$qtde=contaConsulta($consulta);
+		
+	# Verificar quantidade
+	if(!$consulta || contaConsulta($consulta)==0 || $qtde==0) {
+		htmlAbreLinha($corFundo);
+			htmlAbreColuna('100%', 'center', $corFundo, 5, "tabfundo$fundo");
+				htmlAbreTabelaSH("left", '100%', 0, 2, 1, $corFundo, $corfundo, $corBorda, 2);
+					htmlAbreLinha($corFundo);
+						htmlAbreColuna('5%', 'center', $corFundo, 0, "tabfundo$fundo");
+							echo "<img src=".$html[imagem][parar]." border=0>";
+						htmlFechaColuna();
+						$msg="Nenhum ticket postado";
+						itemLinhaTMNOURL($msg, 'left', 'middle','100%', $corFundo, 2, "txtaviso");
+					htmlFechaLinha();
+				fechaTabela();
+			htmlFechaColuna();
+		htmlFechaLinha();
+	}
+	# Tickets encontrados - listar
+	elseif($qtde>0) {
+		htmlAbreLinha($corFundo);
+			htmlAbreColuna('100%', 'center', $corFundo, 5, "tabfundo$fundo");
+				htmlAbreTabelaSH("left", '100%', 0, 2, 1, $corFundo, $corfundo, $corBorda, 5);
+					htmlAbreLinha($corFundo);
+						htmlAbreColuna('5%', 'center', $corFundo, 0, "tabfundo$fundo");
+							echo "<img src=".$html[imagem][grupo]." border=0>";
+						htmlFechaColuna();
+						$msg="$qtde ticket(s) postado(s)";
+						itemLinhaTMNOURL($msg, 'left', 'middle','100%', $corFundo, 5, "txtaviso");
+					htmlFechaLinha();
+				fechaTabela();
+			htmlFechaColuna();
+		htmlFechaLinha();
+		htmlAbreLinha($corBorda);
+			itemLinhaTMNOURL('Assunto', 'center', 'middle','40%', $corFundo, 0, "titulo");
+			itemLinhaTMNOURL('Data de Criação', 'center', 'middle','20%', $corFundo, 0, "titulo");
+			itemLinhaTMNOURL('Prioridade', 'center', 'middle','5%', $corFundo, 0, "titulo");
+			itemLinhaTMNOURL('Categoria', 'center', 'middle','20%', $corFundo, 0, "titulo");
+			itemLinhaTMNOURL('Criado por', 'center', 'middle','10%', $corFundo, 0, "titulo");
+		htmlFechaLinha();
+
+
+		# Mostrar ticket
+		$x=0;
+		
+		for($i=0;$i<contaConsulta($consulta);$i++) {
+			# Verificar se registro está na matriz de tickets selecionads
+			$id=resultadoSQL($consulta, $i, 'id');
+			$fundo=$x%2+1;
+			# Incrementar contador de matriz de tickets selecionados
+			$x++;
+			
+			# Buscar valores
+			$assunto=resultadoSQL($consulta, $i, 'assunto');
+			$data=resultadoSQL($consulta, $i, 'data');
+			$usuario=resultadoSQL($consulta, $i, 'idUsuario');
+			if($status!='N') {
+				$cor=resultadoSQL($consulta, $i, 'cor');
+				$prioridade=resultadoSQL($consulta, $i, 'prioridade');
+				$categoria=resultadoSQL($consulta, $i, 'categoria');
+			}
+
+			# Mostrar ticket
+			htmlAbreLinha($corFundo);
+				$url="?modulo=$modulo&sub&acao=ver&registro=$id";
+				if($status!='N') {
+					$icone=iconeTicket($idUsuario, $usuario);
+					itemLinhaCor("$icone $assunto", $url, 'left', $corFundo, 0, 'bold10', $cor);
+					itemLinhaCorNOURL(converteData($data,'banco','form'), 'center', $corFundo, 0, "normal10", $cor);
+					itemLinhaCorNOURL($prioridade, 'center', $corFundo, 0, "normal10", $cor);
+					itemLinhaCorNOURL($categoria, 'center', $corFundo, 0, "normal10", $cor);
+					itemLinhaCorNOURL(checaUsuario($usuario), 'center', $corFundo, 0, 'normal10', $cor);
+				}
+				else {
+					$icone=iconeTicket($idUsuario, $usuario);
+					itemLinhaTM("$icone <b>$assunto</b>", $url, 'left', 'middle','40%', $corFundo, 0, "tabfundo$fundo");
+					itemLinhaTMNOURL(converteData($data,'banco','form'), 'center', 'middle','25%', $corFundo, 0, "tabfundo$fundo");
+					itemLinhaTMNOURL("X", 'center', 'middle','5%', $corFundo, 0, "tabfundo$fundo");
+					itemLinhaTMNOURL("X", 'center', 'middle','20%', $corFundo, 0, "tabfundo$fundo");
+					itemLinhaTMNOURL(checaUsuario($usuario), 'center', 'middle','10%', $corFundo, 0, "tabfundo$fundo");
+				}
+			htmlFechaLinha();
+		}
+		
+	}
+	
+	# Fechar Tabela
+	fechaTabela();
+	
+} # fecha função de listagem
+
+
+
+
+
+# Listar 
+function listarUltimosTicketsUsuario($idUsuario, $idGrupo) {
+	
+	global $conn, $corFundo, $corBorda, $html, $modulo, $sub, $acao, $limite, $matriz;
+	
+	# Caso idGrupo não seja recebido, buscar perfil de usuario
+	# para obter o grupo padrão
+	$perfil=dadosPerfilUsuario($idUsuario);
+	if(!$idGrupo) $idGrupo=$perfil[idGrupo];
+	
+	//novaTabela("[Ultimos Tickets]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 7);
+	#$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=adicionar class=titulo>Novo Ticket</a>",'incluir');
+	#$opcoes.="&nbsp;&nbsp;".htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar class=titulo>Procurar</a>",'procurar');
+	
+	$selecao="<form name=matriz action=index.php method=post>
+	<input type=hidden name=modulo value=$modulo>
+	<input type=hidden name=sub value=$sub>
+	<input type=hidden name=acao value=$acao>";
+	
+	$selecao.=formListaGruposUsuario($idUsuario, $idGrupo);
+	$selecao.="&nbsp;<input type=submit name=matriz[bntAtualizar] value=Atualizar>";
+	
+	htmlAbreTabelaSH('center', '100%', 0, 2, 1, $corFundo, $corBorda, 7);
+	htmlAbreLinha($corBorda);
+		itemLinhaTMNOURL("[Ultimos Tickets]", 'center', 'middle', '65%', $corFundo, 2, 'tabtitulo');
+		itemLinhaNOURL($selecao, 'right', $corFundo, 5, 'tabtitulo');
+	htmlFechaLinha();	
+	
+	if($idUsuario && $idGrupo) {
+	
+		$sql="
+		SELECT 
+			ticket.id, 
+			ticket.idUsuario idUsuarioTicket,
+			ticket.assunto, 
+			ticket.data dataTicket,
+			ticket.status status,
+			ticket.idPrioridade idPrioridade,
+			max(processos_ticket.data) dataProcesso,
+			processos_ticket.idUsuario idUsuarioProcesso,
+			grupos.nome nomeGrupo			
+		FROM 
+			ticket, 
+			grupos, 
+			usuarios, 
+			usuarios_grupos, 
+			categorias_grupos, 
+			categorias, 
+			processos_ticket
+		WHERE 
+			usuarios.id=usuarios_grupos.idUsuario 
+			AND grupos.id=usuarios_grupos.idGrupo 
+			AND grupos.id=categorias_grupos.idGrupo
+			AND ticket.idCategoria=categorias.id
+			AND categorias_grupos.idCategoria=categorias.id
+			AND processos_ticket.idTicket=ticket.id 
+			AND grupos.id=$idGrupo
+			AND usuarios.id=$idUsuario
+		GROUP BY 
+			ticket.id 
+		ORDER BY
+			dataProcesso DESC";
+				
+		$consulta=consultaSQL($sql, $conn);
+
+		if($perfil[atualizarUltimos]=='S' || $matriz[bntAtualizar]) {
+			if($consulta && contaConsulta($consulta)>0) {
+	
+				# Cabeçalho Grupo
+				$grupo=resultadoSQL($consulta, 0, 'nomeGrupo');
+				
+				# Listar ultimos tickets de acordo com limite
+				$i=0;
+				$linha=0;
+				while($i<contaConsulta($consulta)) {
+					# Informações sobre ticket
+					$id=resultadoSQL($consulta, $i, 'id');
+					$assunto=resultadoSQL($consulta, $i, 'assunto');
+					$status=checaValorStatus(resultadoSQL($consulta, $i, 'status'));
+					$idPrioridade=resultadoSQL($consulta, $i, 'idPrioridade');
+					if($idPrioridade) {
+						$prioridade=checaPrioridade($idPrioridade);
+						$cor=$prioridade[cor];
+					}
+					else $cor='#ffffff';
+					$idUsuarioCriador=resultadoSQL($consulta, $i, 'idUsuarioTicket');
+					$dataTicket=converteData(resultadoSQL($consulta, $i, 'dataTicket'), 'banco','formdata');
+					$dataProcesso=converteData(resultadoSQL($consulta, $i, 'dataProcesso'), 'banco','formdata');
+					
+					# Buscar dados do ticket
+					$dadosTicket=buscaProcessosTicket($id, 'idTicket','igual','data DESC');
+					$comentarioTicket=buscaUltimoComentarioTicket($id);
+					$idUsuarioProcesso=resultadoSQL($dadosTicket, 0, 'idUsuario');				
+					
+					if($status[status] != 'F') {
+					
+						if($linha==0) {
+							htmlAbreLinha($corFundo);
+								itemLinhaTMNOURL("Tickets do Grupo: $grupo", 'center', 'middle', '65%', $corFundo, 2, "tabfundo0");
+								itemLinhaTMNOURL('Status', 'center', 'middle', '5%', $corFundo, 0, "tabfundo0");
+								itemLinhaTMNOURL('Criado por', 'center', 'middle', '15%', $corFundo, 2, "tabfundo0");
+								itemLinhaTMNOURL('Última Alteração', 'center', 'middle', '15%', $corFundo, 2, "tabfundo0");
+							htmlFechaLinha();
+						}
+							
+						# Verificar ultima data
+						$fundo=$linha%2+1;
+						$linha++;
+						
+						if(!$comentarioTicket[idUsuario]) $icone=iconeTicket($idUsuarioCriador, $idUsuarioProcesso, $id);
+						else $icone=iconeTicket($idUsuarioCriador, $comentarioTicket[idUsuario], $id);
+						
+						htmlAbreLinha($corFundo);
+							itemLinhaCorNOURL('&nbsp;', 'center', $corFundo, 0, "normal10", $cor);
+							$texto="$icone<a href=?modulo=$modulo&acao=ver&registro=$id class=bold10>$assunto</a>";
+							itemLinhaTMNOURL($texto, 'left', 'middle', '65%', $corFundo, 0, "tabfundo8$fundo");
+							itemLinhaTMNOURL($status[nome], 'center', 'middle', '5%', $corFundo, 0, "tabfundo8$fundo");
+							itemLinhaTMNOURL(buscaLoginUsuario($idUsuarioCriador,'id','igual','id'), 'center', 'middle', '7%', $corFundo, 0, "tabfundo8$fundo");
+							itemLinhaTMNOURL($dataTicket, 'center', 'middle', '8%', $corFundo, 0, "tabfundo8$fundo");
+							itemLinhaTMNOURL(buscaLoginUsuario($idUsuarioProcesso, 'id','igual','id'), 'center', 'middle', '7%', $corFundo, 0, "tabfundo8$fundo");
+							itemLinhaTMNOURL($dataProcesso, 'center', 'middle', '8%', $corFundo, 0, "tabfundo8$fundo");
+						htmlFechaLinha();
+					}
+					
+					if($linha >= $limite[resumo][ultimos]) break;
+					
+					# Incrementar contador
+					$i++;
+				}
+				
+				if($linha==0) {
+					# Nenhum registro encontrado
+					itemTabelaNOURL('Selecionar Grupo para visualização de Últimos Tickets!', 'left', $corFundo, 7, 'txtaviso');
+				}
+			}
+			else {
+				# Nenhum registro encontrado
+				itemTabelaNOURL('Selecionar Grupo para visualização de Últimos Tickets!', 'left', $corFundo, 7, 'txtaviso');
+			}
+		}
+		else {
+			# Nenhum registro encontrado
+			itemTabelaNOURL('Selecionar Grupo para visualização de Últimos Tickets!', 'left', $corFundo, 7, 'txtaviso');
+		}
+	}
+	else {
+		# Nenhum registro encontrado
+		itemTabelaNOURL('Selecionar Grupo para visualização de Últimos Tickets!', 'left', $corFundo, 7, 'txtaviso');
+	}
+
+	fechaTabela();
+
+
+} # fecha função de listagem
+
+
+
+# Fução para visualização de status 
+function verStatusTicket()
+{
+	global $conn, $tb, $corFundo, $corBorda, $html;
+
+	# Motrar tabela de busca
+	novaTabela2("[Informações sobre Tickets]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 3);
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('60%', 'left', $corFundo, 0, 'tabfundo1');
+			echo "<br><img src=".$html[imagem][status]." border=0 align=left><b class=bold>Status de Tickets</b><br>
+			<span class=normal10>Status e informações sobre Tickets.";
+			htmlFechaColuna();
+			htmlAbreColuna('10', 'left', $corFundo, 0, 'normal');
+			echo "&nbsp;";
+			htmlFechaColuna();
+			
+			htmlAbreColuna('40%', 'left', $corFundo, 0, 'normal');
+				# Mostrar status
+				$busca=buscaTicket($texto, $campo, 'todos', 'id');
+				if($busca) {
+					$numBusca=contaConsulta($busca);
+				}
+				else {
+					$numBusca=0;
+				}
+				
+				htmlAbreTabelaSH('left', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				novaLinhaTabela($corFundo, '100%');
+					itemLinhaNOURL('Número de Registros:', 'right', $corFundo, $colunas, 'bold10');
+					itemLinhaNOURL("$numBusca ticket(s)&nbsp;cadastrado(s)", 'left', $corFundo, $colunas, 'normal10');
+				fechaLinhaTabela();
+				
+			
+			htmlFechaColuna();
+		fechaLinhaTabela();
+	fechaTabela();	
+} #fecha status 
+
+
+# Funcao para cadastro 
+function incluirTicket($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html, $sessLogin;
+
+	# Form de inclusao
+	if(!$matriz[bntAdicionar]) {
+		# Motrar tabela de busca
+		novaTabela2("[Adicionar]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+			# Opcoes Adicionais
+			menuOpcAdicional($modulo, $sub, $acao, $registro);	
+			#fim das opcoes adicionais
+			novaLinhaTabela($corFundo, '100%');
+			$texto="			
+				<form method=post name=matriz action=index.php>
+				<input type=hidden name=modulo value=$modulo>
+				<input type=hidden name=sub value=$sub>
+				<input type=hidden name=acao value=$acao>&nbsp;";
+				itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+			fechaLinhaTabela();
+			novaLinhaTabela($corFundo, '100%');
+				htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+					echo "<b class=bold>Assunto: </b><br>
+					<span class=normal10>Assunto do ticket, utilizado para visualização abreviada do Ticket</span>";
+				htmlFechaColuna();
+				$texto="<input type=text name=matriz[assunto] size=60>";
+				itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+			fechaLinhaTabela();
+			novaLinhaTabela($corFundo, '100%');
+				htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+					echo "<b class=bold>Descrição: </b><br>
+					<span class=normal10>Descrição detalhada do Ticket</span>";
+				htmlFechaColuna();
+				$texto="<textarea name=matriz[descricao] rows=10 cols=60></textarea>";
+				itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+			fechaLinhaTabela();
+			#relacionar
+			getOpcaoRelacionar();
+			novaLinhaTabela($corFundo, '100%');
+				htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+					echo "&nbsp;";
+				htmlFechaColuna();
+				$texto="<input type=submit name=matriz[bntAdicionar] value=Adicionar>";
+				itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+			fechaLinhaTabela();
+		fechaTabela();
+	} #fecha form
+	elseif($matriz[bntAdicionar]) {
+		# Conferir campos
+		if($matriz[assunto] && $matriz[descricao]) {
+			
+			# Buscar ID de novo Ticket
+			$matriz[idTicket]=buscaIDNovoTicket();
+			
+			# Buscar ID de novo Protocolo
+			$matriz[protocolo]=buscaIDNovoProtocolo($matriz[idTicket]);
+			
+			# Cadastrar em banco de dados
+			$grava=dbTicket($matriz, 'incluir');
+			
+			# Verificar inclusão de registro
+			if($grava) {
+				# Gravar Status de Ticket - NOVO
+				dbProcessosTicket($matriz, 'incluir');
+				
+				# Buscar Ticket
+				$idUsuario=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'id');
+				
+				# Enviar mensagem alertando sobre novo ticket Criado
+				mailTicket($matriz[idTicket], $idUsuario, 'incluir');
+				
+				# Mostrar Protocolo do ticket
+				verProtocolo($matriz[protocolo]);
+				echo "<br>";
+				
+				# Mostrar Ticket
+				if(!$matriz[relacionar]) {
+					verTicket($modulo, $sub, 'ver', $matriz, $matriz[idTicket]);
+				}
+				elseif($matriz[relacionar] == 'S') {
+					relacionarTicket($modulo, $sub, $acao, $matriz, $matriz[idTicket]);
+				}
+			}
+		}
+		
+		# falta de parametros
+		else {
+			# acusar falta de parametros
+			# Mensagem de aviso
+			$msg="Falta de parâmetros necessários. Informe os campos obrigatórios e tente novamente";
+			$url="?modulo=$modulo&acao=$acao";
+			aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+		}
+	}
+
+} # fecha funcao de inclusao
+
+
+
+# Função para gravação em banco de dados
+function dbTicket($matriz, $tipo)
+{
+	global $conn, $tb, $modulo, $acao, $sessLogin;
+	
+	# Data do sistema 
+	$data=dataSistema();
+	
+	# Busca o ID do usuário logado
+	if($sessLogin[login]) $idUser=buscaIDUsuario($sessLogin[login], 'login', 'igual', 'login');
+	else $idUser=buscaIDUsuario('convidado', 'login','igual','login');
+	
+	# Sql de inclusão
+	if($tipo=='incluir') {
+		$sql="INSERT INTO $tb[Ticket] VALUES ($matriz[idTicket],
+		'$matriz[assunto]',
+		'$data[dataBanco]',
+		'$matriz[descricao]',
+		'$idUser',
+		'',
+		'$matriz[idCategoria]',
+		'N',
+		'$matriz[protocolo]')";
+	} #fecha inclusao
+	
+	elseif($tipo=='excluir') {
+		# Verificar se ticket existe
+		$tmpBusca=buscaTicket($matriz[id], 'id', 'igual', 'id');
+		
+		# Registro já existe
+		if(!$tmpBusca|| contaConsulta($tmpBusca)==0) {
+			# Mensagem de aviso
+			$msg="Registro não existe no banco de dados";
+			$url="?modulo=$modulo&sub=$sub&acao=$acao";
+			aviso("Aviso: Erro ao alterar registro", $msg, $url, 760);
+		}
+		else {
+			$sql="DELETE FROM $tb[Ticket] WHERE id=$matriz[id]";
+		}
+	}
+	
+	# Alterar
+	elseif($tipo=='alterar') {
+		# Verificar se o ticket existe
+		$sql="UPDATE $tb[Ticket] SET assunto='$matriz[assunto]', texto='$matriz[descricao]' WHERE id=$matriz[id]";
+	}
+	
+	# Transferir
+	elseif($tipo=='transferir') {
+		# Verificar se o ticket existe
+		$sql="UPDATE $tb[Ticket] SET idUsuario='$matriz[idUsuario]' WHERE id=$matriz[id]";
+	}
+	
+	# Prioridade
+	elseif($tipo=='prioridade') {
+		# Verificar se o ticket existe
+		$sql="UPDATE $tb[Ticket] SET idPrioridade='$matriz[prioridade]' WHERE id=$matriz[id]";
+	}
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+	
+} # fecha função de gravação em banco de dados
+
+
+
+# Exclusão de servicos
+function excluirTicket($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html, $sessLogin;
+	
+	# ERRO - Registro não foi informado
+	if(!$registro) {
+		# Mostrar Erro
+		$msg="Registro não foi encontrado!";
+		$url="?modulo=$modulo&sub=$sub&acao=$acao";
+		aviso("Aviso", $msg, $url, 760);
+	}
+	# Form de inclusao
+	elseif($registro && !$matriz[bntExcluir]) {
+	
+		# Buscar Valores
+		$consulta=buscaTicket($registro, 'id', 'igual', 'id');
+		
+		if(!$consulta || contaConsulta($consulta)==0) {
+			# Mostrar Erro
+			$msg="Registro não foi encontrado!";
+			$url="?modulo=$modulo&sub=$sub&acao=$acao";
+			aviso("Aviso", $msg, $url, 760);
+		}
+		else {
+		
+			#atribuir valores
+			$id=resultadoSQL($consulta, 0, 'id');
+			$assunto=resultadoSQL($consulta, 0, 'assunto');
+			$descricao=resultadoSQL($consulta, 0, 'texto');
+			
+			# Motrar tabela de busca
+			novaTabela2("[Excluir]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+				# Opcoes Adicionais
+				menuOpcAdicional($modulo, $sub, $acao, $registro);				
+				#fim das opcoes adicionais
+				novaLinhaTabela($corFundo, '100%');
+				$texto="			
+					<form method=post name=matriz action=index.php>
+					<input type=hidden name=modulo value=$modulo>
+					<input type=hidden name=sub value=$sub>
+					<input type=hidden name=acao value=$acao>
+					<input type=hidden name=registro value=$registro>
+					<input type=hidden name=matriz[id] value=$registro>&nbsp;";
+					itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold>Assunto: </b>";
+					htmlFechaColuna();
+					itemLinhaForm($assunto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "<b class=bold>Descrição: </b>";
+					htmlFechaColuna();
+					itemLinhaForm($descricao, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+	
+				# Botão de confirmação
+				novaLinhaTabela($corFundo, '100%');
+					htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+						echo "&nbsp;";
+					htmlFechaColuna();
+					$texto="<input type=submit name=matriz[bntExcluir] value=Excluir>";
+					itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+				fechaLinhaTabela();
+			fechaTabela();
+		} #fecha alteracao
+	} #fecha form - !$bntExcluir
+	
+	# Alteração - bntExcluir pressionado
+	elseif($matriz[bntExcluir]) {
+		# Cadastrar em banco de dados
+		$grava=dbTicket($matriz, 'excluir');
+				
+		# Verificar inclusão de registro
+		if($grava) {
+			# Apagar comentarios
+			dbComentariosTicket($matriz, 'excluirtodos');
+			# Apagar Processos
+			dbProcessosTicket($matriz, 'excluirtodos');
+			# Apagar detalhes
+			dbDetalhesTicket($matriz, 'excluirtodos');
+			# Apagar Finalizacoes
+			dbFinalizacoesTicket($matriz,'excluirtodos','');
+			# Apagar Chats
+			dbTicketChat($matriz, 'excluirtodos');
+			
+			verTicketUsuario(buscaIDUsuario($sessLogin[login], 'login', 'igual', 'id'));
+		}
+		
+	} #fecha bntExcluir
+	
+} #fecha exclusao 
+
+
+
+# Fução para visualização de status 
+function verTicketUsuario() {
+	global $conn, $tb, $corFundo, $corBorda, $html, $sessLogin, $modulo, $sessNavegacao;
+
+	# Motrar tabela de busca
+	$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&acao=adicionar class=titulo>Novo Ticket</a>",'incluir');
+	$opcoes.="&nbsp;&nbsp;".htmlMontaOpcao("<a href=?modulo=$modulo&acao=procurar class=titulo>Procurar</a>",'procurar');
+	
+	htmlAbreTabelaSH('center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		htmlAbreLinha($corBorda);
+			itemLinhaTMNOURL("[Tickets]", 'left', 'middle', '68%', $corFundo, 2, 'tabtitulo');
+			itemLinhaNOURL($opcoes, 'right', $corFundo, 0, 'tabtitulo');
+		htmlFechaLinha();
+	fechaTabela();
+	
+	novaTabela2SH("right", '100%', 0, 2, 1, $corFundo, $corBorda, 0);
+		novaLinhaTabela($corFundo, '100%');
+		
+			htmlAbreColuna('100%', 'right', $corFundo, 2, 'normal');
+				# Colunas e quadros de estatíticas e mostragem de tickets
+				htmlAbreTabelaSH('center', '100%', 0, 5, 0, $corFundo, $corBorda, 2);
+				
+					novaLinhaTabela($corFundo, '100%');
+						# Coluna de Meus Tickets
+						htmlAbreColunaForm('50%', 'right','top', $corFundo, 0, 'normal');
+							# Visualizar Tickets do usuario
+							meusTickets(buscaIDUsuario($sessLogin[login],'login','igual','login'));
+						htmlfechaColuna();
+				
+						# Coluna de Informações de Grupo
+						htmlAbreColunaForm('50%', 'right', 'top', $corFundo, 0, 'normal');
+							# Tickets de Grupo
+							htmlAbreTabelaSH('left', '100%', 0, 0, 0, $corFundo, $corBorda, 0);
+								novaLinhaTabela($corFundo, '100%');
+									htmlAbreColunaForm('100%', 'right', 'top', $corFundo, 0, 'normal');
+										novaTabela2("[Novos Tickets]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 3);
+											novaLinhaTabela($corFundo, '100%');
+												listarTicketsStatus('Novos', 'N', 5);
+											fechaLinhaTabela();
+										fechaTabela();
+									htmlFechaColuna();
+								htmlFechaLinha();
+								itemTabelaNOURL('&nbsp;', 'left', $corFundo, 0, 'normal');
+								novaLinhaTabela($corFundo, '100%');
+									htmlAbreColunaForm('100%', 'right', 'top', $corFundo, 0, 'normal');
+										novaTabela2("[Tickets de Grupo]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 3);
+											novaLinhaTabela($corFundo, '100%');
+												grupoTicketsStatus(buscaIDUsuario($sessLogin[login],'login','igual','id'));
+											fechaLinhaTabela();
+										fechaTabela();
+									htmlFechaColuna();
+								htmlFechaLinha();
+							fechaTabela();
+						htmlfechaColuna();
+					htmlFechaLinha();
+				fechaTabela();
+			htmlfechaColuna();
+		htmlFechaLinha();
+	fechaTabela();	
+	
+	listarUltimosTicketsUsuario(buscaIDUsuario($sessLogin[login], 'login','igual','id'), $sessNavegacao[grupo]);
+	
+
+} #fecha status 
+
+
+
+
+# função para mostrar os tickets do usuario
+function meusTickets($usuario) {
+
+	global $conn, $corFundo, $corBorda, $html, $limite;
+	
+	novaTabela2("[Meus Tickets]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 4);
+	
+		# Tickets Novos
+		meusTicketsStatus($usuario, 'N', 'Novos', $limite[ticket][novo]);
+		
+		# Tickets Abertos
+		itemTabelaNOURL('&nbsp', 'left', $corFundo, 4, 'normal');
+		meusTicketsStatus($usuario, 'A', 'Abertos', $limite[ticket][aberto]);
+
+	fechaTabela();
+
+}
+
+
+# função para mostrar os tickets do usuario
+function meusTicketsStatus($usuario, $status, $titulo, $limite) {
+
+	global $conn, $corFundo, $corBorda, $html, $modulo, $sub;
+	
+	# Mostrar tickets - NOVOS
+	if($status=='A') {
+		$sqlADD="OR ticket.status='R'";
+	}
+	
+	if($status == 'N') {
+		
+		$sql="
+			SELECT 
+				ticket.id id, 
+				ticket.assunto assunto, 
+				status.valor valorStatus, 
+				ticket.status status,
+				ticket.protocolo protocolo,
+				max(processos_ticket.data) data,
+				ticket.idUsuario,
+				ticket.idPrioridade prioridade,
+				ticket.idCategoria categoria
+			FROM 
+				ticket, 
+				status, 
+				usuarios, 
+				processos_ticket 
+			WHERE
+				processos_ticket.idTicket=ticket.id 
+				AND ticket.idUsuario=usuarios.id 
+				AND status.id=processos_ticket.idStatus 
+				AND ( usuarios.id=$usuario OR processos_ticket.idUsuario=$usuario)
+				AND ( ticket.status='$status' $sqlADD)
+			GROUP BY
+				ticket.id
+			ORDER BY 
+				data DESC";
+	}
+	else {
+		$sql="
+			SELECT 
+				ticket.id id, 
+				ticket.assunto assunto, 
+				status.valor valorStatus, 
+				ticket.status status,
+				ticket.protocolo protocolo,
+				max(processos_ticket.data) data,
+				ticket.idUsuario,
+				ticket.idPrioridade prioridade,
+				ticket.idCategoria categoria
+			FROM 
+				ticket, 
+				status, 
+				usuarios, 
+				processos_ticket,
+				prioridades
+			WHERE
+				processos_ticket.idTicket=ticket.id 
+				AND ticket.idUsuario=usuarios.id 
+				AND status.id=processos_ticket.idStatus 
+				AND ticket.idPrioridade = prioridades.id
+				AND ( usuarios.id=$usuario OR processos_ticket.idUsuario=$usuario)
+				AND ( ticket.status='$status' $sqlADD)
+			GROUP BY
+				ticket.id
+			ORDER BY 
+				prioridades.valor,
+				ticket.data DESC";		
+	}
+
+	
+	$consulta=consultaSQL($sql, $conn);	
+	$perfil=dadosPerfilUsuario($usuario);
+
+	# Checar Tickets - buscar um unico processo para cada ticket
+	if(!$consulta || contaConsulta($consulta)==0) {
+		$qtde=contaConsulta($consulta);
+		itemTabelaNOURL("$titulo: $qtde ticket(s)", 'left', $corFundo, 4, 'bold10');
+
+		$msg="Nenhum ticket cadastrado";
+		htmlAbreLinha($corFundo);
+			htmlAbreColuna('5%', 'left', $corFundo, 0, "normal10");
+				echo "<img src=".$html[imagem][parar]." border=0>";
+			htmlFechaColuna();
+			itemLinhaTMNOURL($msg, 'left', 'middle','55%', $corFundo, 3, "txtaviso");
+		htmlFechaLinha();
+	} 
+	else {
+	
+		$qtde=contaConsulta($consulta);
+		
+		itemTabelaNOURL("$titulo: $qtde ticket(s)", 'left', $corFundo, 4, 'bold10');
+		if($qtde==0) {
+
+			$msg="Nenhum ticket cadastrado";
+			htmlAbreLinha($corFundo);
+				htmlAbreColuna('5%', 'left', $corFundo, 0, "normal10");
+					echo "<img src=".$html[imagem][parar]." border=0>";
+				htmlFechaColuna();
+				itemLinhaTMNOURL($msg, 'left', 'middle','55%', $corFundo, 3, "txtaviso");
+			htmlFechaLinha();
+		}
+		
+		# Listar registros
+		for($i=0;$i<contaConsulta($consulta) && $i < $limite ;$i++) {
+			$id=resultadoSQL($consulta, $i, 'id');
+			$idUsuario=resultadoSQL($consulta, $i, 'idUsuario');
+			$assunto=resultadoSQL($consulta, $i, 'assunto');
+			$data=resultadoSQL($consulta, $i, 'data');
+			$valorStatus=resultadoSQL($consulta, $i, 'valorStatus');
+			$categoria=resultadoSQL($consulta, $i, 'categoria');
+			$prioridade=resultadoSQL($consulta, $i, 'prioridade');
+			$protocolo=resultadoSQL($consulta, $i, 'protocolo');
+
+			if($prioridade) {
+				$dadosPrioridade=checaPrioridade($prioridade);
+				$cor=$dadosPrioridade[cor];
+			}
+			else $cor='#ffffff';
+
+			# URL para acesso
+			$url="?modulo=$modulo&acao=ver&registro=$id";
+
+			$fundo=$i%2+1;
+			
+			htmlAbreLinha($corFundo);
+			
+				if($perfil[alinhaPrior]=='I' || $perfil[alinhaPrior]=='L') {
+					itemLinhaCorNOURL(iconeTicket($usuario, $idUsuario, $id), 'center', $corFundo, 2, "normal10", $cor);
+				}
+				else {
+					htmlAbreColuna('5%', 'left', $corFundo, 0, "tabfundo$fundo");
+						echo iconeTicket($usuario, $idUsuario, $id);
+					htmlFechaColuna();
+				}
+				
+				if(!$perfil[alinhaPrior] || $perfil[alinhaPrior]=='E') {
+					htmlAbreColuna('2%', 'left', $corFundo, 0, "tabfundo$fundo");
+						novaTabela2SH('left','1%',0,0,1,$corFundo, $corBorda, 1);
+							htmlAbreLinha($corFundo);
+								itemLinhaCorNOURL('&nbsp;', 'center', $corFundo, 0, "normal10", $cor);
+							htmlFechaLinha();
+						fechaTabela();
+					htmlFechaColuna();
+				}
+				
+				if($perfil[alinhaPrior]=='L') {
+					itemLinhaCor($assunto, $url, 'left width=80%',$corFundo, 0, 'normal10', $cor);
+					itemLinhaCorNOURL(converteData($data,'banco','formdata'), 'center width=20%', $corFundo, 0, "normal10", $cor);
+				}
+				else {
+					itemLinhaTM($assunto, $url, 'left', 'middle','80%', $corFundo, 0, "tabfundo$fundo");
+					itemLinhaTMNOURL(converteData($data,'banco','formdata'), 'center', 'middle', '20%', $corFundo, 0, "tabfundo$fundo");
+				}
+				
+				if($perfil[alinhaPrior]=='D') {
+					htmlAbreColuna('2%', 'left', $corFundo, 0, "tabfundo$fundo");
+						novaTabela2SH('left','100%',0,0,1,$corFundo, $corBorda, 1);
+							htmlAbreLinha($corFundo);
+								itemLinhaCorNOURL('&nbsp;', 'center border', $corFundo, 0, "normal10", $cor);
+							htmlFechaLinha();
+						fechaTabela();
+					htmlFechaColuna();
+				}
+				
+			htmlFechaLinha();
+
+		}
+	}
+}
+
+
+
+# função para mostrar os tickets do usuario
+function grupoTicketsStatus($usuario) {
+
+	global $conn, $corFundo, $corBorda, $html, $limite, $sessLogin, $modulo, $sub, $acao;
+
+	# Buscar Grupos do Usuario
+	$gruposUsuario=buscaUsuariosGrupos($usuario, 'idUsuario','igual','idUsuario');
+	$idUsuario=buscaIDUsuario($sessLogin[login],'login','igual','id');
+	
+	if($gruposUsuario && contaConsulta($gruposUsuario)) {
+	
+		# Contador de Tickets
+		$qtdeTicket=0;
+		
+		for($x=0;$x<contaConsulta($gruposUsuario);$x++) {
+			$tmpGrupo=resultadoSQL($gruposUsuario, $x, 'idGrupo');
+			$nomeGrupo=checaGrupo($tmpGrupo);
+			
+			# Totalizar informações de Status x Grupo
+			# Tickets Novos
+			//$totalNovos=totalTicketsGrupoStatus($tmpGrupo, $idUsuario, 'N');
+			# Tickets Aberto
+			$totalAbertos=totalTicketsGrupoStatus($tmpGrupo, $idUsuario, 'A');
+			# Tickets Fechados
+			$totalFechados=totalTicketsGrupoStatus($tmpGrupo, $idUsuario, 'F');
+			
+			if($totalAbertos || $totalFechados) {
+				$qtdeTicket++;
+
+				htmlAbreTabelaSH('left', '100%', 0, 2, 0, $corFundo, $corBorda, 4);
+					# Tabela de Quantidades por Status
+					htmlAbreLinha($corFundo);
+						/*
+						if($x+1<contaConsulta($gruposUsuario)) {
+							# Cabeçalho Grupo
+							$titulo="<img src=".$html[imagem][grupo]."> $nomeGrupo";
+							itemLinhaTMNOURL($titulo, 'left', 'bottom', '28%', $corFundo, 0, 'bold10');
+							$abertos="<a href=?modulo=$modulo&sub=grupo&acao=A&registro=$tmpGrupo class=bold10>Aberto</a>";
+							$abertos.="<br><b>$totalAbertos</b> ticket(s)";
+							itemLinhaNOURL($abertos, 'center', $corFundo, 0, 'normal10');
+							
+							//$fechados="<a href=?modulo=$modulo&sub=grupo&acao=F&registro=$tmpGrupo class=bold10>Fechado</a>";
+							//$fechados.="<br><b>$totalFechados</b> ticket(s)";
+							//itemLinhaNOURL($fechados, 'center', $corFundo, 0, 'normal10');
+							
+
+							$x++;
+							$tmpGrupo=resultadoSQL($gruposUsuario, $x, 'idGrupo');
+							$nomeGrupo=checaGrupo($tmpGrupo);
+							
+							# Cabeçalho Grupo
+							$titulo="<img src=".$html[imagem][grupo]."> $nomeGrupo";
+							
+							# Totalizar informações de Status x Grupo
+							# Tickets Aberto
+							$totalAbertos=totalTicketsGrupoStatus($tmpGrupo, $idUsuario, 'A');
+							itemLinhaTMNOURL('&nbsp;', 'left', 'bottom', '5', $corFundo, 0, 'bold10');
+							itemLinhaTMNOURL($titulo, 'left', 'bottom', '28%', $corFundo, 0, 'bold10');
+							$abertos="<a href=?modulo=$modulo&sub=grupo&acao=A&registro=$tmpGrupo class=bold10>Aberto</a>";
+							$abertos.="<br><b>$totalAbertos</b> ticket(s)";
+							itemLinhaNOURL($abertos, 'center', $corFundo, 0, 'normal10');
+						}
+						elseif($x+1==contaConsulta($gruposUsuario) && ($x%2)==0) {
+							# Cabeçalho Grupo
+							$titulo="<img src=".$html[imagem][grupo]."> $nomeGrupo";
+							itemLinhaTMNOURL($titulo, 'left', 'bottom', '70%', $corFundo, 4, 'bold10');
+							$abertos="<a href=?modulo=$modulo&sub=grupo&acao=A&registro=$tmpGrupo class=bold10>Aberto</a>";
+							$abertos.="<br><b>$totalAbertos</b> ticket(s)";
+							itemLinhaNOURL($abertos, 'center', $corFundo, 0, 'normal10');
+						}
+						else {
+							# Cabeçalho Grupo
+							$titulo="<img src=".$html[imagem][grupo]."> $nomeGrupo";
+							itemLinhaTMNOURL($titulo, 'left', 'bottom', '28%', $corFundo, 0, 'bold10');
+							$abertos="<a href=?modulo=$modulo&sub=grupo&acao=A&registro=$tmpGrupo class=bold10>Aberto</a>";
+							$abertos.="<br><b>$totalAbertos</b> ticket(s)";
+							itemLinhaTMNOURL($abertos, 'center', 'bottom', '20%', $corFundo, 0, 'normal10');
+							itemLinhaTMNOURL('&nbsp;', 'center', 'bottom', '50%', $corFundo, 3, 'bold10');
+						}*/
+						
+						# Cabeçalho Grupo
+						$titulo="<img src=".$html[imagem][grupo]."> $nomeGrupo";
+						itemLinhaTMNOURL($titulo, 'left', 'bottom', '28%', $corFundo, 0, 'bold10');
+						
+						//$novos="<a href=?modulo=$modulo&sub=grupo&acao=N&registro=$tmpGrupo class=bold10>Novo</a>";
+						//$novos.="<br><b>$totalNovos</b> ticket(s)";
+						//itemLinhaTMNOURL($novos, 'center', 'bottom', '20%', $corFundo, 0, 'normal10');
+						
+						$abertos="<a href=?modulo=$modulo&sub=grupo&acao=A&registro=$tmpGrupo class=bold10>Aberto</a>";
+						$abertos.="<br><b>$totalAbertos</b> ticket(s)";
+						itemLinhaTMNOURL($abertos, 'center', 'bottom', '20%', $corFundo, 0, 'normal10');
+						
+						$fechados="<a href=?modulo=$modulo&sub=grupo&acao=F&registro=$tmpGrupo class=bold10>Fechado</a>";
+						$fechados.="<br><b>$totalFechados</b> ticket(s)";
+						itemLinhaTMNOURL($fechados, 'center', 'bottom', '20%', $corFundo, 0, 'normal10');
+						
+
+						if($x+1<contaConsulta($gruposUsuario)) itemTabelaNOURL("&nbsp;", 'left', $corFundo, 5, 'normal10');
+
+					htmlFechaLinha();
+				fechaTabela();
+			}
+		}
+		
+		if($qtdeTicket==0) {
+			$msg="<span class=txtaviso>Nenhum ticket cadastrado</span>";
+			itemLinhaTMNOURL($msg, 'left', 'bottom', '28%', $corFundo, 5, 'bold10');
+		}
+
+	}
+}
+
+
+
+# função para mostrar os tickets do usuario
+function listarTicketsStatus($titulo, $status, $limite) {
+
+	global $conn, $corFundo, $corBorda, $html, $limite, $sessLogin, $modulo, $sub, $acao, $sessLogin, $tb;
+	
+	$idUsuario=buscaIDUsuario($sessLogin[login],'login','igual','id');
+	if($status=='A') $sqlStatus="	AND ( $tb[Ticket].status = '$status' OR $tb[Ticket].status = 'R' )";
+	else $sqlStatus="AND $tb[Ticket].status = '$status'";
+	
+	# Buscar Tickets pertencentes a algum usuario que faz parte do grupo aos quais
+	# o usuario da session pertence
+	$consultaGrupos=buscaUsuariosGrupos($idUsuario,'idUsuario','igual','idUsuario');
+	
+	if($status != "N") {
+	
+		if($consultaGrupos && contaConsulta($consultaGrupos)>0) {
+			$sqlADD="AND ( ";
+			for($a=0;$a<contaConsulta($consultaGrupos);$a++) {
+				$idGrupo=resultadoSQL($consultaGrupos, $a, 'idGrupo');
+				$sqlADD.=" $tb[Grupos].id=$idGrupo ";
+				
+				if( ($a+1) < contaConsulta($consultaGrupos)) $sqlADD.=" OR ";
+			}
+	
+			# Forçar o usuario a participar do grupo padrão do usuario que criou o ticket;
+			
+			$sqlADD.=" ) ";
+		}
+	
+		$sqlGrupo="
+			AND $tb[Usuarios].id = $tb[UsuariosGrupos].idUsuario 
+			AND $tb[UsuariosGrupos].idGrupo = $tb[Grupos].id
+			AND $tb[Ticket].idUsuario = $tb[UsuariosGrupos].idUsuario
+		";
+	
+		$sqlCategoria="AND $tb[Categorias].id = $tb[CategoriasGrupos].idCategoria 
+			AND $tb[CategoriasGrupos].idGrupo = $tb[Grupos].id 
+			AND $tb[Ticket].idCategoria = $tb[Categorias].id";
+		
+		$sql="
+			 SELECT
+			 	$tb[Ticket].id, 
+				$tb[Ticket].assunto, 
+				$tb[Ticket].idUsuario, 
+				$tb[Ticket].status, 
+				$tb[Ticket].idPrioridade, 
+				$tb[Ticket].idCategoria, 
+				$tb[Ticket].protocolo, 
+				$tb[Ticket].data, 
+				$tb[ProcessosTicket].texto, 
+				$tb[ProcessosTicket].idUsuario 
+			FROM
+				$tb[Ticket] LEFT JOIN $tb[Categorias] ON $tb[Ticket].idCategoria = $tb[Categorias].id,
+				$tb[ProcessosTicket], 
+				$tb[Usuarios], 
+				$tb[UsuariosGrupos], 
+				$tb[Grupos], 
+				$tbPerfil
+				$tb[CategoriasGrupos]
+			WHERE
+				$tb[Ticket].id = $tb[ProcessosTicket].idTicket 
+				$sqlGrupo
+				$sqlCategoria
+				$sqlStatus
+				$sqlADD
+				$sqlADDNovo
+			GROUP BY
+				$tb[Ticket].id;
+		";
+		
+	}
+	else {
+		# Selecionar apenas ticket do grupo principal do usuario
+		$dadosPerfil=dadosPerfilUsuario($idUsuario);
+
+		# Buscar id do usuário convidado
+		$idConvidado=buscaIDUsuario('convidado','login','igual','id');
+		
+		$idDemo=buscaIDUsuario('demo','login','igual','id');
+		$idDemo2=buscaIDUsuario('demo2','login','igual','id');
+
+		if($idUsuario != $idDemo && $idUsuario != $idDemo2 && $idConvidado>0) $sqlADDConvidado="OR $tb[Ticket].idUsuario=$idConvidado";
+		else $sqlADDConvidado='';
+		
+		$sqlGrupo=" AND (  
+			$tb[Ticket].idUsuario=$tb[UsuariosGrupos].idUsuario
+			AND $tb[Grupos].id=$tb[UsuariosGrupos].idGrupo
+			AND ( $tb[Perfil].id = $tb[Ticket].idUsuario)
+			AND $tb[Perfil].idGrupo=$dadosPerfil[idGrupo]
+		) ";
+		
+		$tbPerfil="$tb[Perfil],";
+	
+		$sql="
+			SELECT 
+				$tb[Ticket].id, 
+				$tb[Ticket].assunto, 
+				$tb[Ticket].idUsuario, 
+				$tb[Ticket].status, 
+				$tb[Ticket].idPrioridade, 
+				$tb[Ticket].idCategoria, 
+				$tb[Ticket].protocolo, 
+				$tb[Ticket].data 
+			FROM 
+				$tb[Ticket], 
+				$tb[UsuariosGrupos], 
+				$tb[Perfil] 
+			WHERE 
+				$tb[Ticket].status = 'N' 
+				AND 
+				( 
+					( $tb[Ticket].idUsuario=$tb[UsuariosGrupos].idUsuario 
+						AND $tb[Perfil].id = $tb[Ticket].idUsuario 
+						AND $tb[Perfil].idGrupo='$dadosPerfil[idGrupo]' ) 
+					$sqlADDConvidado
+				)
+			GROUP BY 
+				$tb[Ticket].id;
+		";
+	}
+	
+	$consulta=consultaSQL($sql, $conn);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+
+		htmlAbreTabelaSH('left', '100%', 0, 2, 0, $corFundo, $corBorda, 2);
+			# listar Tickets
+			$total=contaConsulta($consulta);
+			
+			# Tabela de Quantidades por Status
+			htmlAbreLinha($corFundo);
+				$texto="<b>Total de tickets $titulo: $total</b> ticket(s) <a href=?modulo=$modulo&sub=listar&acao=N class=bold10>listar todos</a>";
+				itemLinhaNOURL($texto, 'left', $corFundo, 2, 'normal10');
+			htmlFechaLinha();
+			
+			# Listar ultimos tickets de acordo com limite
+			for($i=0;$i<contaConsulta($consulta) && $i < $limite[resumo][novos];$i++) {
+				# Informações sobre ticket
+				$id=resultadoSQL($consulta, $i, 'id');
+				$assunto=resultadoSQL($consulta, $i, 'assunto');
+				$idUsuarioTicket=resultadoSQL($consulta, $i, 'idUsuario');
+				$data=converteData(resultadoSQL($consulta, $i, 'data'), 'banco','formdata');
+				$fundo=$i%2+1;
+
+				$icone=iconeTicket($idUsuario, $idUsuarioTicket);
+
+				htmlAbreLinha($corFundo);
+					$texto="$icone <a href=?modulo=$modulo&acao=ver&registro=$id class=bold10>$assunto</a>";
+					itemLinhaTMNOURL($texto, 'left', 'middle', '90%', $corFundo, 0, "tabfundo$fundo");
+					itemLinhaTMNOURL($data, 'center', 'middle', '10%', $corFundo, 0, "tabfundo$fundo");
+				htmlFechaLinha();
+			}
+	
+		fechaTabela();
+	}
+	else {
+		htmlAbreLinha($corFundo);
+			$texto="<span class=txtaviso>Nenhum ticket cadastrado</span>";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'normal10');
+		htmlFechaLinha();
+	}
+}
+
+
+# função de totalização de tickets de grupo por status
+function totalTicketsGrupoStatus($grupo, $idUsuario, $status) {
+
+	global $conn, $tb, $sessLogin;
+	
+	$idUsuario=buscaIDUsuario($sessLogin[login],'login','igual','id');
+
+	if($status=='A') $sqlStatus="	AND ( $tb[Ticket].status = '$status' OR $tb[Ticket].status = 'R' )";
+	else $sqlStatus="AND $tb[Ticket].status = '$status'";
+
+	if($status != "N") {
+
+		if($consultaGrupos && contaConsulta($consultaGrupos)>0) {
+			$sqlADD="AND ";
+			for($a=0;$a<contaConsulta($consultaGrupos);$a++) {
+				$idGrupo=resultadoSQL($consultaGrupos, $a, 'idGrupo');
+				$sqlADD.=" $tb[Grupos].id=$idGrupo ";
+				
+				if( ($a+1) < contaConsulta($consultaGrupos)) $sqlADD.=" OR ";
+			}
+	
+		}
+
+		$sqlGrupo="
+			AND $tb[Usuarios].id = $tb[UsuariosGrupos].idUsuario 
+			AND $tb[UsuariosGrupos].idGrupo = $tb[Grupos].id
+			AND $tb[Ticket].idUsuario = $tb[UsuariosGrupos].idUsuario
+		";
+	
+		$sqlCategoria="AND $tb[Categorias].id = $tb[CategoriasGrupos].idCategoria 
+			AND $tb[CategoriasGrupos].idGrupo = $tb[Grupos].id 
+			AND $tb[Ticket].idCategoria = $tb[Categorias].id";
+	}
+	else {
+		# Selecionar apenas ticket do grupo principal do usuario
+		$dadosPerfil=dadosPerfilUsuario($idUsuario);
+		$sqlGrupo="AND 
+			$tb[Ticket].idUsuario=$tb[UsuariosGrupos].idUsuario
+			AND $tb[Grupos].id=$tb[UsuariosGrupos].idGrupo
+			AND $tb[Perfil].id = $tb[Usuarios].id
+			AND $tb[Perfil].idGrupo=$dadosPerfil[idGrupo]
+		";
+		
+		$tbPerfil="$tb[Perfil],";
+	}	
+
+	$sql="
+		SELECT 
+			$tb[Ticket].id, 
+			$tb[Ticket].assunto, 
+			$tb[ProcessosTicket].texto, 
+			$tb[Ticket].idUsuario, 
+			$tb[ProcessosTicket].idUsuario 
+		FROM 
+			$tb[Ticket] LEFT JOIN $tb[Categorias] ON $tb[Ticket].idCategoria = $tb[Categorias].id,
+			$tb[ProcessosTicket], 
+			$tb[Usuarios], 
+			$tb[UsuariosGrupos], 
+			$tb[CategoriasGrupos], 
+			$tb[Grupos], 
+			$tb[Perfil]
+		WHERE 
+			$tb[Ticket].id = $tb[ProcessosTicket].idTicket
+			AND $tb[Grupos].id = $grupo
+			AND $tb[CategoriasGrupos].idGrupo = $tb[Grupos].id 
+			AND $tb[CategoriasGrupos].idCategoria = $tb[Categorias].id 
+			AND $tb[Perfil].id = $tb[Usuarios].id
+			$sqlGrupo
+			$sqlCategoria
+			$sqlStatus
+		group by 
+			$tb[Ticket].id
+	";
+
+	$consulta=consultaSQL($sql, $conn);
+	
+	return(contaConsulta($consulta));
+	
+}
+
+
+# Função para visualizar as informações do servidor
+function verTicket($modulo, $sub, $acao, $matriz, $registro) {
+
+	global $conn, $corFundo, $corBorda, $tb, $html, $sessLogin;
+	
+	# Checar permissão do usuario
+	# Buscar informações sobre usuario - permissões
+	$permissao=buscaPermissaoUsuario($sessLogin[login]);
+
+	if(!$permissao[visualizar] && !$permissao[admin]) {
+		# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+		$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Acesso Negado", $msg, $url, 760);
+	}
+	else {
+	
+		# Mostar informações sobre Servidor
+		$consulta=buscaTicket($registro, 'id','igual','id');
+		
+		$idTicket=resultadoSQL($consulta, 0, 'id');
+		$assunto=resultadoSQL($consulta, 0, 'assunto');
+		$data=resultadoSQL($consulta, 0, 'data');
+		$descricao=resultadoSQL($consulta, 0, 'texto');
+		$idUsuario=resultadoSQL($consulta, 0, 'idUsuario');
+		$nomeUsuario=resultadoSQL(buscaUsuarios($idUsuario,'id','igual','login'),0,'login');
+		$idPrioridade=resultadoSQL($consulta, 0, 'idPrioridade');
+		$idCategoria=resultadoSQL($consulta, 0, 'idCategoria');
+		$protocolo=resultadoSQL($consulta, 0, 'protocolo');
+		
+		$perfil=dadosPerfilUsuario(buscaIDUsuario($sessLogin[login],'login','igual','id'));
+		if($acao=='abrir' || $acao=='reabrir') {
+			$matriz[assunto]=$assunto;
+			if(!$matriz[bntAbrir]) $matriz[categoria]=$perfil[categoriaPadrao];
+		}
+		
+		# Processos do Ticket
+		$processosTicket=buscaProcessosTicket($idTicket, 'idTicket','igual','data DESC');
+		
+		if($processosTicket && contaConsulta($processosTicket)>0) {
+			$statusTicket=resultadoSQL($processosTicket, 0, 'idStatus');
+			$status=checaStatusTicket($statusTicket);
+			
+			if($acao=='ver') {
+				
+				mostraTicket($idTicket);
+				
+				# Listagem de Encaminhamentos
+				echo "<br>";
+				listarDetalhesTicket($modulo, $sub, $acao, $matriz, $registro);
+
+				# Listagem de Processos do Ticket
+				echo "<br>";
+				listarProcessosTicket($modulo, $sub, $acao, $matriz, $registro);
+
+				# Listagem de Comentários do Ticket
+				echo "<br>";
+				listarComentariosTicket($modulo, $sub, $acao, $matriz, $registro);
+			}			
+			
+			# Opção de abertura de ticket
+			elseif($acao=='abrir') {
+				
+				if(!$permissao[abrir] && !$permissao[admin]) {
+					# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+					$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+					$url="?modulo=$modulo&sub=$sub";
+					aviso("Acesso Negado", $msg, $url, 760);
+				}
+				else {
+					if(!$matriz[bntAbrir] || !$matriz[prioridade] || !$matriz[categoria] || !$matriz[descricao]) {
+		
+						if($matriz[bntAbrir]) {
+							$msg="ATENÇÃO: Todos os campos devem ser preenchidos!";
+							$url="?modulo=$modulo&sub=$sub&acao=abrir&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							echo "<br>";
+						}
+						
+						# Form de abertura de Ticket
+						formAbrirTicket($modulo, $sub, $acao, $matriz, $idTicket);
+					}
+					else {
+						
+						# Gravar
+						$grava=dbProcessosTicket($matriz, 'abrir');
+						
+						if($grava) {
+							# Atualizar Categoria e Prioridade e Status do Ticket
+							atualizaPrioridadeTicket($registro, $matriz[prioridade]);
+							atualizaCategoriaTicket($registro, $matriz[categoria]);
+							atualizaStatusTicket($registro, 'A');
+							
+							atualizaAssuntoTicket($registro, $matriz[titulo]);
+
+							# Enviar mensagem alertando sobre novo ticket Criado
+							mailTicket($idTicket, $idUsuario, 'abrir');
+							
+							# Enviar mensagem para autor da mensagem - verificando detalhes
+							$detalhesTicket=detalhesTicket($idTicket);
+							if($detalhesTicket) {
+								$matriz[email]=$detalhesTicket;
+								$matriz[idTicket]=$idTicket;
+								$matriz[protocolo]=$protocolo;
+								mailTicketProtocolo($matriz, $idUsuario, 'abrir_origem');
+							}							
+							
+							if ($matriz[agendar]) {
+								avisoNOURL("Aviso", "Ticket Aberto com sucesso!!!", 400);
+								echo "<BR>";
+								$matriz[bntAgendar]="";
+								eventoAgendar($modulo, $sub, 'agendar', $matriz, $registro);
+							}
+							else {
+								# Mostrar Ticket
+								if(!$matriz[relacionar]) {
+									verTicket($modulo, $sub, 'ver', $matriz, $registro);
+								}
+								elseif($matriz[relacionar] == 'S') {
+									relacionarTicket($modulo, $sub, $acao, $matriz, $registro);
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			# Opção de abertura de ticket
+			elseif($acao=='reabrir') {
+				if(!$permissao[abrir] && !$permissao[admin]) {
+					# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+					$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+					$url="?modulo=$modulo&sub=$sub";
+					aviso("Acesso Negado", $msg, $url, 760);
+				}
+				else {
+					if(!$matriz[bntAbrir] || !$matriz[prioridade] || !$matriz[categoria] || !$matriz[descricao]) {
+					
+						if($matriz[bntAbrir]) {
+							$msg="ATENÇÃO: Todos os campos devem ser preenchidos!";
+							$url="?modulo=$modulo&sub=$sub&acao=abrir&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							echo "<br>";
+						}
+						else {
+							mostraTicket($idTicket);
+			
+							# Listagem de Processos do Ticket
+							echo "<br>";
+							listarProcessosTicket($modulo, $sub, $acao, $matriz, $registro);
+						}
+						
+						echo "<br>";
+						# Form de abertura de Ticket
+						formReAbrirTicket($modulo, $sub, $acao, $matriz, $idTicket);
+					}
+					else {
+						# Gravar
+						$grava=dbProcessosTicket($matriz, 'reabrir');
+						
+						if($grava) {
+							/*
+							$msg="Ticket Aberto com sucesso!";
+							$url="?modulo=$modulo&sub=$sub&acao=ver&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							*/
+							
+							# Atualizar Categoria e Prioridade do Ticket
+							atualizaPrioridadeTicket($registro, $matriz[prioridade]);
+							atualizaCategoriaTicket($registro, $matriz[categoria]);
+							atualizaStatusTicket($registro, 'R');
+							
+							# Enviar mensagem alertando sobre novo ticket Criado
+							mailTicket($idTicket, $idUsuario, 'reabrir');
+							
+							# Enviar mensagem para autor da mensagem - verificando detalhes
+							$detalhesTicket=detalhesTicket($idTicket);
+							if($detalhesTicket) {
+								$matriz[email]=$detalhesTicket;
+								$matriz[idTicket]=$idTicket;
+								$matriz[protocolo]=$protocolo;
+								mailTicketProtocolo($matriz, $idUsuario, 'reabrir_origem');						
+							}
+
+							
+							verTicket($modulo, $sub, 'ver', $matriz, $registro);
+						}
+					}
+				}
+			}
+			
+			# Opção de abertura de ticket
+			elseif($acao=='alterar') {
+				# Form de abertura de Ticket
+				if(!$permissao[alterar] && !$permissao[admin]) {
+					# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+					$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+					$url="?modulo=$modulo&sub=$sub";
+					aviso("Acesso Negado", $msg, $url, 760);
+				}
+				else {				
+					if(!$matriz[bntAlterar] || !$matriz[assunto] || !$matriz[descricao]) {
+	
+						if($matriz[bntAlterar]) {
+							$msg="ATENÇÃO: Todos os campos devem ser preenchidos!";
+							$url="?modulo=$modulo&sub=$sub&acao=abrir&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							echo "<br>";
+						}
+						
+						# Form
+						formAlterarTicket($modulo, $sub, $acao, $matriz, $idTicket);
+					}
+	
+					else {
+						# Gravar
+						$grava=dbTicket($matriz, 'alterar');
+						
+						if($grava) {
+							
+							# Realizar a alteração de categoria
+							if($matriz[categoria]) atualizaCategoriaTicket($matriz[id], $matriz[categoria]);
+							
+							# Enviar mensagem alertando sobre novo ticket Criado
+							mailTicket($idTicket, $idUsuario, 'alterar');
+							
+							verTicket($modulo, $sub, 'ver', $matriz, $registro);
+						}
+					}
+					
+				}
+			}
+			
+
+			# Opção de abertura de ticket
+			elseif($acao=='prioridade') {
+				# Form de abertura de Ticket
+				if(!$permissao[alterar] && !$permissao[admin]) {
+					# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+					$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+					$url="?modulo=$modulo&sub=$sub";
+					aviso("Acesso Negado", $msg, $url, 760);
+				}
+				else {				
+					if(!$matriz[bntAlterar] || !$matriz[prioridade]) {
+	
+						if($matriz[bntAlterar]) {
+							$msg="ATENÇÃO: Todos os campos devem ser preenchidos!";
+							$url="?modulo=$modulo&sub=$sub&acao=abrir&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							echo "<br>";
+						}
+						
+						# Form
+						formPrioridadeTicket($modulo, $sub, $acao, $matriz, $idTicket);
+					}
+	
+					else {
+						# Gravar
+						$grava=dbTicket($matriz, 'prioridade');
+						
+						if($grava) {
+							/*
+							$msg="Ticket Alterado com sucesso!";
+							$url="?modulo=$modulo&sub=$sub&acao=ver&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							*/
+							
+							# Enviar mensagem alertando sobre novo ticket Criado
+							mailTicket($idTicket, $idUsuario, 'prioridade');
+							
+							verTicket($modulo, $sub, 'ver', $matriz, $registro);
+						}
+					}
+					
+				}
+			}
+			
+			# Opção de abertura de ticket
+			elseif($acao=='fechar') {
+				# Form de abertura de Ticket
+				if(!$permissao[abrir] && !$permissao[admin]) {
+					# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+					$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+					$url="?modulo=$modulo&sub=$sub";
+					aviso("Acesso Negado", $msg, $url, 760);
+				}
+				else {
+					if(!$matriz[bntFechar] || !$matriz[descricao]) {
+	
+						if($matriz[bntFechar]) {
+							$msg="ATENÇÃO: Todos os campos devem ser preenchidos!";
+							$url="?modulo=$modulo&sub=$sub&acao=abrir&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							echo "<br>";
+						}
+						
+						# Form
+						formFecharTicket($modulo, $sub, $acao, $matriz, $idTicket);
+					}
+					else {
+						# Gravar
+						$grava=dbProcessosTicket($matriz, 'fechar');
+						
+						if($grava) {
+							
+							/*
+							$msg="Ticket Fechado com sucesso!";
+							$url="?modulo=$modulo&sub=$sub&acao=ver&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							*/
+							
+							# Enviar mensagem alertando sobre novo ticket Criado
+							mailTicket($idTicket, $idUsuario, 'fechar');
+							atualizaStatusTicket($idTicket, 'F');
+							
+							# Salva os detalhes finais da ocorrencia como eg como duracao, periodo
+							# Converter horas em timestamp
+							$matriz[duracao]=converteData($matriz[duracao], 'hora','segundos');
+							
+							dbFinalizacoesTicket($matriz, 'incluir');
+							
+							# Enviar mensagem para autor da mensagem - verificando detalhes
+							$detalhesTicket=detalhesTicket($idTicket);
+							if($detalhesTicket) {
+								$matriz[email]=$detalhesTicket;
+								$matriz[idTicket]=$idTicket;
+								$matriz[protocolo]=$protocolo;
+								mailTicketProtocolo($matriz, $idUsuario, 'fechar_origem');
+								mailTicketProtocolo($matriz, $idUsuario, 'feedback');
+							}
+														
+							verTicket($modulo, '', 'ver', $matriz, $registro);
+						}
+					}
+				}
+			}
+			
+			
+			# Opção de encaminhamento de ticket
+			elseif($acao=='encaminhar') {
+				if(!$permissao[abrir] && !$permissao[admin]) {
+					# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+					$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+					$url="?modulo=$modulo&sub=$sub";
+					aviso("Acesso Negado", $msg, $url, 760);
+				}
+				else {
+					
+					if(!$matriz[nome] || !$matriz[email] || checkMailDominio($matriz[email], 'check')) {
+						if($matriz[bntEncaminhar]) {
+							$msg="ATENÇÃO: Todos os campos devem ser preenchidos!";
+							$url="?modulo=$modulo&sub=$sub&acao=abrir&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							echo "<br>";
+						}
+						
+						# Form de abertura de Ticket
+						formEncaminharTicket($modulo, $sub, $acao, $matriz, $idTicket);
+					}
+					else {
+						# Gravar
+						$grava=gravaDetalhesTicket($idTicket, $matriz);
+
+						# Enviar mensagem para autor da mensagem - verificando detalhes
+						$detalhesTicket=detalhesTicket($idTicket);
+						if($detalhesTicket) {
+							$matriz[email]=$detalhesTicket;
+							$matriz[idTicket]=$idTicket;
+							$matriz[protocolo]=$protocolo;
+							mailTicketProtocolo($matriz, $idUsuario, 'encaminhar');						
+						}
+						
+						verTicket($modulo, $sub, 'ver', $matriz, $registro);
+					}
+				}
+			}
+			# Opção de relacionamento
+			elseif($acao=='relacionar') {
+
+				if(!$permissao[abrir] && !$permissao[admin]) {
+					# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+					$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+					$url="?modulo=$modulo&sub=$sub";
+					aviso("Acesso Negado", $msg, $url, 760);
+				}
+				else {
+					
+					if(!$matriz[nome] || !$matriz[email] || checkMailDominio($matriz[email], 'check')) {
+						if($matriz[bntEncaminhar]) {
+							$msg="ATENÇÃO: Todos os campos devem ser preenchidos!";
+							$url="?modulo=$modulo&sub=$sub&acao=abrir&registro=$idTicket";
+							aviso("Aviso", $msg, $url, 760);
+							echo "<br>";
+						}
+						
+						# Form de abertura de Ticket
+						relacionarTicket($modulo, $sub, $acao, $matriz, $idTicket);
+					}
+					else {
+						# Gravar
+						$grava=gravaDetalhesTicket($idTicket, $matriz);
+
+						# Enviar mensagem para autor da mensagem - verificando detalhes
+						$detalhesTicket=detalhesTicket($idTicket);
+						if($detalhesTicket) {
+							$matriz[email]=$detalhesTicket;
+							$matriz[idTicket]=$idTicket;
+							$matriz[protocolo]=$protocolo;
+							mailTicketProtocolo($matriz, $idUsuario, 'encaminhar');						
+						}
+						
+						verTicket($modulo, $sub, 'ver', $matriz, $registro);
+					}
+				}
+			}
+		}
+	}
+	
+} #fecha visualizacao
+
+
+
+# Função para Form de abertura de ticket
+function formAbrirTicket($modulo, $sub, $acao, $matriz, $registro) {
+	global $html, $corFundo, $corBorda;
+	
+	# Buscar Assunto
+	$consulta=buscaTicket($registro, 'id','igual','id');
+	$assunto=resultadoSQL($consulta, 0, 'assunto');
+	
+	novaTabela2("Abrir Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>
+			<input type=hidden name=matriz[ticket] value=$registro>";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('100%', 'center', $corFundo, 2, 'tabfundo1');
+				novaTabela2("Alteração Automática de Ticket", 'center', '100%', 0, 1, 1, $corFundo, $corBorda, 2);
+					itemTabelaNOURL('&nbsp;', 'center',$corFundo, 2, 'tabfundo1');
+					novaLinhaTabela($corFundo, '100%');
+						htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+							echo "<b class=bold>Título:</b>";
+						htmlFechaColuna();
+						if(!$matriz[titulo]) $matriz[titulo]=$matriz[assunto];
+						$texto="<input type=text name=matriz[titulo] value='$matriz[titulo]' size=60>";
+						itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+					fechaLinhaTabela();
+					itemTabelaNOURL('&nbsp;', 'center',$corFundo, 2, 'tabfundo1');
+				fechaTabela();
+			htmlFechaColuna();
+		fechaLinhaTabela();
+
+		itemTabelaNOURL('&nbsp;', 'center',$corFundo, 2, 'tabfundo1');
+		
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Categoria:</b><br>
+				<span class=normal10>Selecione uma categoria para este Ticket</span>";
+			htmlFechaColuna();
+			itemLinhaForm(formCategorias($matriz[categoria],'categoria'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Prioridade:</b><br>
+				<span class=normal10>Selecione uma prioridade deste Ticket</span>";
+			htmlFechaColuna();
+			itemLinhaForm(formPrioridades($matriz[prioridade],'prioridade'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Comentário:</b><br>
+				<span class=normal10>Comentários sobre abertura do Ticket</span>";
+			htmlFechaColuna();
+			$texto="<textarea name=matriz[descricao] rows=5 cols=60></textarea>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		#Dados para o agendamento
+		getOpcaoAgendar();
+		
+		# Relacionar
+		getOpcaoRelacionar();
+		
+		# botao
+		getBotao('matriz[bntAbrir]', 'Abrir Ticket');
+		
+	fechaTabela();		
+}
+
+
+
+
+# Função para Form encaminhamento de tickets
+function formEncaminharTicket($modulo, $sub, $acao, $matriz, $registro) {
+	global $html, $corFundo, $corBorda;
+	
+	# Buscar Assunto
+	$consulta=buscaTicket($registro, 'id','igual','id');
+	$assunto=resultadoSQL($consulta, 0, 'assunto');
+	
+	novaTabela2("Encaminhar Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Nome do Destinatário: </b><br>
+				<span class=normal10>Informe o nome, contato ou empresa para destino</span>";
+			htmlFechaColuna();
+			$texto="<input type=text name=matriz[nome] size=60>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Email de Destino: </b><br>
+				<span class=normal10>Informe os emails de destino (separados por ',')</span>";
+			htmlFechaColuna();
+			$texto="<input type=text name=matriz[email] size=60>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "&nbsp;";
+			htmlFechaColuna();
+			$texto="<input type=submit name=matriz[bntEncaminhar] value='Encaminhar Ticket'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();
+	
+	echo "<br>";
+	verTicket($modulo, $sub, 'ver', $matriz, $registro);
+	
+}
+
+
+# Função para Form de abertura de ticket
+function formReAbrirTicket($modulo, $sub, $acao, $matriz, $registro) {
+	global $html, $corFundo, $corBorda;
+	
+	# Buscar Assunto
+	$consulta=buscaTicket($registro, 'id','igual','id');
+	$assunto=resultadoSQL($consulta, 0, 'assunto');
+	
+	novaTabela2("Re-Abrir Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>
+			<input type=hidden name=matriz[ticket] value=$registro>";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Categoria: </b><br>
+				<span class=normal10>Selecione uma categoria para este Ticket</span>";
+			htmlFechaColuna();
+			itemLinhaForm(formCategorias($matriz[categoria],'categoria'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Prioridade: </b><br>
+				<span class=normal10>Selecione uma prioridade deste Ticket</span>";
+			htmlFechaColuna();
+			itemLinhaForm(formPrioridades($matriz[prioridade],'prioridade'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Comentário: </b><br>
+				<span class=normal10>Comentários sobre re-abertura do Ticket</span>";
+			htmlFechaColuna();
+			$texto="<textarea name=matriz[descricao] rows=5 cols=60></textarea>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "&nbsp;";
+			htmlFechaColuna();
+			$texto="<input type=submit name=matriz[bntAbrir] value='Abrir Ticket'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();		
+}
+
+
+# Função para Form de abertura de ticket
+function formFecharTicket($modulo, $sub, $acao, $matriz, $registro) {
+	global $html, $corFundo, $corBorda, $statusTicket, $tb;
+	
+	$data=dataSistema();
+	
+	# Buscar Assunto
+	$consulta=buscaTicket($registro, 'id','igual','id');
+	$assunto=resultadoSQL($consulta, 0, 'assunto');
+	
+	//Busca a data de abertura
+	$where = 	"idTicket = $registro and idStatus in (". buscaIDStatus('A', 'valor') . ", ". buscaIDStatus('R', 'valor').")" ;
+	$processos= buscaProcessosTicket($where, '','custom','data');
+	$dtAbertura=converteData(resultadoSQL($processos, contaConsulta($processos)-1, 'data'), "banco", "form");
+	
+	# Buscar lançamentos de tempo para ticket
+	$consultaDuracao=buscaRegistro($registro, 'idTicket','igual','',$tb[TicketFinalizacoes]);
+	
+	if($consultaDuracao && contaConsulta($consultaDuracao)>0) {
+		$duracao = "00:00:00";
+	}
+	else {
+		$duracao = subtraiData($dtAbertura, $data[dataNormal], 'hora');
+	}
+	
+	novaTabela2("Fechar Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>
+			<input type=hidden name=matriz[ticket] value=$registro>";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Comentário: </b><br>
+				<span class=normal10>Comentários sobre fechamento do Ticket</span>";
+			htmlFechaColuna();
+			$texto="<textarea name=matriz[descricao] rows=5 cols=60></textarea>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				$tempoAtendimento=converteData(tempoAtendimento($registro),'timestamp','formhora');
+				echo "<b class=bold>Tempo de Atendimento Registrado: </b>";
+			htmlFechaColuna();
+			itemLinhaForm($tempoAtendimento, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Duracão do Atendimento: </b>";
+			htmlFechaColuna();
+			$texto="<input type=text size=8 name=matriz[duracao] value=$duracao onBlur=\"CheckTime(this)\"> <span class=txtaviso>Formato HH:MM:SS</span>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+
+		novaLinhaTabela($corFundo, '100%');
+				( $matriz[expediente] != 'N' ? $check = "CHECKED" : $check1 = "CHECKED" );
+				itemLinhaTMNOURL("Periodo do serviço",  'right', 'middle', '30%', $corFundo, 0, 'tabfundo1');
+				$texto = "<input id=durante type=radio name=matriz[expediente] value=S $check >" .
+						 	"<label for=durante>Durante Horario de Servico</label>&nbsp;" ;
+				$texto .= "&nbsp;<input id=fora type=radio name=matriz[expediente] value=N $check1 >" .
+						 	"<label for=fora>Fora de Horario de Servico</label>" ;
+				itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		
+		
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "&nbsp;";
+			htmlFechaColuna();
+			$texto="<input type=submit name=matriz[bntFechar] value='Fechar Ticket'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();		
+}
+
+
+
+# Função para Form de abertura de ticket
+function formAlterarTicket($modulo, $sub, $acao, $matriz, $registro) {
+	global $html, $corFundo, $corBorda, $statusTicket;
+	
+	# Buscar Assunto
+	$consulta=buscaTicket($registro, 'id','igual','id');
+	$assunto=resultadoSQL($consulta, 0, 'assunto');
+	$descricao=resultadoSQL($consulta, 0, 'texto');
+	$categoria=resultadoSQL($consulta, 0, 'idCategoria');
+	
+	novaTabela2("Alterar Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>
+			<input type=hidden name=matriz[id] value=$registro>&nbsp;";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Assunto: </b><br>
+				<span class=normal10>Assunto do ticket, utilizado para visualização abreviada do Ticket</span>";
+			htmlFechaColuna();
+			$texto="<input type=text name=matriz[assunto] size=60 value='$assunto'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		# Permitir alteração de categoria em caso de ticket já categorizado
+		if($categoria > 0) {
+			novaLinhaTabela($corFundo, '100%');
+				htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+					echo "<b class=bold>Categoria:</b><br>
+					<span class=normal10>Selecione uma categoria para este Ticket</span>";
+				htmlFechaColuna();
+				itemLinhaForm(formCategorias($categoria,'categoria'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+			fechaLinhaTabela();
+		}
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Descrição: </b><br>
+				<span class=normal10>Descrição detalhada do Ticket</span>";
+			htmlFechaColuna();
+			$texto="<textarea name=matriz[descricao] rows=10 cols=60>$descricao</textarea>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "&nbsp;";
+			htmlFechaColuna();
+			$texto="<input type=submit name=matriz[bntAlterar] value='Alterar Ticket'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();	
+}
+
+
+
+# Função para Form de abertura de ticket
+function formPrioridadeTicket($modulo, $sub, $acao, $matriz, $registro) {
+
+	global $html, $corFundo, $corBorda, $statusTicket;
+	
+	# Buscar Assunto
+	$consulta=buscaTicket($registro, 'id','igual','id');
+	
+	$assunto=resultadoSQL($consulta, 0, 'assunto');
+	$descricao=resultadoSQL($consulta, 0, 'texto');
+	$idPrioridade=resultadoSQL($consulta, 0, 'idPrioridade');
+	
+	novaTabela2("Alterar prioridade do Ticket", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>
+			<input type=hidden name=matriz[id] value=$registro>&nbsp;";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Assunto: </b>";
+			htmlFechaColuna();
+			itemLinhaForm($assunto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Descrição: </b>";
+			htmlFechaColuna();
+			itemLinhaForm($descricao, 'left', 'top', $corFundo, 0, 'tabfundo3');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Prioridade: </b>";
+			htmlFechaColuna();
+			itemLinhaForm(formPrioridades($idPrioridade,'prioridade'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "&nbsp;";
+			htmlFechaColuna();
+			$texto="<input type=submit name=matriz[bntAlterar] value='Alterar Ticket'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();	
+}
+
+
+
+# Função para procura 
+function procurarTicket($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $conn, $tb, $corFundo, $corBorda, $html, $limite, $textoProcurar, $sessLogin;
+	
+	$idUsuario=buscaIDUsuario($sessLogin[login],'login','igual','id');
+	
+	# Buscar Grupos do Usuario
+	$gruposUsuario=buscaUsuariosGrupos($idUsuario,'idUsuario','igual','idUsuario');
+	for($a=0;$a<contaConsulta($gruposUsuario);$a++) {
+		$idGrupo=resultadoSQL($gruposUsuario, $a, 'idGrupo');
+		
+		$sqlADD.="$tb[Grupos].id = $idGrupo";
+		
+		if($a+1 < contaConsulta($gruposUsuario)) $sqlADD.=" OR ";
+	}
+	
+	novaTabela2("[Tickets]", "center", '100%', 0, 3, 1, $corFundo, $corBorda, 3);
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('65%', 'left', $corFundo, 0, 'tabfundo1');
+				echo "<br><img src=".$html[imagem]['cadastro']." border=0 align=left >
+				<b class=bold>Tickets</b>
+				<br><span class=normal10>Selecine as opções do menu superior para navegar
+				entre os módulos do $configAppName, ou clique nos atalhos ao lado para
+				acesso rápido.</span>";
+			htmlFechaColuna();			
+			$texto=htmlMontaOpcao("<br>Novo Ticket", 'relatorio');
+			itemLinha($texto, "?modulo=ticket&acao=adicionar", 'center', $corFundo, 0, 'normal');
+			$texto=htmlMontaOpcao("<br>Procurar", 'procurar');
+			itemLinha($texto, "?modulo=ticket&acao=procurar", 'center', $corFundo, 0, 'normal');
+		fechaLinhaTabela();
+	fechaTabela();
+	
+	echo "<br>";
+	
+	# Atribuir valores a variável de busca
+	if($textoProcurar) {
+		$matriz[bntProcurar]=1;
+		$matriz[txtProcurar]=$textoProcurar;
+	} #fim da atribuicao de variaveis
+	
+	# Motrar tabela de busca
+	novaTabela2("[Procurar]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('15%', 'right', $corFundo, 0, 'tabfundo1');
+			echo "<b>Procurar por:</b>";
+			htmlFechaColuna();
+			$texto="
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=procurar>
+			<input type=hidden name=registro>
+			<input type=text name=matriz[txtProcurar] size=15 value='$matriz[txtProcurar]'>
+			&nbsp;<b>Data Inicial:</b>&nbsp;<input type=text name=matriz[dtInicial] size=10 value='$matriz[dtInicial]' onBlur=verificaData(this.value,5)>
+			&nbsp;<b>Data Final:</b>&nbsp;<input type=text name=matriz[dtFinal] size=10 value='$matriz[dtFinal]' onBlur=verificaData(this.value,6)>
+			<input type=submit name=matriz[bntProcurar] value=Procurar>";
+			itemLinhaForm($texto, 'left','middle', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();
+
+	if($matriz[dtInicial]) $dtInicial=converteData(formatarData($matriz[dtInicial]),'form','bancodata');
+	if($matriz[dtFinal]) $dtFinal=converteData(formatarData($matriz[dtFinal]),'form','bancodata') . " 23:59:59";
+	
+	if($dtInicial & $dtFinal) {
+		$sqlADDData="AND processos_ticket.data BETWEEN '$dtInicial' and '$dtFinal'";
+	}
+	elseif($dtInicial) {
+		$sqlADDData="AND processos_ticket.data >= '$dtInicial'";
+	}
+	elseif($dtFinal) {
+		$sqlADDData="AND processos_ticket.data <= '$dtFinal'";
+	}
+	
+	# Caso botão procurar seja pressionado
+	if($matriz[txtProcurar] && $matriz[bntProcurar]) {
+		#buscar registros
+		$sql="
+			SELECT
+				ticket.id, 
+				ticket.assunto, 
+				ticket.data, 
+				ticket.idUsuario,
+				ticket.idPrioridade,
+				categorias.nome categoria
+			FROM
+				ticket, 
+				processos_ticket, 
+				usuarios, 
+				grupos, 
+				usuarios_grupos, 
+				categorias, 
+				categorias_grupos,
+				prioridades
+			LEFT JOIN 
+					ticket_comentario on (ticket_comentario.idTicket=ticket.id)
+			WHERE
+				ticket.id=processos_ticket.idTicket 
+				AND ticket.idPrioridade=prioridades.id
+				AND ticket.idCategoria=categorias.id
+				AND usuarios.id=usuarios_grupos.idUsuario 
+				AND grupos.id=usuarios_grupos.idGrupo 
+				AND grupos.id=categorias_grupos.idGrupo
+				AND categorias_grupos.idCategoria=categorias.id
+				AND ( $sqlADD )
+				AND ( ticket.idUsuario=usuarios.id 
+					OR processos_ticket.idUsuario=usuarios.id)
+				AND (ticket.assunto like '%$matriz[txtProcurar]%' 
+					OR ticket.texto like '%$matriz[txtProcurar]%' 
+					OR processos_ticket.texto like '%$matriz[txtProcurar]%'
+					OR ticket_comentario.texto like '%$matriz[txtProcurar]%') 
+				$sqlADDData
+			GROUP BY 
+				ticket.id
+			ORDER BY 
+				ticket.data DESC,
+				prioridades.valor ASC";
+		
+		
+		$consulta=consultaSQL($sql, $conn);
+
+		echo "<br>";
+		novaTabela("[Resultados]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 5);
+	
+		if(!$consulta || contaConsulta($consulta)==0 ) {
+			# Não há registros
+			itemTabelaNOURL('Não foram encontrados registros cadastrados', 'left', $corFundo, 5, 'txtaviso');
+		}
+		elseif($consulta && contaConsulta($consulta)>0 && (!$registro || is_numeric($registro)) ) {	
+		
+			itemTabelaNOURL('Registros encontrados procurando por ('.$matriz[txtProcurar].'): '.contaConsulta($consulta).' registro(s)', 'left', $corFundo, 5, 'txtaviso');
+
+			# Paginador
+			$urlADD="&textoProcurar=".$matriz[txtProcurar];
+			if($matriz[dtInicial]) $urlADD.="&matriz[dtInicial]=".$matriz[dtInicial];
+			if($matriz[dtFinal]) $urlADD.="&matriz[dtFinal]=".$matriz[dtFinal];
+			
+			paginador($consulta, contaConsulta($consulta), $limite[lista][tickets], $registro, 'normal', 5, $urlADD);
+			
+			htmlAbreLinha($corBorda);
+				itemLinhaTMNOURL('Assunto', 'center', 'middle','40%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Data de Criação', 'center', 'middle','15%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Status', 'center', 'middle','5%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Categoria', 'center', 'middle','20%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Criado por', 'center', 'middle','10%', $corFundo, 0, "titulo");
+			htmlFechaLinha();
+	
+			# Setar registro inicial
+			if(!$registro) {
+				$i=0;
+			}
+			elseif($registro && is_numeric($registro) ) {
+				$i=$registro;
+			}
+			else {
+				$i=0;
+			}
+			
+			$limite=$i+$limite[lista][usuarios];
+			
+			while($i < contaConsulta($consulta) && $i < $limite) {			
+				# Verificar se registro está na matriz de tickets selecionads
+				$id=resultadoSQL($consulta, $i, 'id');
+				$assunto=resultadoSQL($consulta, $i, 'assunto');
+				$data=resultadoSQL($consulta, $i, 'data');
+				$usuario=resultadoSQL($consulta, $i, 'idUsuario');
+				$idPrioridade=resultadoSQL($consulta, $i, 'idPrioridade');
+				$prioridade=checaPrioridade($idPrioridade);
+				$categoria=resultadoSQL($consulta, $i, 'categoria');
+	
+				$status=buscaUltimoStatusTicket($id);
+				
+				# Buscar dados de relacionnamento e postar junto ao titulo
+				$dadosTicket=dadosRelacionamentoTicket($id);
+				if($dadosTicket[maquina]>0 && verificaIntegracaoTicketInvent()) {
+					$assuntoADD="<BR><img src=" . $html[imagem][empresas] . " border=0>" . $dadosTicket[maquina] . "&nbsp;-&nbsp;" . $dadosTicket[empresa];
+				}
+				elseif($dadosTicket[empresa]) {
+					$assuntoADD="<BR><img src=" . $html[imagem][empresas] . " border=0>&nbsp;" . $dadosTicket[empresa];
+				}
+				else {
+					$assuntoADD="";
+				}
+	
+				# Mostrar ticket
+				htmlAbreLinha($prioridade[cor]);
+					$url="?modulo=$modulo&sub&acao=ver&registro=$id";
+					if($usuario==$idUsuario) $icone="<img src=".$html[imagem][usuario]." border=0>";
+					else $icone="<img src=".$html[imagem][grupo]." border=0>";
+					itemLinhaTM("$icone <b>$assunto</b>$assuntoADD", $url, 'left', 'middle','40%', $corFundo, 0, "normal8");
+					itemLinhaTMNOURL(converteData($data,'banco','form'), 'center', 'middle','15%', $corFundo, 0, "normal8");
+					itemLinhaTMNOURL($status[nome], 'center', 'middle','5%', $corFundo, 0, "normal8");
+					itemLinhaTMNOURL($categoria, 'center', 'middle','20%', $corFundo, 0, "bold8");
+					itemLinhaTMNOURL(checaUsuario($usuario), 'center', 'middle','10%', $corFundo, 0, "normal8");
+				htmlFechaLinha();
+				
+				# Incrementar contador
+				$i++;
+			}
+			
+		} #fecha listagem
+		fechaTabela();
+		
+		
+		#buscar registros
+		$sql="
+			SELECT
+				ticket.id, 
+				ticket.assunto, 
+				ticket.data, 
+				ticket.idUsuario
+			FROM
+				ticket, 
+				processos_ticket, 
+				usuarios, 
+				grupos, 
+				usuarios_grupos
+			LEFT JOIN 
+				ticket_comentario on (ticket_comentario.idTicket=ticket.id)
+			WHERE
+				ticket.id=processos_ticket.idTicket 
+				AND ticket.status='N'
+				AND usuarios.id=usuarios_grupos.idUsuario 
+				AND grupos.id=usuarios_grupos.idGrupo 
+				AND ( $sqlADD )
+				AND ( ticket.idUsuario=usuarios.id 
+					OR processos_ticket.idUsuario=usuarios.id)
+				AND (ticket.assunto like '%$matriz[txtProcurar]%' 
+					OR ticket.texto like '%$matriz[txtProcurar]%' 
+					OR processos_ticket.texto like '%$matriz[txtProcurar]%'
+					OR ticket_comentario.texto like '%$matriz[txtProcurar]%') 
+				$sqlADDData
+			GROUP BY 
+				ticket.id
+			ORDER BY 
+				processos_ticket.data DESC";
+		
+		$consulta=consultaSQL($sql, $conn);
+				
+		echo "<br>";
+		novaTabela("[Resultados - Tickets Novos]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 4);
+	
+		if(!$consulta || contaConsulta($consulta)==0 ) {
+			# Não há registros
+			itemTabelaNOURL('Não foram encontrados registros cadastrados', 'left', $corFundo, 4, 'txtaviso');
+		}
+		elseif($consulta && contaConsulta($consulta)>0 && (!$registro || is_numeric($registro)) ) {	
+		
+			itemTabelaNOURL('Registros encontrados procurando por ('.$matriz[txtProcurar].'): '.contaConsulta($consulta).' registro(s)', 'left', $corFundo, 4, 'txtaviso');
+
+			htmlAbreLinha($corBorda);
+				itemLinhaTMNOURL('Assunto', 'center', 'middle','40%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Data de Criação', 'center', 'middle','15%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Status', 'center', 'middle','5%', $corFundo, 0, "titulo");
+				itemLinhaTMNOURL('Criado por', 'center', 'middle','10%', $corFundo, 0, "titulo");
+			htmlFechaLinha();
+	
+			for($i=0;$i<contaConsulta($consulta);$i++) {			
+				# Verificar se registro está na matriz de tickets selecionads
+				$id=resultadoSQL($consulta, $i, 'id');
+				$assunto=resultadoSQL($consulta, $i, 'assunto');
+				$data=resultadoSQL($consulta, $i, 'data');
+				$usuario=resultadoSQL($consulta, $i, 'idUsuario');
+	
+				$status=buscaUltimoStatusTicket($id);
+				
+				# Buscar dados de relacionnamento e postar junto ao titulo
+				$dadosTicket=dadosRelacionamentoTicket($id);
+				if($dadosTicket[maquina] && verificaIntegracaoTicketInvent()) {
+					$assuntoADD="<BR><img src=" . $html[imagem][empresas] . " border=0>" . $dadosTicket[maquina] . "&nbsp;-&nbsp;" . $dadosTicket[empresa];
+				}
+				elseif($dadosTicket[empresa]) {
+					$assuntoADD="<BR><img src=" . $html[imagem][empresas] . " border=0>&nbsp;" . $dadosTicket[empresa];
+				}
+				else {
+					$assuntoADD="";
+				}
+	
+				# Mostrar ticket
+				htmlAbreLinha($corFundo);
+					$url="?modulo=$modulo&sub&acao=ver&registro=$id";
+					if($usuario==$idUsuario) $icone="<img src=".$html[imagem][usuario]." border=0>";
+					else $icone="<img src=".$html[imagem][grupo]." border=0>";
+					itemLinhaTM("$icone <b>$assunto</b>$assuntoADD", $url, 'left', 'middle','40%', $corFundo, 0, "normal10");
+					itemLinhaTMNOURL(converteData($data,'banco','form'), 'center', 'middle','15%', $corFundo, 0, "normal10");
+					itemLinhaTMNOURL($status[nome], 'center', 'middle','5%', $corFundo, 0, "normal10");
+					itemLinhaTMNOURL(checaUsuario($usuario), 'center', 'middle','10%', $corFundo, 0, "normal10");
+				htmlFechaLinha();
+				
+			}
+			
+		} #fecha listagem
+		fechaTabela();
+	} # fecha botão procurar
+} #fecha funcao de  procurar 
+
+
+
+
+# Função para buscar ID de novo Ticket
+function buscaIDNovoTicket() {
+
+
+	global $conn, $tb;
+	
+	$sql="SELECT max(id)+1 idTicket from $tb[Ticket]";
+	$consulta=consultaSQL($sql, $conn);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$id=resultadoSQL($consulta, 0, 'idTicket');
+		
+		if(!is_numeric($id)) return(1) ;
+		else  return($id);
+	}
+	else return(1);
+	
+}
+
+
+
+# Função para atualização de Prioridade de Ticket
+function atualizaStatusTicket($ticket, $status) {
+	global $conn, $tb, $modulo, $sub, $acao;
+	
+	$sql="UPDATE $tb[Ticket] SET status='$status' WHERE id=$ticket";
+	$consulta=consultaSQL($sql, $conn);
+	
+	if(!$consulta) {
+		# Erro
+		$msg="Erro ao atualizar Prioridade do Ticket!";
+		$url="?modulo=$modulo&sub=$sub&acao=ver&registro=$ticket";
+		aviso("Erro", $msg, $url, 760);
+	}
+}
+
+
+# Função para atualização de Assunto do Ticket
+function atualizaAssuntoTicket($ticket, $assunto) {
+	
+	global $conn, $tb, $modulo, $sub, $acao;
+	
+	$sql="UPDATE $tb[Ticket] SET assunto='$assunto' WHERE id=$ticket";
+	$consulta=consultaSQL($sql, $conn);
+	if(!$consulta) {
+		# Erro
+		$msg="Erro ao atualizar Assunto do Ticket!";
+		$url="?modulo=$modulo&sub=$sub&acao=ver&registro=$ticket";
+		aviso("Erro", $msg, $url, 400);
+	}
+}
+
+
+# Função para visualizar as informações do servidor
+function transferirTicket($modulo, $sub, $acao, $matriz, $registro) {
+
+	global $conn, $corFundo, $corBorda, $tb, $html, $sessLogin;
+	
+	# Checar permissão do usuario
+	# Buscar informações sobre usuario - permissões
+	$permissao=buscaPermissaoUsuario($sessLogin[login]);
+
+	if(!$permissao[alterar] && !$permissao[admin]) {
+		# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+		$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Acesso Negado", $msg, $url, 760);
+	}
+	else {
+		
+		# Form de transferência
+		if(!$matriz[bntTransferir]) {
+			formTransferirTicket($modulo, $sub, $acao, $matriz, $registro);
+		}
+		else {
+			
+			# Buscar ultimo processo do ticket e transferir para outro usuário, mantendo
+			# o mesmo status
+			$ultimoProcesso=ultimoProcessoTicket($matriz[ticket]);
+			
+			# efetivar transferência
+			$idUsuario=$matriz[idUsuario];
+			$matriz[id]=$matriz[ticket];
+			$matriz[idStatus]=$ultimoProcesso[idStatus];
+			$matriz[idUsuario]=buscaIDUsuario($sessLogin[login],'login','igual','id');
+			$textoAcao=$matriz[descricao];
+			$matriz[descricao]="Ticket Transferido por [$sessLogin[login]]: $matriz[descricao]";
+			$grava=dbProcessosTicket($matriz, 'transferir');
+			
+			if($matriz[transferir_totalmente]=='S') {
+				$matriz[idUsuario]=$idUsuario;
+				dbProcessosTicket($matriz, 'transferir_totalmente');
+			}
+			
+			# Alterar idUsuarioCriador para novo Usuario
+			$matriz[idUsuario]=$idUsuario;
+			dbTicket($matriz, 'transferir');
+			
+			if($grava) {
+				$msg="Ticket transferido com sucesso";
+				# Enviar email para os usuários relacionados
+				mailTicket($matriz[id], $matriz[idUsuario], 'transferir', $textoAcao);
+			}
+			else {
+				# erro
+				$msg="Erro ao transferir ticket";
+			}
+
+			avisoNOURL("Aviso", $msg, 400);
+
+		}
+		
+		# Visualizar ticket
+		echo "<br>";
+		verTicket($modulo, $sub, 'ver', $matrizm, $registro);
+
+	}
+}
+
+
+# Form de transferência de ticket
+function formTransferirTicket($modulo, $sub, $acao, $matriz, $registro) {
+	
+	global $html, $corFundo, $corBorda, $sessLogin;
+	
+	$dadosTicket=dadosTicket($registro);
+	$assunto=$dadosTicket[assunto];
+	
+	# Buscar Assunto
+	novaTabela2("Transferir Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		# Opcoes Adicionais
+		menuOpcAdicional($modulo, $sub, $acao, $registro);				
+		#fim das opcoes adicionais
+		novaLinhaTabela($corFundo, '100%');
+		$texto="			
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=acao value=$acao>
+			<input type=hidden name=registro value=$registro>
+			<input type=hidden name=matriz[ticket] value=$registro>";
+			itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Usuário: </b><br>
+				<span class=normal10>Usuário para quem deve ser transferido o Ticket</span>";
+			htmlFechaColuna();
+			itemLinhaForm(formSelectUsuariosGruposCategorias(buscaIDUsuario($sessLogin[login],'login','igual','id'),'idUsuario'), 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Transferir totalmente: </b><br>
+				<span class=normal10>Fazer com que o ticket saida de meu desktop</span>";
+			htmlFechaColuna();
+			$texto="<input type=checkbox name=matriz[transferir_totalmente] value='S'>&nbsp;<span class=txtaviso>Esta opção faz com que ticket não seja mais visualizado como seu</span>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "<b class=bold>Comentário: </b><br>
+				<span class=normal10>Comentários sobre abertura do Ticket</span>";
+			htmlFechaColuna();
+			$texto="<textarea name=matriz[descricao] rows=5 cols=60></textarea>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('40%', 'right', $corFundo, 0, 'tabfundo1');
+				echo "&nbsp;";
+			htmlFechaColuna();
+			$texto="<input type=submit name=matriz[bntTransferir] value='Transferir Ticket'>";
+			itemLinhaForm($texto, 'left', 'top', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();		
+}
+
+
+
+function mostraTicket($registro,$menu=1,$showDescricao=1) {
+	
+	global $corFundo, $corBorda,$sessLogin;
+	
+	# Mostar informações sobre Servidor
+	$consulta=buscaTicket($registro, 'id','igual','id');
+	
+	$perfilUsuario=dadosPerfilUsuario(buscaIDUsuario($sessLogin[login],'login','igual','login'));
+	
+	$idTicket=resultadoSQL($consulta, 0, 'id');
+	$assunto=resultadoSQL($consulta, 0, 'assunto');
+	$data=resultadoSQL($consulta, 0, 'data');
+	$descricao=resultadoSQL($consulta, 0, 'texto');
+	$idUsuario=resultadoSQL($consulta, 0, 'idUsuario');
+	$nomeUsuario=resultadoSQL(buscaUsuarios($idUsuario,'id','igual','login'),0,'login');
+	$idPrioridade=resultadoSQL($consulta, 0, 'idPrioridade');
+	$idCategoria=resultadoSQL($consulta, 0, 'idCategoria');
+	$protocolo=resultadoSQL($consulta, 0, 'protocolo');
+	
+	# Processos do Ticket
+	$processosTicket=buscaProcessosTicket($idTicket, 'idTicket','igual','data DESC');
+	
+	$statusTicket=resultadoSQL($processosTicket, 0, 'idStatus');
+	$status=checaStatusTicket($statusTicket);
+	
+	# Buscar informações de relacionamento do ticket
+	$dadosRelacionamento=dadosTicketEmpresa($idTicket, 'idTicket', 'igual','id');
+	
+	#nova tabela para mostrar informações
+	novaTabela2SH('center', '100%', 0, 2, 0, $corFundo, $corBorda, 2);
+		novaLinhaTabela($corFundo, '100%');
+			# Menu de opções na visualização do ticket
+			if($perfilUsuario[alinhaMenu]=='E' && $menu==1) {
+				htmlAbreColuna('10%', 'left nowrap  valign=top', $corFundo, 0, 'normal');
+					menuTicket($statusTicket, $registro, 'Opções', 'left', '100%', $corFundo, $corBorda, 'normal10');
+				htmlFechaColuna();
+			}
+			htmlAbreColuna('90%', 'center valign=top', $corFundo, 0, 'normal');
+				novaTabela2("Ticket: $assunto", 'center', '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+					# Verificar prioridade
+					if($idPrioridade) {
+						# Buscar Prioridade
+						$prioridade=checaPrioridade($idPrioridade);
+						novaLinhaTabela($corFundo, '100%');
+							itemLinhaCorNOURL("<b>Prioridade:</b></font>", 'right', $corFundo, 0 , 'bold10', $prioridade[cor]);
+							itemLinhaCorNOURL($prioridade[nome], 'left', $corFundo, 0, 'normal10', $prioridade[cor]);
+						fechaLinhaTabela();
+					}
+					# Verificar categoria
+					if($idCategoria) {
+						# Buscar categoria
+						$categoria=checaCategoria($idCategoria);
+						novaLinhaTabela($corFundo, '100%');
+							itemLinhaTabela('<b>Categoria:</b>', 'right', '20%', 'tabfundo1');
+							itemLinhaNOURL($categoria[nome], 'left', $corFundo, 0, 'bold10');
+						fechaLinhaTabela();
+					}
+					if($protocolo) {
+						novaLinhaTabela($corFundo, '100%');
+							itemLinhaTabela('<b>Protocolo:</b>', 'right', '20%', 'tabfundo1');
+							itemLinhaNOURL($protocolo, 'left', $corFundo, 0, 'normal10');
+						fechaLinhaTabela();
+					}
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTabela('<b>Criado por:</b>', 'right', '20%', 'tabfundo1');
+						itemLinhaNOURL($nomeUsuario, 'left', $corFundo, 0, 'normal10');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTabela('<b>Data de Criação:</b>', 'right', '20%', 'tabfundo1');
+						itemLinhaNOURL(converteData($data, 'banco','form'), 'left', $corFundo, 0, 'normal10');
+					fechaLinhaTabela();
+					novaLinhaTabela($corFundo, '100%');
+						itemLinhaTabela('<b>Status:</b>', 'right', '20%', 'tabfundo1');
+						itemLinhaNOURL($status[nome], 'left', $corFundo, 0, 'normal10');
+					fechaLinhaTabela();
+					if($dadosRelacionamento[idEmpresa]) {
+							novaLinhaTabela($corFundo, '100%');
+							itemLinhaTabela('<b>Empresa:</b>', 'right', '20%', 'tabfundo1');
+							itemLinhaNOURL(formSelectEmpresas($dadosRelacionamento[idEmpresa],'','check'), 'left', $corFundo, 0, 'normal10');
+						fechaLinhaTabela();
+					}
+					if($dadosRelacionamento[idMaquina] && verificaIntegracaoTicketInvent()) {
+							novaLinhaTabela($corFundo, '100%');
+							itemLinhaTabela('<b>Máquina:</b>', 'right', '20%', 'tabfundo1');
+							itemLinhaNOURL(formSelectMaquinasEmpresa($dadosRelacionamento[idMaquina],'','','check'), 'left', $corFundo, 0, 'normal10');
+						fechaLinhaTabela();
+					}
+					if($showDescricao) {
+						novaLinhaTabela($corFundo, '100%');
+							itemLinhaTabela('<b>Descrição:</b>', 'right', '20%', 'tabfundo1');
+							itemLinhaNOURL(nl2br($descricao), 'left', $corFundo, 0, 'tabfundo3');
+						fechaLinhaTabela();
+					}
+				fechaTabela();
+			htmlFechaColuna();
+			if((!$perfilUsuario[alinhaMenu] || $perfilUsuario[alinhaMenu]=='D') && $menu==1) {
+				htmlAbreColuna('10%', 'left nowrap  valign=top', $corFundo, 0, 'normal');
+					menuTicket($statusTicket, $registro, 'Opções', 'left', '100%', $corFundo, $corBorda, 'normal10');
+				htmlFechaColuna();
+			}
+		htmlFechaLinha();
+	fechaTabela();	
+	# fim da tabela	
+}
+?>
+@

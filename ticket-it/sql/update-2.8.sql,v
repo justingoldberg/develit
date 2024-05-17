@@ -1,0 +1,51 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.37.17;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@--
+-- Autor: kerne
+-- Atualizacoes de integracao do ticket com empresas
+-- e cadastro de usuarios de empresas, com painel
+-- proporio de movimentacao de tickets
+
+create table EmpresasUsuarios (
+	id int primary key auto_increment, 
+	login varchar(60), 
+	senha varchar(100), 
+	senha_texto varchar(100), 
+	dtCriacao datetime, 
+	dtInativacao datetime, 
+	dtCancelamento datetime, 
+	email varchar(200), 
+	nome varchar(200), 
+	fone varchar(40), 
+	admin char(1) default 'N', 
+	status char(1) default 'I'
+);
+
+create table UsuariosEmpresas (
+	id int primary key auto_increment, 
+	idEmpresaUsuario int, 
+	idEmpresa int
+);
+
+
+@

@@ -1,0 +1,73 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.32.22;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Relatorios
+
+# Relatorios
+function relatorios($modulo, $sub, $acao, $registro, $matriz) {
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html, $sessLogin;
+
+	# Permissão do usuario
+	$permissao=buscaPermissaoUsuario($sessLogin[login],'login','igual','login');
+	
+	if(!$permissao[admin]) {
+		# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+		$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Acesso Negado", $msg, $url, 760);
+	}
+	else {
+		### Menu principal - usuarios logados apenas
+		novaTabela2("[relatórios]", "center", '100%', 0, 3, 1, $corFundo, $corBorda, 3);
+			novaLinhaTabela($corFundo, '100%');
+				htmlAbreColuna('65%', 'left', $corFundo, 0, 'tabfundo1');
+					echo "<br><img src=".$html[imagem][empresa]." border=0 align=left >
+					<b class=bold>Relatórios</b>
+					<br><span class=normal10>Relatórios $configAppName.</span>";
+				htmlFechaColuna();			
+				$texto=htmlMontaOpcao("<br>Total Horas por Empresa", 'relogio');
+				itemLinha($texto, "?modulo=$modulo&sub=clienteshoras", 'center', $corFundo, 0, 'normal');
+				$texto=htmlMontaOpcao("<br>Total Geral de Horas", 'relogio');
+				itemLinha($texto, "?modulo=$modulo&sub=totalhoras", 'center', $corFundo, 0, 'normal');
+			fechaLinhaTabela();
+		fechaTabela();
+		
+		if($sub=='clienteshoras') {
+			# Menu de modulos
+			echo "<br>";
+			formRelatorioClienteHoras($modulo, $sub, $acao, $registro, $matriz);	
+		}
+		elseif($sub=='totalhoras') {
+			# Menu de modulos
+			echo "<br>";
+			formRelatorioHoras($modulo, $sub, $acao, $registro, $matriz);	
+		}
+	}
+}
+
+
+
+?>
+@

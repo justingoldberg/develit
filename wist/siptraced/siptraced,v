@@ -1,0 +1,119 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.07.09;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@#!/usr/bin/perl
+#
+use POSIX qw(setsid); # to daemonize the server
+use strict;
+use IO::Socket;
+
+########## SERVER CONFIGURATION ###########
+my $port = 10027; # tcp port to listen to
+my $timeout = 300; # connection timeout (seconds)
+my $user = 'nobody'; # childrens will use privileges from this user
+my ($client_addr, $childpid, $paddr, $uid);
+
+######### GENERAL CONFIGURATION ############
+# PID file to write the Server's PID
+my $PID_FILE = '/var/run/siptraced.pid';
+
+# NGREP LOG file to read
+my $NGREP_LOG = '/var/log/ngrep.log';
+
+##########################################
+### %%% CODE %%% ###
+
+unless ($uid = (getpwnam($user))[2]) {
+	die "Attempt to run server as non-existent or superuser\n"; }
+
+# perl's autoflush
+$|=1;
+
+# I don't care about termination reasons of childrens
+$SIG{CHLD} = 'IGNORE';
+
+# daemonize the server
+Daemonize();
+
+# Write the PID in $PID_FILE
+open (PID, "> $PID_FILE") || die "Can't open pid file for write: $!\n"; 
+print PID $$ . "\n";
+close(PID);
+
+# create a socket, make it reusable
+socket(SERVER, PF_INET, SOCK_STREAM, getprotobyname('tcp')) or die "Socket error: $!\n";
+setsockopt(SERVER, SOL_SOCKET, SO_REUSEADDR, 1) or die "Setsockopt error: $!\n";
+
+# grab a port on this machine
+$paddr = sockaddr_in($port, INADDR_ANY);
+
+# bind to a port, then listen
+bind(SERVER, $paddr) or die "Bind error: $!\n";
+listen(SERVER, SOMAXCONN) or die "Listen error: $!\n";
+
+while ($client_addr = accept(CLIENT, SERVER)) {
+	if ($childpid = fork()) {
+		close(CLIENT);
+		next; # parent process
+	}
+ 
+	die "fork child: $!\n" unless defined $childpid; # failure
+	#################
+	# child process #
+	#################
+	
+	close(SERVER);
+	alarm($timeout); # to avoid long connections
+	select(CLIENT);
+	CLIENT->autoflush(1);
+	
+	# Change the user's privileges to $user ($uid)
+	$> = $uid;
+	
+	#open(TAIL,"/usr/bin/ngrep -W byline -p -d eth0 port 5060|") 
+	# || die("ERRO: can't open pipe tail\n$!\n");
+	if (-r $NGREP_LOG) {
+		open(TAIL,"tail -f $NGREP_LOG|") || 
+			die ("ERROR: can't run tail: $!\n");
+		while (<TAIL>) {
+			print  CLIENT $_;
+		}
+	} else {
+		print CLIENT "ERROR: can't open $NGREP_LOG for read, please check: $!\n";
+	}	
+	close(CLIENT);
+	close(TAIL);
+	exit;
+}
+
+sub Daemonize {
+	chdir '/' or die "Can't chdir to /: $!";
+	open STDIN, '/dev/null' or die "Can't read /dev/null: $!";
+	#open STDOUT, '>>/dev/null' or die "Can't write to /dev/null: $!";
+	#open STDERR, '>>/dev/null' or die "Can't write to /dev/null: $!";
+	defined(my $pid = fork) or die "Can't fork: $!";
+	exit if $pid;
+	setsid or die "Can't start a new session: $!";
+	umask 0;
+}
+
+@

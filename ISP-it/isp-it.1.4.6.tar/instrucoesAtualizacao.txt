@@ -1,0 +1,10 @@
+### INSTRUCOES SOBRE NOVAS CARACTERISTICAS DA FERRAMENTA
+### Ex:. Forma Cobranca incluido o campo arquivoremessa, que define qual o padrão da cobrança utilizada pela agencia
+#X## Qdo a versao foi atualizada no cliente, instrui-lo a inserir os valores corretos neste cadastro.
+PRIMEIRAMENTE CONFERIR TODAS AS SENHAS DE ACESSO AP SERVIDOR QUE ESTÁ SENDO ATUALOIZADO COMO SEGUE:
+./config/custom.php
+./config/radius.php
+./config/vpopmail.php
+./config/manager.php
+Para cliente que irão iniciar com a rotina de débito automático, primeiramente precisamos alterar a forma de cobranca de todos os planos dos cliente optantes por esta forma de cobranca, depois, informar que cada cliente optante por esse método de cobraça deverá ser cadastrado como participante de débito automático em -> Faturamento -> Manutenção de clientes em Débito Automático -> adicionar; informando os dados da conta do cliente.
+DEBITO BANESPA --> colocar agencia 04 digitos (zeros a esquerda)

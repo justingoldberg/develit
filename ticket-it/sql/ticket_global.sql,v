@@ -1,0 +1,103 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.37.17;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@-- MySQL dump 9.09
+--
+-- Host: localhost    Database: Ticket_IT
+---------------------------------------------------------
+-- Server version	4.0.15
+
+--
+-- Table structure for table `Empresas`
+--
+
+CREATE TABLE Empresas (
+  id int(11) NOT NULL auto_increment,
+  idPessoaTipo int(11) default NULL,
+  nome varchar(200) default NULL,
+  dominio varchar(20) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `Parametros`
+--
+
+CREATE TABLE Parametros (
+  id int(11) NOT NULL auto_increment,
+  descricao varchar(200) default NULL,
+  parametro varchar(20) default NULL,
+  valor varchar(200) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `grupos`
+--
+
+CREATE TABLE grupos (
+  id int(9) NOT NULL auto_increment,
+  nome varchar(50) NOT NULL default '',
+  admin char(1) default NULL,
+  incluir char(1) default NULL,
+  excluir char(1) default NULL,
+  visualizar char(1) default NULL,
+  alterar char(1) default NULL,
+  abrir char(1) default NULL,
+  fechar char(1) default NULL,
+  comentar char(1) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `usuarios`
+--
+
+CREATE TABLE usuarios (
+  id int(9) NOT NULL auto_increment,
+  login varchar(20) NOT NULL default '',
+  senha varchar(40) NOT NULL default '',
+  status char(1) NOT NULL default '',
+  PRIMARY KEY  (id)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `usuarios_grupos`
+--
+
+CREATE TABLE usuarios_grupos (
+  idUsuario int(9) NOT NULL default '0',
+  idGrupo int(9) NOT NULL default '0',
+  PRIMARY KEY  (idUsuario,idGrupo),
+  KEY idUsuario (idUsuario),
+  KEY idGrupo (idGrupo)
+) TYPE=MyISAM;
+
+INSERT INTO Parametros VALUES (1,'Passphrase de autenticação para visualização de senha','passphrase','YmF0YXRpbmhhIHF1YW5kbyBuYXNjZQ==');
+INSERT INTO Parametros VALUES (2,'Timeout de validação de PassPhrase (em segundos)','passphrase_timeout','MzA=');
+INSERT INTO Parametros VALUES (3,'Ticket-IT - URL','ticket_url','aHR0cDovL3RpY2tldC5kZXZlbC5pdA==');
+
+INSERT INTO usuarios VALUES (1,'admin','$1$$CoERg7ynjYLsj2j4glJ34.','A');
+INSERT INTO usuarios VALUES (2,'convidado','$1$Ou6tpaef$N1JF7ZRnhVATotUtJW/Xy1','A');
+INSERT INTO usuarios_grupos VALUES (1,1);
+INSERT INTO grupos VALUES (1,'Administradores','S','','','','','','','');
+@

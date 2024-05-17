@@ -1,0 +1,74 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.19.52.40;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@Ticket-IT FAQ
+--------------------------------------------------------------------------------
+P: O que é Ticket-IT?
+
+R: Ticket-IT é uma ferramenta destinada a  empresas  que  necessitam  de  melhor
+   integração e  distribuição  de  informações  sobre  atendimento  a  clientes,
+   suporte, desenvolvimento de produtos, callcenter, etc,  entre  seus  diversos
+   departamentos.
+
+
+P: Como é o escopo dos usuários no Ticket-IT?
+
+R: Basicamente existem dois tipos de usuários: O usuário encarregado de  atender
+   o cliente nas diversas funcionalidades do sistema. Estes usuários necessitam 
+   estar autenticado para realizar as determinadas tarefas.  Estes usuários  são
+   normalmente os  funcionários  da  empresa  a  qual  presta  este  serviço  de
+   atendimento.
+   O usuário convidado que pode abrir/visualizar  chamados  (tickets),  comentar
+   chamados (desce de que ele conheça o número do  protocolo),  e  ser  atendido
+   via chat online.  Normalmente sendo clientes, este usuário não precisa  estar
+   autenticado. 
+
+
+P: É possivel criar um chamado mediante um usuário convidado?
+
+R: Sim, para tal tarefa acesse:
+   [endereco_ticket]/index.php?modulo=protocolo&acao=incluir&categoria=1
+   Uma   dica   é   linkar   esta    URL    no    endereço    do    seu    site.
+
+
+P: Se os clientes  não  têm  um  usuário  cadastrado,  como  eles  acompanham  o
+   atendimento de seu chamado?
+
+R: Quando é aberto um chamado, é informado o número de  protocolo,  com  o  qual
+   este pode acompar o chamado,  informando  este  código  na  tela  inicial  do
+   Ticket-IT. 
+   Além disso, o endereço de e-mail especificado pelo  cliente  no  cadastro  do
+   Ticket  é  automaticamente  cadastrado  na  lista  de  encaminhamentos  deste
+   chamado,  enviando   notifição   aos   enventos   ocorridos   neste   chamado.
+
+
+P: Como encaminho um Ticket, para mais de um usuário?
+
+R: Quando estiver na opção Encaminhar, basta inserir  mais  de  um  endereço  de
+   e-mail     separado     por     vírgula     (,)     no     campo      e-mail.
+
+
+P: Um grupo de usuários pode fazer parte de mais de uma categoria?
+
+R: Sim.  Um grupo de usuários pode estar relacionado a mais  de  uma  categoria,
+   assim  como  uma  categoria  pode  fazer  parte  de   mais   de   um   grupo.
+@

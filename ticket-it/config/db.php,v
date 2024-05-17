@@ -1,0 +1,101 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.10.46;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#    Estrutura SQL da aplicação
+
+# Usuários
+$tb[Usuarios]="usuarios";
+
+# Grupos
+$tb[Grupos]="grupos";
+
+# Usuários dos grupos
+$tb[UsuariosGrupos]="usuarios_grupos";
+
+# Categorias
+$tb[Categorias]="categorias";
+
+# CategoriasGrupos
+$tb[CategoriasGrupos]="categorias_grupos";
+
+# Prioridades
+$tb[Prioridades]="prioridades";
+
+# Status
+$tb[Status]="status";
+
+# Ticket
+$tb[Ticket]="ticket";
+
+# Ticket Detalhes
+$tb[TicketDetalhes]="ticket_detalhes";
+
+# Processos Ticket
+$tb[ProcessosTicket]="processos_ticket";
+
+# Comentários de Tickets
+$tb[ComentariosTicket]="ticket_comentario";
+
+# Perfil
+$tb[Perfil]="perfil";
+
+# Evento
+$tb[Evento]="evento";
+
+# Agenda
+$tb[Agenda]="agenda";
+
+# Parametros
+$tb[Parametros]="Parametros";
+
+# Empresas
+$tb[Empresas]="Empresas";
+
+# Usuários Empresas
+$tb[EmpresasUsuarios]="EmpresasUsuarios";
+
+# Usuários Empresas (tabela associativa)
+$tb[UsuariosEmpresas]="UsuariosEmpresas";
+
+# Maquinas
+$tb[Maquinas]="Maquinas";
+
+# Tickets
+$tb[TicketEmpresa]="ticket_empresa";
+
+# Finalizacoes
+$tb[TicketFinalizacoes]="ticket_tempo";
+
+# Ticket Chat
+$tb[TicketChat]="ticket_chat";
+
+# Ticket Chat Conteudo
+$tb[TicketChatConteudo]="ticket_chat_conteudo";
+
+# Ticket Feedback
+$tb[TicketFeedback]="ticket_feedback";
+
+?>
+@

@@ -1,0 +1,248 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.19.42.14;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@Ticket-IT
+
+   2.9: Dec 15, 2005
+   * Alteração de Layout de Visualização do Ticket. Menu agora fica do lado 
+     direito, com 1 opção por linha;
+   * Meu Perfil atualizado - Adicionada opção de Posicionamento do menu de 
+     opções;
+   * Relatório de Tickets por Empresa/Máquina com subtotal de horas por máquina
+     (expediente [s/n]) e total geral de horas;
+   * Relatório Total Geral de Horas por cliente;
+   * Busca de Tickets - Procura também nos comentários, e pode utilizar data de 
+     início e fim de processo do ticket;
+   * Busca de Tickets agora mostra os tickets relacionados ao cliente e máquina;
+   * Opção de Relacionar Ticket no form de abertura;
+   * Nova visualização de menu de opções (configurável via "Meu Perfil");
+   * Implementado sistema de contagem de tempo por ticket;
+   * Nova opção em menu - Atender (abre pop-up de atendimento do ticket);
+   * Relatório de Tempo por Cliente/Máquina contabiliza tempo expediente S/N 
+     em mesmo ticket, podendo haver atendimento de ticket parcial em expediente
+     e parcial fora de expediente;
+   * Validação de Email em postagem de ticket (Link Suporte Online no Site da 
+     Devel);
+   * Fechamento de ticket agora mostra tempo de atendimento já registrado, além 
+     do valor de duração (00:00:00) quando já houver registros de tempo 
+     gravados, sendo opcional o preenchimento do tempo final (Nova forma de 
+     utilização de tempo ticket);
+   * POP-UP de atendimento suporta atendimento de múltiplos tickets 
+     simultaneamente;
+   * Tabela CSS alterada para suportar formatação de estilos em botões, bold 
+     padrão e outros;
+   * Busca de ticket organiza ticket por data descrescrente de criação (mais 
+     rescentes aparecem no topo da lista);
+   * Correção de BUG em somatório de sub-total de atendimento por máquina;
+   * Implementação de listagem, alteração e exclusão de tempos de atendimento;
+   * Implemetação de links de acesso ao ticket e a listagem de horas de 
+     atendimeto por ticket em relatório de ticket por cliente;
+   * Versão inicial do Chat Online;
+   * Atendimento via Chat (POP-UP) implementado;
+   * Liberação de chat-online em tela do usuário (convidado) implementado;
+   * Javascript abre automaticamente a janela de chat na visualização do 
+     protocolo (por parte do cliente) quando o chat online está ativo;
+   * Implementação de Tela para visualização de protocolo em tela de cadastro 
+     de novo ticket (suporte via Site - convidado);
+   * Alterada visualização de URL após inclusão de ticket, direcionando para 
+     página (com frames) onde o usuário poderá acompanhar as atualizações do
+     ticket além da abertura automática de chat online, quando este foi ativado
+     pelo operador do suporte;
+   * Removido Campo "Descrição" da tela de chat (visualização de ticket) para 
+     reduzir o espaço de tela; 
+   * Cores das linhas do chat são diferenciadas para até 4 usuários (estilos.css 
+     padrão possui chat0, chat1, chat2 e chat3, utilizados para linhas de chat);
+   * Problema de visualização de chat de outro ticket em aberto foi resolvido,
+     e agora pode-se atender múltiplos chats simultaneamente, com logs 
+     totalmente independentes;
+   * Mensagem de boas vindas adicionada ao Chat;
+   * Procura de Ticket por protocolo (usuário do ticket) agora está mostrando 
+     janela corretamente (bug no index.php corrigido);
+   * Registro de tempo de atendimeto agora inclui o idUsuario;
+   * Listagem de tempo de atendimentos mostra data, usuário, tempo, expediente 
+     e opções;
+   * Correção de BUG de refresh em POP-UP de ChatOnline, fazendo com que o frame
+     de mensagens seja recarregado apenas quanto houverem novas mensagens para o 
+     chat em aberto;
+   * Bug de refresh do IE no POP-UP do chat online foi corrigido;
+   * Bug do "taximetro" corrigido;
+   * Adicionado uma verificação para ver se o usuário já tem um perfil 
+     cadastrado de forma a impedir que ele acesse os demais môdulos do sistema
+     caso ele não possua seu perfil cadastrado;
+   * Criada uma verifição nos módulos que interagem com o Invent-IT, 
+     mediante a uma nova função que verifica um novo parâmetro criado para esta
+     integração. Caso não possua o parâmetro "integration" o sistema entenderá 
+     que não existe esta integração;
+   * Criada a função formGeraSelect() em includes/html.php que cria um objeto 
+     html de formulário select;
+   * Criado documentação (INSTALAR, FAQ, etc) para o primeiro release público do
+     projeto licenciado sob a GPL;
+
+   2.8: Jan 12, 2005
+   * Alteração de listagem de novos ticket, incluindo o usuário convidado;
+   * Icone da listagem de novos tickets, usando função iconeTicket();
+   * Merge de BDs Invent-IT + Ticket-IT;
+   * Cadastro de Empresas (migrado do invent-it);
+   * Cadastro de Parâmetros (migrado do invent-it);
+   * Inclusão de funcionalidades e integração com ISP-IT necessárias para 
+     cadastro de empresas;
+   * Agendamento de tickets novos;
+   * Relacionamento de tickets com Empresas;
+   * Relacionamento de tickets com Máquinas (opcional);
+   * Correção de bug em checkbox Agendar;
+   * Criação de Tickets com opção de Relacionar ticket após criação;
+   * Visualização de tickets, incluindo nome da Empresa;
+   * Botão de Relacionamento de Tickets em todos os menus;
+   * Integração com dados do Invent-IT para inclusão de Tickets das máquinas;
+   * Alteração de comentários dos tickets;
+   * Alteração e Exclusão de Encaminhamentos;
+   * Corrigido problema de duplicaçao de emails;
+   * BUG na listagem de Encaminhamentos corrigido;
+   * Implementado verificação de MX do domínio de email do encaminhamento no 
+     cadastro;
+   * Implementado validação de domínio de e-mails;
+   * Implementado validação de listagem de Emails;
+
+   2.7: Aug 17, 2004
+   * Perfil - 2 novos parâmetros (Categoria Padrão e Alinhamento da Prioridade);
+   * Categoria padrão - utilizado na abertura dos tickets, selecionando
+     automaticamente a categoria seleciona o perfil do usuário como sendo a 
+     categoria padrão;
+   * Alinhamento da prioridade - agora a listagem de tickets da página 
+     principal está organizada em ordem de prioridade, e logo depois por ordem
+     de data do ticket (decrescente). A indicação de cor da prioridade pode ser
+     alinhada tanto à direita quanto à esquerda, bastando selecionar o 
+     posicionamento desejado em "Meu Perfil". Pode-se selecionar as 
+     "identificações" de prioridade Direita, Esquerda, Linha e Ícone;
+   * Últimos tickets - Atualização dos últimos tickets na tela principal, que
+     pode ou não ser feita ao se visualizar "Meus Tickets" ou ver a página
+     principal. Caso parâmetro fique em "sim", a lista é automaticamente 
+     atualizada, tendo-se em vista o grupo selecionado (ou padrão do usuário).
+     Caso a opção fique em "não", a lista somente é atualizada após o usuário
+     clicar no botão Atualizar, ao lado da caixa de seleção de Grupos;
+   * Alteração de tickets - Na alteração, caso o ticket já possua a configuração
+     de categoria, é possivel efetuar a alteração também de categoria;
+   * Abertura de tickets - Agora é possivel alterar automaticamente o 
+     nome/assunto do ticket, no processo de abertura de tickets;
+   * Procura - A procura de tickets agora faz uma busca adicional, apenas 
+     buscando os tickets novos, pela palavra/frase especificada;
+   * Encaminhamentos - Em casos de tickets criados via WEB pelo usuário 
+     convidado (clientes) diretamente especificando a categoria (utilizado
+     ainda apenas pela Devel-IT), ou em casos de tickets encaminhados para
+     outros destinatários, há uma nova tabela que lista todos os destinatários
+     do ticket;
+   * Agendamento - Agendamento agora conta com validação dos campos de data e
+     hora do agendamento;
+   * Transferência - Agora pode-se transferir tickets para si mesmo, deixando a
+     dependência de outros usuários para fazê-lo;
+   
+
+   2.6: Jul 15, 2004
+   * Correção de javascripts de validação de dados (agendamento de evento);
+   * Correção de abertura de tickets (nao necessita do perfil);
+   * Perfil - adicionado parâmetro de ordenação de comentários;
+   * Perfil - posicionamento/visualização de prioridades dos ticket em formato
+     de linha, Ícone, direita e esquerda;
+
+   2.5: Jun 17, 2004
+   * Adicionado suporte a agendamento de tickets;
+   * Adicionado configurações da agenda no perfil de cada usuário;
+
+   2.4: Mar 08, 2004
+   * Transferência de ticket (total ou parcialmente) para transferir a 
+     responsabilidade sobre o ticket;
+   * Correção de BUG em listagem de ticket de grupo e totalização. Consulta
+     era muito lenta;
+   * Correção de BUG relacionado a abertura de tickets que são encaminhados
+     por outro usuário;
+
+   2.3: Dec 18, 2003
+   * Alteração de visualização de ticket por status;
+   * Listagem de ticket por status, baseados em grupo principal do usuário;
+   * Sistema de encaminhamento automática de tickets, ao criar novo ticket;
+   * Sub-sistema de responsáveis por grupos;
+
+   2.2: Dec 08, 2003
+   * Correção de bug em geração do número de protocolo. Número está sendo 
+     gerado com - 2 letras + 5 numeros (máximo) + 1 letra;
+   * Campo de comentários (textarea) sobre ticket foi aumentado para 15 linhas;
+   * Exclusão de comentários;
+   * Implementado formulário de criação e acompanhamento de ticket pelo 
+     convidado, com acompanhamento do ticket pelo cliente atravéz do protocolo;  
+
+   2.1: Dec 04, 2003
+   * Correções em banco de dados para incremento de performance;
+   * Atualizaçao de registros com status na tabela ticket;
+   * Alteração de tabelas de perfil;
+   * Atualizaçao de perfis de usuários para incluir o ID do grupo principal;
+
+   2.0: Oct 14, 2003
+   * Atualização do sistema de busca (filtragem por grupos de usuários foi
+     corrigido);
+   * Listagem de tickets de grupo atualizado;
+   * Últimos Tickets do Grupo atualizado;
+   * Correções em SQLs e melhor implementação das validações e cláusulas de
+     seleção de consultas de tickets por grupo;
+   * Recurso de alteração de Prioridade adicionado, com suporte a envio de 
+     email de notificação, aos membros participantes da categoria do ticket;
+   * Implementado sistema de geração de protocolos para tickets;
+   * Implementado busca por protocolos;
+   * Tela de Login alterada;
+   * Ícones atualizados e melhorados;
+   * Adiconado menu Protocolo;
+   * Correções de BUGs de renderização HTML no IE;
+
+   1.6: Sep 02, 2003
+   * Implementado envio de e-mails de notificação para os processos criação,
+     alteração, abertura, re-abertura, fechamento e comentários;
+   * Área de perfil do usuário criada;
+
+   1.5: Aug 26, 2003
+   * Alteração no sistema de envio de e-mails, para permitir utilização de 
+     grupos por categoria, para incrementar a notificação, enviando mensagem
+     apenas aos usuários participantes dos grupos, ligados à categoria do ticket;
+
+   1.4: Aug 17, 2003
+   * Alterado form de fechamento de ticket, fazendo inclusão de duração em 
+     segundos;
+   * Inclusão de conversor de horas (atualiza_horas.php) para converter horas
+     já gravadas no formato HH:MM:SS;
+   * Correções menores;  
+
+   1.3: Aug 16, 2003
+   * Adicionado visulização de encaminhamentos;
+   * Inclusão de javascripts para formatação e validação de formulários;
+
+   1.2: Jul 07, 2003
+   * Visualização de protocolo a partir de página principal (form de login);
+   
+   1.1: Jun 17, 2003
+   * Correções gerais
+
+   1.0: Apr 21, 2003
+   * Primeiro release com suporte a adição, exclusão, alteração, abertura,
+     re-abertura, fechamento, comentários, procura, prioridades, configurações,
+     usuários, grupos e categorias;
+   * Agrupamentos na tela inicial por novos, abertos, tickets de grupo e meus
+     tickets;
+		 
+@

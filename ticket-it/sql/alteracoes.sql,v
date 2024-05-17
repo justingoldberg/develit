@@ -1,0 +1,34 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.37.17;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@########################
+# Alteracoes para agenda
+# 22-07-2004
+# Hugo Ribeiro
+########################
+alter table perfil add diaInicio int(1) not null default 1;
+alter table perfil add diaFim int(1) not null default 5;
+alter table perfil add horarioInicio int(1) not null default 9;
+alter table perfil add horarioFim int(1) not null default 18;
+alter table perfil add grade char(1) not null default '1';
+
+@

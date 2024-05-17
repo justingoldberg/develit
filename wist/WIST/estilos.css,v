@@ -1,0 +1,84 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.04.07.12.10.36;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@input,select,textarea {font-family: verdana,arial,helvetica; font-size: 10pt; color: #000000; background-color: #FFFFFF; border: 1px solid #223366;}
+select,input,textarea {font-family: verdana,arial,helvetica; font-size: 10pt; color: #000000; background-color: #edf1fc; border: 1px solid #223366;}
+A			  {text-decoration: none; color: #223366 }
+A:hover		  {text-decoration: underline; color: #990020}
+body		  {background: #ffffff; color: #000000; font-family: arial,helvetica,verdana,sans-serif; }
+input.submit  {background-color: #223366; background-image: url(imagens/fundobotao.gif); background-position: bottom; background-repeat: repeat; border: none; color: #ffffff; cursor: pointer; font-weight: bold; height: 20px;border-left: 0px solid #223366; border-right: 0px solid #223366; border-top: 0px solid #223366; border-bottom: 0px solid #223366;}
+input.submit2 {background-color: #223366; background-image: url(imagens/fundobotao2.gif); background-position: bottom; background-repeat: repeat; border: none; color: #ffffff; cursor: pointer; font-weight: bold; height: 20px;border-left: 0px solid #223366; border-right: 0px solid #223366; border-top: 0px solid #223366; border-bottom: 0px solid #223366;}
+
+
+.titulo		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;color: #ffffff}
+.titulo9	{font-family: arial,helvetica,verdana,sans-serif;font-size: 9pt;font-weight: 600;color: #ffffff}
+.tabtitulo	{font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 600;color: #ffffff; height: 20pt}
+.tabfundo0	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;color: #000000; background: #bbbbbb;}
+.tabfundo1	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000; background: #eeeeee;}
+.tabfundo2	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000; background: #dddddd;}
+.tabfundo3	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000; background: #ffffee;}
+.tabfundo4	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000; background: #ffffcc;}
+.tabfundo81	{font-family: arial,helvetica,verdana,sans-serif;font-size: 9pt;font-weight: 100;color: #000000; background: #eeeeee;}
+.tabfundo82	{font-family: arial,helvetica,verdana,sans-serif;font-size: 9pt;font-weight: 100;color: #000000; background: #dddddd;}
+
+.normal		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000}
+.normal10	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000}
+.normal9	{font-family: arial,helvetica,verdana,sans-serif;font-size: 8pt;font-weight: 100;color: #000000}
+.normal8	{font-family: arial,helvetica,verdana,sans-serif;font-size: 8pt;font-weight: 100;color: #000000}
+
+.bold		{font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 600;}
+.bold10		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;}
+.bold8		{font-family: arial,helvetica,verdana,sans-serif;font-size: 8pt;font-weight: 600;}
+
+.rodape		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;color: #000000}
+
+.log_txt	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 100;color: #000000}
+
+.txtaviso	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;color: #AA0000}
+.txtaviso8	{font-family: arial,helvetica,verdana,sans-serif;font-size: 8pt;font-weight: 600;color: #AA0000}
+.txtok		{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;color: #006000}
+.txtok8		{font-family: arial,helvetica,verdana,sans-serif;font-size: 8pt;font-weight: 600;color: #006000}
+.txtcheck	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;color: #001099}
+.txtcheck8	{font-family: arial,helvetica,verdana,sans-serif;font-size: 8pt;font-weight: 600;color: #001099}
+.txttrial	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;color: #E89600}
+.txttrial8	{font-family: arial,helvetica,verdana,sans-serif;font-size: 8pt;font-weight: 600;color: #E89600}
+.txtaviso10	{font-family: arial,helvetica,verdana,sans-serif;font-size: 10pt;font-weight: 600;color: #AA0000}
+
+.ativado	{font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 100;color: #000000; background: #EEFFEE}
+.desativado {font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 100;color: #000000; background: #ffEEEE}
+.novo 		{font-family: arial,helvetica,verdana,sans-serif;font-size: 12pt;font-weight: 100;color: #000000; background: #eeeeff}
+.codigo		{font-family: courier, fixed;font-size: 12pt;font-weight: 100;}
+
+.classeCaixa {border: 1px solid #223366;}
+
+.linhaLog {font-family: arial,helvetica,verdana,sans-serif; font-size: 10pt;}
+
+.classeTitulo {
+	font-family: arial,helvetica,verdana,sans-serif;
+	font-size: 12pt;
+	font-weight: 600;
+	color: #ffffff; 
+	height: 20pt;
+	background-color: #223366;
+	text-align: center;
+	vertical-align: middle;
+}@

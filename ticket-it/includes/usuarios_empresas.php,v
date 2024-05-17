@@ -1,0 +1,631 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.30.49;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?
+################################################################################
+# Função:
+#		Funções para usuarios de empresas
+
+# Menu principal de usuarios
+# Função para cadastro de usuarios
+function usuariosEmpresas($modulo, $sub, $acao, $registro, $matriz) {
+	
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+
+	# Buscar informações sobre usuario - permissões
+	$sessLogin=$_SESSION["sessLogin"];	
+	$permissao=buscaPermissaoUsuario($sessLogin[login]);
+
+	if(!$permissao[admin]) {
+		# SEM PERMISSÃO DE EXECUTAR A FUNÇÃO
+		$msg="ATENÇÃO: Você não tem permissão para executar esta função";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Acesso Negado", $msg, $url, 760);
+	}
+	else {
+
+		# Topo da tabela - Informações e menu principal do Cadastro
+		novaTabela2("[Cadastro de Usuarios de Empresas]", "center", '100%', 0, 3, 1, $corFundo, $corBorda, 4);
+			novaLinhaTabela($corFundo, '100%');
+				htmlAbreColuna('65%', 'left', $corFundo, 0, 'tabfundo1');
+					echo "<br><img src=".$html[imagem][empresa]." border=0 align=left><b class=bold>Usuarios de Empresas</b>
+					<br><span class=normal10>O cadastro de usuários de empresas gerencia os usuários externos, os quais 
+					terão permissão e acompanhamento para manutenção dos tickets nas empresas.</span>";
+				htmlFechaColuna();			
+				$texto=htmlMontaOpcao("<br>Adicionar", 'incluir');
+				itemLinha($texto, "?modulo=$modulo&sub=$sub&acao=adicionar", 'center', $corFundo, 0, 'normal');
+				$texto=htmlMontaOpcao("<br>Procurar", 'procurar');
+				itemLinha($texto, "?modulo=$modulo&sub=$sub&acao=procurar", 'center', $corFundo, 0, 'normal');
+				$texto=htmlMontaOpcao("<br>Listar", 'listar');
+				itemLinha($texto, "?modulo=$modulo&sub=$sub&acao=listar", 'center', $corFundo, 0, 'normal');
+			fechaLinhaTabela();
+		fechaTabela();
+		
+		echo "<br>";
+		
+		# Mostrar Status para não seja informada a ação
+		if(!$acao || $acao=='procurar' || $acao=='listar') {
+			# Listar Usuários de Empresas
+			procurarUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz);
+		}
+	
+		# Inclusão
+		elseif($acao=="adicionar") {
+			adicionarUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz);
+		}
+		# Alterar 
+		elseif($acao=="alterar") {
+			alterarUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz);
+		}
+		# Excluir
+		elseif($acao=="excluir") {
+			excluirUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz);
+		}
+		# Usuarios Empresas
+		elseif($acao=="empresas") {
+			empresasUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz);
+		}
+		
+		# Usuarios Empresas Adicionar
+		elseif($acao=="empresasadicionar") {
+			empresasUsuariosEmpresasAdicionar($modulo, $sub, $acao, $registro, $matriz);
+		}
+	}
+}
+
+
+
+# Funcao para cadastro de usuarios
+function adicionarUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+	
+	# Procurar login
+	if($matriz[login]) {
+		$consulta=buscaUsuariosEmpresas($matriz[login], 'login','igual','id');
+		if($consulta && contaConsulta($consulta)>0) {
+			$msgAviso="<span class=txtaviso><center>Login indisponível! Por favor, informe um login diferente</center></span>";
+			$matriz[login]='';
+		}
+	}
+	
+	# Form de inclusao
+	if(!$matriz[bntAdicionar] || $msgAviso) {
+		# Motrar tabela de busca
+		novaTabela2("[Adicionar]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+			#fim das opcoes adicionais
+			menuOpcAdicional($modulo, $sub, $acao, $registro);
+			novaLinhaTabela($corFundo, '100%');
+			$texto="			
+				<form method=post name=matriz action=index.php>
+				<input type=hidden name=modulo value=$modulo>
+				<input type=hidden name=sub value=$sub>
+				<input type=hidden name=acao value=$acao>
+				<input type=hidden name=registro value=''>
+				$msgAviso
+				&nbsp;";
+				itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+			fechaLinhaTabela();
+			getCampo('text', 'Login', 'matriz[login]', $matriz[login], '', '', 30,'bold10');
+			getCampo('text', 'Senha', 'matriz[senha]', $matriz[senha], '', '', 20,'bold10');
+			getCampo('', 'Empresa', '', formSelectEmpresas($matriz[empresa], 'empresa', 'form'), '', '', 20,'bold10');
+			getCampo('text', 'Nome Completo', 'matriz[nome]', $matriz[nome], '', '', 60,'bold10');
+			getCampo('text', 'E-mail', 'matriz[email]', $matriz[email], '', '', 60,'bold10');
+			getCampo('text', 'Telefone para Contato', 'matriz[fone]', $matriz[fone], '', '', 40,'bold10');
+			getCampo('', 'Status', '', formSelectStatus($matriz[status], 'status','form'), '', '', 20,'bold10');
+			getBotao('matriz[bntAdicionar]', 'Adicionar');
+		fechaTabela();
+	} #fecha form
+	elseif($matriz[bntAdicionar]) {
+		# Conferir campos
+		if($matriz[login] && $matriz[senha]) {
+			# Cadastrar em banco de dados
+			$matriz[id]=novoIDEmpresasUsuarios();
+			$grava=dbUsuarioEmpresa($matriz, 'incluir');
+			
+			# Verificar inclusão de registro
+			if($grava) {
+				
+				# Relacionar Usuario a Empresa
+				$matriz[idUsuario]=$matriz[id];
+				$matriz[idEmpresa]=$matriz[empresa];
+				dbRelacionarUsuarioEmpresa($matriz, 'incluir');
+				
+				# acusar falta de parametros
+				# Mensagem de aviso
+				$msg="Registro Gravado com Sucesso!";
+				$url="?modulo=$modulo&sub=$sub&acao=$acao";
+				avisoNOURL("Aviso", $msg, 400);
+				echo "<BR>";
+				
+				procurarUsuariosEmpresas($modulo, $sub, 'listar', 0, '');
+				
+			}
+		}
+		
+		# falta de parametros
+		else {
+			# acusar falta de parametros
+			# Mensagem de aviso
+			$msg="Falta de parâmetros necessários. Informe os campos obrigatórios e tente novamente";
+			$url="?modulo=$modulo&sub=$sub&acao=$acao";
+			aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+		}
+	}
+} # fecha funcao de inclusao de usuarios
+
+
+# Função para gravação em banco de dados
+function dbUsuarioEmpresa($matriz, $tipo)
+{
+	global $conn, $tb, $modulo, $sub, $acao;
+	
+	$data=dataSistema();
+	
+	# Sql de inclusão
+	if($tipo=='incluir') {
+		$tmpLogin=strtoupper($matriz[login]);
+		# Verificar se serviço existe
+		$tmpBusca=buscaUsuariosEmpresas("upper(login)='$tmpLogin'", $campo, 'custom', 'id');
+		
+		# Registro já existe
+		if($tmpBusca && contaConsulta($tmpBusca)>0) {
+			# Mensagem de aviso
+			$msg="Registro já existe no banco de dados";
+			$url="?modulo=$modulo&sub=$sub&acao=$acao";
+			aviso("Aviso: Erro ao incluir registro", $msg, $url, 760);
+		}
+		else {
+			# Criptograma senha
+			$senhaBanco=crypt($matriz[senha]);
+			$sql="INSERT INTO $tb[EmpresasUsuarios] VALUES (
+				'$matriz[id]', 
+				'$matriz[login]', 
+				'$senhaBanco', 
+				'$matriz[senha]', 
+				'$data[dataBanco]',
+				'',
+				'',
+				'$matriz[email]',
+				'$matriz[nome]',
+				'$matriz[fone]',
+				'',
+				'$matriz[status]'
+			)";
+		}
+	} #fecha inclusao
+	
+	elseif($tipo=='alterar') {
+		$senhaBanco=crypt($matriz[senha]);
+		$sql="
+			UPDATE 
+				$tb[EmpresasUsuarios] 
+			SET 
+				senha='$senhaBanco',
+				nome='$matriz[nome]',
+				fone='$matriz[fone]',
+				email='$matriz[email]',
+				status='$matriz[status]',
+				admin='$matriz[admin]'
+			WHERE 
+				id=$matriz[id]";
+	}
+
+	elseif($tipo=='excluir') {
+		$sql="DELETE FROM $tb[EmpresasUsuarios] WHERE id=$matriz[id]";
+	}
+
+	
+	if($sql) { 
+		$retorno=consultaSQL($sql, $conn);
+		return($retorno); 
+	}
+	
+} # fecha função de gravação em banco de dados
+
+
+# função de busca 
+function buscaUsuariosEmpresas($texto, $campo, $tipo, $ordem)
+{
+	global $conn, $tb, $corFundo, $modulo, $sub;
+	
+	if($tipo=='todos') {
+		$sql="SELECT * FROM $tb[EmpresasUsuarios] ORDER BY $ordem";
+	}
+	elseif($tipo=='contem') {
+		$sql="SELECT * from $tb[EmpresasUsuarios] WHERE $campo LIKE '%$texto%' ORDER BY $ordem";
+	}
+	elseif($tipo=='igual') {
+		$sql="SELECT * from $tb[EmpresasUsuarios] WHERE $campo='$texto' ORDER BY $ordem";
+	}
+	elseif($tipo=='custom') {
+		$sql="SELECT * from $tb[EmpresasUsuarios] WHERE $texto ORDER BY $ordem";
+	}
+	
+	# Verifica consulta
+	if($sql){
+		$consulta=consultaSQL($sql, $conn);
+		# Retornvar consulta
+		return($consulta);
+	}
+	else {	
+		# Mensagem de aviso
+		$msg="Consulta não pode ser realizada por falta de parâmetros";
+		$url="?modulo=$modulo&sub=$sub";
+		aviso("Aviso: Ocorrência de erro", $msg, $url, 760);
+	}
+	
+} # fecha função de busca de usuarios
+
+
+
+
+# Função para procura de serviço
+function procurarUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $conn, $tb, $corFundo, $corBorda, $html, $limite, $textoProcurar;
+	
+	# Atribuir valores a variável de busca
+	if($textoProcurar) {
+		$matriz[bntProcurar]=1;
+		$matriz[txtProcurar]=$textoProcurar;
+	} #fim da atribuicao de variaveis
+	
+	# Motrar tabela de busca
+	novaTabela2("[Procurar]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+		novaLinhaTabela($corFundo, '100%');
+			htmlAbreColuna('30%', 'right', $corFundo, 0, 'tabfundo1');
+			echo "<b>Procurar por:</b>";
+			htmlFechaColuna();
+			$texto="
+			<form method=post name=matriz action=index.php>
+			<input type=hidden name=modulo value=$modulo>
+			<input type=hidden name=sub value=$sub>
+			<input type=hidden name=acao value=procurar>
+			<input type=hidden name=nulo value=nulo>
+			<input type=text name=matriz[txtProcurar] size=40 value='$matriz[txtProcurar]'>
+			<input type=submit name=matriz[bntProcurar] value=Procurar class=submit>
+			";
+			itemLinhaForm($texto, 'left','middle', $corFundo, 0, 'tabfundo1');
+		fechaLinhaTabela();
+	fechaTabela();
+
+	# Caso botão procurar seja pressionado
+	if( ($matriz[txtProcurar] && $matriz[bntProcurar]) || $acao=='listar' || !$acao) {
+		#buscar registros
+		if($acao=='listar' || !$acao) $consulta=buscaUsuariosEmpresas('','','todos','login ASC');
+		else {
+			$consulta=buscaUsuariosEmpresas(
+				"upper(login) like '%$matriz[txtProcurar]%' 
+				OR upper(email) like '%$matriz[txtProcurar]%'
+				OR upper(fone) like '%$matriz[txtProcurar]%'
+				OR upper(nome) like '%$matriz[txtProcurar]%'",
+				$campo, 
+				'custom',
+				'login'
+			);
+		}
+
+		echo "<br>";
+
+		novaTabela("[Resultados]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 5);
+	
+		if(!$consulta || contaConsulta($consulta)==0 ) {
+			# Não há registros
+			itemTabelaNOURL('Não foram encontrados registros cadastrados', 'left', $corFundo, 5, 'txtaviso');
+		}
+		elseif($consulta && contaConsulta($consulta)>0 && (!$registro || is_numeric($registro)) ) {	
+		
+			if($acao != 'listar' && $acao) itemTabelaNOURL('Registros encontrados procurando por ('.$matriz[txtProcurar].'): '.contaConsulta($consulta).' registro(s)', 'left', $corFundo, 5, 'txtaviso');
+
+			# Paginador
+			$urlADD="&textoProcurar=".$matriz[txtProcurar];
+			# Paginador
+			paginador($consulta, contaConsulta($consulta), $limite[lista][usuariosempresas], $registro, 'normal10', 5, $urlADD);
+		
+			# Cabeçalho
+			novaLinhaTabela($corFundo, '100%');
+				itemLinhaTabela('Login', 'center', '10%', 'tabfundo0');
+				itemLinhaTabela('Nome', 'center', '25%', 'tabfundo0');
+				itemLinhaTabela('Empresas', 'center', '35%', 'tabfundo0');
+				itemLinhaTabela('Status', 'center', '10%', 'tabfundo0');
+				itemLinhaTabela('Opções', 'center', '20%', 'tabfundo0');
+			fechaLinhaTabela();
+
+			# Setar registro inicial
+			if(!$registro) {
+				$i=0;
+			}
+			elseif($registro && is_numeric($registro) ) {
+				$i=$registro;
+			}
+			else {
+				$i=0;
+			}
+
+			$limite=$i+$limite[lista][empresas];
+			
+			while($i < contaConsulta($consulta) && $i < $limite) {
+				# Mostrar registro
+				$id=resultadoSQL($consulta, $i, 'id');
+				$nome=resultadoSQL($consulta, $i, 'nome');
+				$login=resultadoSQL($consulta, $i, 'login');
+				$status=resultadoSQL($consulta, $i, 'status');
+				
+				# Buscar Empresas do Usuário
+				$consultaEmpresas=buscaRegistro($id, 'idEmpresaUsuario', 'igual', 'id', $tb[UsuariosEmpresas]);
+				if($consultaEmpresas && contaConsulta($consultaEmpresas)>0) {
+					$empresas='';
+					for($a=0;$a<contaConsulta($consultaEmpresas);$a++) {
+						$idEmpresa=resultadoSQL($consultaEmpresas, $a, 'idEmpresa');
+						$empresas.=formSelectEmpresas($idEmpresa, '', 'check');
+						
+						if( ($a+1) < contaConsulta($consultaEmpresas)) $empresas.="<BR";
+					}
+				}
+				else {
+					$empresas='&nbsp;';
+				}
+				
+				$opcoes="";
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=empresas&registro=$id>Empresas</a>",'empresas');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=alterar&registro=$id>Alterar</a>",'alterar');
+				$opcoes.=htmlMontaOpcao("<a href=?modulo=$modulo&sub=$sub&acao=excluir&registro=$id>Excluir</a>",'excluir');
+				
+				novaLinhaTabela($corFundo, '100%');
+					itemLinhaTabela($login, 'center', '10%', 'normal10');
+					itemLinhaTabela($nome, 'left', '25%', 'normal8');
+					itemLinhaTabela($empresas, 'left', '35%', 'normal10');
+					itemLinhaTabela(formSelectStatus($status,'','check'), 'center', '10%', 'normal10');
+					itemLinhaTabela($opcoes, 'left', '20%', 'normal8 nowrap');
+				fechaLinhaTabela();
+				
+				# Incrementar contador
+				$i++;
+			} #fecha laco de montagem de tabela
+		} #fecha listagem
+		
+		fechaTabela();
+	} # fecha botão procurar
+} #fecha funcao de  procurar 
+
+
+/**
+ * Relacionar Usuarios Empresas a Empresas
+ *
+ * @@param array $matriz (campos: id, idEmpresa, idUsuario)
+ * @@param string $tipo (incluir, alterar, excluir, excluirusuario, excluirempresa)
+ */
+function dbRelacionarUsuarioEmpresa($matriz, $tipo) {
+	
+	global $conn, $tb;
+	
+	if($tipo=='incluir') {
+		$sql="INSERT INTO $tb[UsuariosEmpresas] VALUES (0, '$matriz[idUsuario]', '$matriz[idEmpresa]')";
+//		$sql="INSERT INTO $tb[UsuariosEmpresas] VALUES (0, '$matriz[idUsuario]', '$matriz[idEmpresa]', '$matriz[admin]')";
+	}
+	elseif($tipo=='excluir') {
+		$sql="DELETE FROM $tb[UsuariosEmpresas] WHERE id='$matriz[id]'";
+	}
+	elseif($tipo=='alterar') {
+		$sql="UPDATE $tb[UsuariosEmpresas] SET idUsuario='$matriz[idUsuario]', idEmpresa='$matriz[idEmpresa] WHERE id='$matriz[id]'";
+	}
+	elseif($tipo=='excluirusuario') {
+		$sql="DELETE FROM $tb[UsuariosEmpresas] WHERE idEmpresaUsuario='$matriz[idUsuario]'";
+	}
+	elseif($tipo=='excluirempresa') {
+		$sql="DELETE FROM $tb[UsuariosEmpresas] WHERE idEmpresa='$matriz[idEmpresa]'";
+	}
+	
+	if($sql) {
+		$consulta=@@consultaSQL($sql, $conn);
+	}
+}
+
+
+
+/**
+ * Buscar novo ID para EmpresasUsuarios (cadastro de usuarios de empresas)
+ *
+ * @@return int $id
+ */
+function novoIDEmpresasUsuarios() {
+	
+	global $conn, $tb;
+	
+	$sql="SELECT MAX(id)+1 id FROM $tb[EmpresasUsuarios]";
+	
+	$consulta=consultaSQL($sql, $conn);
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$id=resultadoSQL($consulta, 0, 'id');
+		
+		if(!$id || $id<=0 || !is_numeric($id)) {
+			$id=1;
+		}
+	}
+		
+	return $id;
+}
+
+
+
+# Funcao para cadastro de usuarios
+function excluirUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $configAppVersion, $corFundo, $corBorda, $html;
+	
+	# Procurar login
+	$consulta=buscaUsuariosEmpresas($registro, 'id','igual','id');
+	
+	# Form de inclusao
+	if(!$matriz[bntExcluir] || $msgAviso) {
+		
+		$id=resultadoSQL($consulta, 0, 'id');
+		$login=resultadoSQL($consulta, 0, 'login');
+		$email=resultadoSQL($consulta, 0, 'email');
+		$nome=resultadoSQL($consulta, 0, 'nome');
+		$fone=resultadoSQL($consulta, 0, 'fone');
+		$status=resultadoSQL($consulta, 0, 'status');
+		
+		# Motrar tabela de busca
+		novaTabela2("[Excluir]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+			#fim das opcoes adicionais
+			menuOpcAdicional($modulo, $sub, $acao, $registro);
+			novaLinhaTabela($corFundo, '100%');
+			$texto="			
+				<form method=post name=matriz action=index.php>
+				<input type=hidden name=modulo value=$modulo>
+				<input type=hidden name=sub value=$sub>
+				<input type=hidden name=acao value=$acao>
+				<input type=hidden name=registro value='$id'>
+				$msgAviso
+				&nbsp;";
+				itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+			fechaLinhaTabela();
+			getCampo('', 'Login', '', $login, '', '', 30,'bold10');
+			getCampo('', 'Nome Completo', '', $nome, '', '', 60,'bold10');
+			getCampo('', 'E-mail', '', $email, '', '', 60,'bold10');
+			getCampo('', 'Telefone para Contato', '', $fone, '', '', 40,'bold10');
+			getCampo('', 'Status', '', formSelectStatus($status, 'status','check'), '', '', 20,'bold10');
+			getBotao('matriz[bntExcluir]', 'Excluir');
+		fechaTabela();
+	} #fecha form
+	elseif($matriz[bntExcluir]) {
+		$matriz[id]=$registro;
+		dbUsuarioEmpresa($matriz, 'excluir');
+		
+		# Relacionar Usuario a Empresa
+		$matriz[idUsuario]=$registro;
+		dbRelacionarUsuarioEmpresa($matriz, 'excluirusuario');
+		
+		# Mensagem de aviso
+		$msg="Registro Excluído com Sucesso!";
+		avisoNOURL("Aviso", $msg, 400);
+		echo "<BR>";
+		
+		procurarUsuariosEmpresas($modulo, $sub, 'listar', 0, '');
+	}
+} # fecha funcao de inclusao de usuarios
+
+
+
+# Funcao para cadastro de usuarios
+function alterarUsuariosEmpresas($modulo, $sub, $acao, $registro, $matriz)
+{
+	global $configAppName, $tb, $configAppVersion, $corFundo, $corBorda, $html;
+
+	$consulta=buscaRegistro($registro, 'id','igual','id', $tb[EmpresasUsuarios]);
+	
+	# Form de inclusao
+	if(!$matriz[bntAlterar] || !$matriz[senha] || !$matriz[nome]) {
+		
+		if(!$matriz[bntAlterar]) {
+			$matriz[login]=resultadoSQL($consulta, 0, 'login');
+			$matriz[email]=resultadoSQL($consulta, 0, 'email');
+			$matriz[senha]=resultadoSQL($consulta, 0, 'senha_texto');
+			$matriz[nome]=resultadoSQL($consulta, 0, 'nome');
+			$matriz[fone]=resultadoSQL($consulta, 0, 'fone');
+			$matriz[status]=resultadoSQL($consulta, 0, 'status');
+		}
+		
+		# Motrar tabela de busca
+		novaTabela2("[Alterar]", "center", '100%', 0, 2, 1, $corFundo, $corBorda, 2);
+			#fim das opcoes adicionais
+			menuOpcAdicional($modulo, $sub, $acao, $registro);
+			novaLinhaTabela($corFundo, '100%');
+			$texto="			
+				<form method=post name=matriz action=index.php>
+				<input type=hidden name=modulo value=$modulo>
+				<input type=hidden name=sub value=$sub>
+				<input type=hidden name=acao value=$acao>
+				<input type=hidden name=registro value='$registro'>
+				&nbsp;";
+				itemLinhaNOURL($texto, 'left', $corFundo, 2, 'tabfundo1');
+			fechaLinhaTabela();
+			getCampo('', 'Login', '', $matriz[login], '', '', 30,'bold10');
+			getCampo('text', 'Senha', 'matriz[senha]', $matriz[senha], '', '', 20,'bold10');
+			getCampo('text', 'Nome Completo', 'matriz[nome]', $matriz[nome], '', '', 60,'bold10');
+			getCampo('text', 'E-mail', 'matriz[email]', $matriz[email], '', '', 60,'bold10');
+			getCampo('text', 'Telefone para Contato', 'matriz[fone]', $matriz[fone], '', '', 40,'bold10');
+			getCampo('', 'Status', '', formSelectStatus($matriz[status], 'status','form'), '', '', 20,'bold10');
+			getBotao('matriz[bntAlterar]', 'Alterar');
+		fechaTabela();
+	} #fecha form
+	elseif($matriz[bntAlterar]) {
+		$matriz[id]=$registro;
+		$grava=dbUsuarioEmpresa($matriz, 'alterar');
+			
+		# Verificar inclusão de registro
+		if($grava) {
+			# acusar falta de parametros
+			# Mensagem de aviso
+			$msg="Registro Gravado com Sucesso!";
+			avisoNOURL("Aviso", $msg, 400);
+			
+		}
+		#erro
+		else {
+			# acusar falta de parametros
+			# Mensagem de aviso
+			$msg="Ocorreu um erro durante a alteração do registro. Contacte o administrador!";
+			avisoNOURL("Aviso: Ocorrência de erro", $msg, 400);
+		}
+		
+		echo "<BR>";
+		procurarUsuariosEmpresas($modulo, $sub, 'listar', 0, '');
+		
+	}
+} # fecha funcao de inclusao de usuarios
+
+
+/**
+ * Retona array com todos os campos do BD para o registro de EmpresasUsuarios informado
+ *
+ * @@param int $registro Empresas Usuarios
+ * @@return array com recordset para registro
+ */
+function dadosusuariosEmpresas($registro) {
+	
+	$consulta=buscaUsuariosEmpresas($registro, 'id','igual','id');
+	
+	if($consulta && contaConsulta($consulta)>0) {
+		$retorno[id]=resultadoSQL($consulta, 0, 'id');
+		$retorno[login]=resultadoSQL($consulta, 0, 'login');
+		$retorno[senha]=resultadoSQL($consulta, 0, 'senha');
+		$retorno[senha_texto]=resultadoSQL($consulta, 0, 'senha_texto');
+		$retorno[dtCriacao]=resultadoSQL($consulta, 0, 'dtCriacao');
+		$retorno[dtInativacao]=resultadoSQL($consulta, 0, 'dtInativacao');
+		$retorno[dtCancelamento]=resultadoSQL($consulta, 0, 'dtCancelamento');
+		$retorno[email]=resultadoSQL($consulta, 0, 'email');
+		$retorno[nome]=resultadoSQL($consulta, 0, 'nome');
+		$retorno[fone]=resultadoSQL($consulta, 0, 'fone');
+		$retorno[admin]=resultadoSQL($consulta, 0, 'admin');
+		$retorno[status]=resultadoSQL($consulta, 0, 'status');
+	}
+	
+	return($retorno);
+	
+}
+
+?>
+@

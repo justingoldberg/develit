@@ -1,0 +1,106 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.17.20.10.46;	author devel-it;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@<?php
+################################################################################
+# Função:
+#    Configurações HTML
+
+# Diretório de imagens
+$htmlDirImagem="imagens";
+
+# diretório de imagems
+$htmlDirIcones=$htmlDirImagem."/icones";
+
+# Tipos de imagem
+# Icones pequenos - para formulários
+$html[imagem][incluir]=$htmlDirIcones."/adicionar.gif";
+$html[imagem][alterar]=$htmlDirIcones."/martelo.gif";
+$html[imagem][excluir]=$htmlDirIcones."/remover.gif";
+$html[imagem][listar]=$htmlDirIcones."/livros.gif";
+$html[imagem][imprimir]=$htmlDirIcones."/impressora.gif";
+$html[imagem][parar]=$htmlDirIcones."/parar.gif";
+$html[imagem][pasta]=$htmlDirIcones."/pasta.gif";
+$html[imagem][procurar]=$htmlDirIcones."/procurar.gif";
+$html[imagem][salvar]=$htmlDirIcones."/salvar.gif";
+$html[imagem][desativar]=$htmlDirIcones."/ativar.gif";
+$html[imagem][ativar]=$htmlDirIcones."/desativar.gif";
+$html[imagem][acesso]=$htmlDirIcones."/lock.gif";
+$html[imagem][usuario]=$htmlDirIcones."/usuarios.gif";
+$html[imagem][grupo]=$htmlDirIcones."/grupos.gif";
+$html[imagem][senha]=$htmlDirIcones."/cadeado.gif";
+$html[imagem][config]=$htmlDirIcones."/configure.gif";
+$html[imagem][mail]=$htmlDirIcones."/mail.gif";
+$html[imagem][home]=$htmlDirIcones."/home.gif";
+$html[imagem][relatorio]=$htmlDirIcones."/relatorio.gif";
+$html[imagem][novo]=$htmlDirIcones."/relatorio.gif";
+$html[imagem][info]=$htmlDirIcones."/info.gif";
+$html[imagem][aviso]=$htmlDirIcones."/foguete.gif";
+$html[imagem][abrir]=$htmlDirIcones."/pasta.gif";
+$html[imagem][comentar]=$htmlDirIcones."/relatorio.gif";
+$html[imagem][categorias]=$htmlDirIcones."/categorias.gif";
+$html[imagem][ver]=$htmlDirIcones."/relatorio.gif";
+$html[imagem][fechar]=$htmlDirIcones."/fechar.gif";
+$html[imagem][perfil]=$htmlDirIcones."/perfil.gif";
+$html[imagem][prioridades]=$htmlDirIcones."/prioridades.gif";
+$html[imagem][status]=$htmlDirIcones."/status.gif";
+$html[imagem][chave]=$htmlDirIcones."/chave.gif";
+$html[imagem][ticket]=$htmlDirIcones."/ticket.gif";
+$html[imagem][protocolo]=$htmlDirIcones."/protocolo.gif";
+$html[imagem][encaminhar]=$htmlDirIcones."/encaminhar.gif";
+$html[imagem][transferir]=$htmlDirIcones."/transferir.gif";
+$html[imagem][relogio]=$htmlDirIcones."/relogio.gif";
+$html[imagem][help]=$htmlDirIcones."/help.gif";
+$html[imagem][alerta]=$htmlDirIcones."/sino.gif";
+$html[imagem][parametros]=$htmlDirIcones."/regras.gif";
+$html[imagem][empresas]=$htmlDirIcones."/enderecos.gif";
+$html[imagem][usuariosempresas]=$htmlDirIcones."/usuario.gif";
+$html[imagem][pdf]=$htmlDirIcones."/pdf.gif";
+$html[imagem][atender]=$htmlDirIcones."/atender.gif";
+$html[imagem][feedback]=$htmlDirIcones."/feedback.gif";
+
+# Setas de navegação
+$html[imagem][setaprimeira]=$htmlDirImagem."/seta-primeira.gif";
+$html[imagem][setadireita]=$htmlDirImagem."/seta-direita.gif";
+$html[imagem][setaesquerda]=$htmlDirImagem."/seta-esquerda.gif";
+$html[imagem][setaultima]=$htmlDirImagem."/seta-ultima.gif";
+
+# Icones grandes - para menus
+$html[imagem][statusg]=$htmlDirImagem."/status.gif";
+$html[imagem][perfilg]=$htmlDirImagem."/perfil.gif";
+$html[imagem][cadastro]=$htmlDirImagem."/cadastro.gif";
+$html[imagem][empresa]=$htmlDirImagem."/empresa.gif";
+$html[imagem][configuracoes]=$htmlDirImagem."/configure.gif";
+$html[imagem][controle_acesso]=$htmlDirImagem."/acesso.gif";
+$html[imagem][categoria]=$htmlDirImagem."/categorias.gif";
+$html[imagem][protocolos]=$htmlDirImagem."/protocolo.gif";
+
+# Logotipos
+$html[imagem][logo]=$htmlDirImagem."/logo.gif";
+
+# Logo da janela principal
+$html[imagem][logoPrincipal]=$htmlDirImagem."/logo_devel-it.jpg";
+$html[imagem][logoPequeno]=$htmlDirImagem."/logo_pequeno-devel-it.gif";
+$html[imagem][logoRelatorio]="http://$configAppHost/$htmlDirImagem/logo_pequeno-devel-it.jpg";
+
+?>
+@
